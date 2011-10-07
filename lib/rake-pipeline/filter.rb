@@ -1,6 +1,10 @@
+require "rake"
+
 module Rake
   class Pipeline
     class Filter
+      include Rake::DSL if defined?(Rake::DSL)
+
       attr_accessor :input_files
       attr_accessor :output_name
       attr_accessor :input_root
@@ -17,6 +21,12 @@ module Rake
         end
 
         hash
+      end
+
+      def rake_tasks
+        outputs.map do |output, inputs|
+          file(output.fullpath)
+        end
       end
 
     private

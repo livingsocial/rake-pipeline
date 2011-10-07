@@ -71,4 +71,41 @@ describe "Rake::Pipeline::Filter" do
       outputs.values.should == [[input_file("jquery.js"), input_file("jquery-ui.js")], [input_file("sproutcore.js")]]
     end
   end
+
+  describe "generates rake tasks" do
+    let(:input_files) { %w(jquery.js jquery-ui.js sproutcore.js) }
+    let(:input_root)  { File.join(tmp, "app/assets") }
+    let(:output_root) { File.join(tmp, "filter1/app/assets") }
+
+    before do
+      filter.input_root = input_root
+      filter.output_root = output_root
+      filter.input_files = input_files
+    end
+
+    def output_task(path)
+      Rake::FileTask.define_task(File.join(output_root, path))
+    end
+
+    it "with a simple output_name proc that outputs to a single file" do
+      filter.output_name = proc { |input| "javascripts/application.js" }
+      tasks = filter.rake_tasks
+
+      tasks.should == [output_task("javascripts/application.js")]
+    end
+
+    it "with a 1:1 output_name proc" do
+      filter.output_name = proc { |input| input }
+      tasks = filter.rake_tasks
+
+      tasks.should == input_files.map { |path| output_task(path) }
+    end
+
+    it "with a more complicated proc" do
+      filter.output_name = proc { |input| input.split(/[-.]/, 2).first + ".js" }
+      tasks = filter.rake_tasks
+
+      tasks.should == [output_task("jquery.js"), output_task("sproutcore.js")]
+    end
+  end
 end
