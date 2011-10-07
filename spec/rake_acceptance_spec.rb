@@ -38,14 +38,20 @@ describe "A realistic pipeline" do
 
   before do
     Rake.application = Rake::Application.new
-  end
 
-  it "can successfully apply filters" do
     inputs.each do |name, string|
       mkdir_p File.dirname(File.join(tmp, name))
       File.open(File.join(tmp, name), "w") { |file| file.write(string) }
     end
+  end
 
+  define_method(:output_should_exist) do
+    output = File.join(tmp, "public/javascripts/application.js")
+    File.exists?(output).should be_true
+    File.read(output).should == expected_output
+  end
+
+  it "can successfully apply filters" do
     concat = ConcatFilter.new
     concat.input_root = tmp
     concat.input_files = inputs.keys
@@ -62,8 +68,40 @@ describe "A realistic pipeline" do
     Rake::Task.define_task(:default => strip_asserts.rake_tasks)
     Rake.application[:default].invoke
 
-    output = File.join(tmp, "public/javascripts/application.js")
-    File.exists?(output).should be_true
-    File.read(output).should == expected_output
+    output_should_exist
+  end
+
+  it "can be configured using the pipeline" do
+    pipeline = Rake::Pipeline.new
+    pipeline.input_root = tmp
+    pipeline.output_root = "public"
+    pipeline.input_files = inputs.keys
+
+    concat = ConcatFilter.new
+    concat.output_name = proc { |input| "javascripts/application.js" }
+
+    strip_asserts = StripAssertsFilter.new
+    strip_asserts.output_name = proc { |input| input }
+
+    pipeline.filters << concat << strip_asserts
+
+    Rake::Task.define_task(:default => pipeline.rake_tasks)
+    Rake.application[:default].invoke
+
+    output_should_exist
+  end
+
+  it "can be configured using the pipeline DSL" do
+    tasks = Rake::Pipeline.build do
+      input tmp, inputs.keys
+      filter(ConcatFilter) { "javascripts/application.js" }
+      filter(StripAssertsFilter) { |input| input }
+      output "public"
+    end
+
+    Rake::Task.define_task(:default => tasks)
+    Rake.application[:default].invoke
+
+    output_should_exist
   end
 end

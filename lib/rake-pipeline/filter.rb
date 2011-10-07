@@ -7,6 +7,7 @@ module Rake
       attr_accessor :output_name
       attr_accessor :input_root
       attr_accessor :output_root
+      attr_accessor :filters
 
       def outputs
         hash = {}
@@ -19,6 +20,12 @@ module Rake
         end
 
         hash
+      end
+
+      def output_files
+        input_files.inject([]) do |array, file|
+          array |= [output_name.call(file)]
+        end
       end
 
       def rake_tasks

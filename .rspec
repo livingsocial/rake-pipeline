@@ -1,1 +1,1 @@
--r spec_helper.rb
+-cfs -r spec_helper.rb

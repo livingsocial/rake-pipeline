@@ -51,6 +51,8 @@ describe "Rake::Pipeline::Filter" do
         output_file("application.js") => 
           input_files.map { |i| input_file(i) }
       }
+
+      filter.output_files.should == [output_file("application.js").path]
     end
 
     it "with a 1:1 output_name proc" do
@@ -60,6 +62,8 @@ describe "Rake::Pipeline::Filter" do
 
       outputs.keys.should == input_files.map { |f| output_file(f) }
       outputs.values.should == input_files.map { |f| [input_file(f)] }
+
+      filter.output_files.should == input_files.map { |f| output_file(f).path }
     end
 
     it "with a more complicated proc" do
@@ -69,6 +73,8 @@ describe "Rake::Pipeline::Filter" do
 
       outputs.keys.should == [output_file("jquery.js"), output_file("sproutcore.js")]
       outputs.values.should == [[input_file("jquery.js"), input_file("jquery-ui.js")], [input_file("sproutcore.js")]]
+
+      filter.output_files.should == [output_file("jquery.js").path, output_file("sproutcore.js").path]
     end
   end
 
