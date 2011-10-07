@@ -3,8 +3,6 @@ require "rake"
 module Rake
   class Pipeline
     class Filter
-      include Rake::DSL if defined?(Rake::DSL)
-
       attr_accessor :input_files
       attr_accessor :output_name
       attr_accessor :input_root
@@ -25,7 +23,12 @@ module Rake
 
       def rake_tasks
         outputs.map do |output, inputs|
-          file(output.fullpath)
+          prerequisites = inputs.map(&:fullpath)
+          prerequisites.each { |path| Rake::FileTask.define_task(path) }
+
+          Rake::FileTask.define_task(output.fullpath => prerequisites) do
+            generate_output(inputs, output)
+          end
         end
       end
 
