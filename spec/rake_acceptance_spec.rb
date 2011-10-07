@@ -80,7 +80,7 @@ describe "A realistic pipeline" do
     pipeline.input_root = File.expand_path(tmp)
     pipeline.output_root = File.expand_path("public")
     pipeline.input_files = inputs.keys
-    pipeline.tempdir = "temporary"
+    pipeline.tmpdir = "temporary"
 
     concat = ConcatFilter.new
     concat.output_name = proc { |input| "javascripts/application.js" }

@@ -6,46 +6,54 @@ module Rake
     class Error < StandardError
     end
 
-    attr_accessor :input_root
-    attr_accessor :output_root
-    attr_accessor :input_files
-    attr_accessor :filters
-    attr_accessor :tempdir
+    class DSL
+      attr_reader :pipeline
 
-    def initialize
-      @filters = []
-      @tmp_id = 0
-      @tempdir = "tmp"
-    end
+      def self.evaluate(pipeline, &block)
+        new(pipeline).instance_eval(&block)
+      end
 
-    def self.build(&block)
-      pipeline = new
-      pipeline.instance_eval(&block)
-      pipeline.rake_tasks
-    end
+      def initialize(pipeline)
+        @pipeline = pipeline
+      end
 
-    module DSL
       def input(root, files)
-        self.input_root = root
-        self.input_files = files
+        pipeline.input_root = root
+        pipeline.input_files = files
       end
 
       def filter(filter_class, &block)
         filter = filter_class.new
         filter.output_name = block
-        self.filters << filter
+        pipeline.filters << filter
       end
 
       def output(root)
-        self.output_root = root
+        pipeline.output_root = root
       end
 
       def tmpdir(root)
-        self.tempdir = root
+        pipeline.tmpdir = root
       end
     end
 
-    include DSL
+    attr_accessor :input_root
+    attr_accessor :output_root
+    attr_accessor :input_files
+    attr_accessor :filters
+    attr_accessor :tmpdir
+
+    def initialize
+      @filters = []
+      @tmp_id = 0
+      @tmpdir = "tmp"
+    end
+
+    def self.build(&block)
+      pipeline = Pipeline.new
+      DSL.evaluate(pipeline, &block)
+      pipeline.rake_tasks
+    end
 
     def relative_input_files
       unless input_root && input_files
@@ -69,7 +77,7 @@ module Rake
         filter.input_files = current_input_files
 
         if next_filter
-          tmp = File.expand_path(File.join(self.tempdir, generate_tmpname))
+          tmp = File.expand_path(File.join(self.tmpdir, generate_tmpname))
           current_input_root = filter.output_root = tmp
         else
           filter.output_root = File.expand_path(output_root)

@@ -33,8 +33,8 @@ describe "Rake::Pipeline" do
   end
 
   it "accepts a temporary directory" do
-    pipeline.tempdir = "tmp"
-    pipeline.tempdir.should == "tmp"
+    pipeline.tmpdir = "tmp"
+    pipeline.tmpdir.should == "tmp"
   end
 
   it "accepts an output directory" do
