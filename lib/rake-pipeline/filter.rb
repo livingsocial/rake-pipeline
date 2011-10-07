@@ -27,7 +27,9 @@ module Rake
           prerequisites.each { |path| Rake::FileTask.define_task(path) }
 
           Rake::FileTask.define_task(output.fullpath => prerequisites) do
-            generate_output(inputs, output)
+            output.create do
+              generate_output(inputs, output)
+            end
           end
         end
       end

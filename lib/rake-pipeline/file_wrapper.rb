@@ -31,15 +31,18 @@ module Rake
 
       def create
         FileUtils.mkdir_p(File.dirname(fullpath))
-        created_file = File.open(fullpath, "w")
+        @created_file = File.open(fullpath, "w")
 
         if block_given?
-          yield created_file
-        else
-          @created_file = created_file
+          yield @created_file
         end
+
+        @created_file
       ensure
-        created_file.close if block_given?
+        if block_given?
+          @created_file.close
+          @created_file = nil
+        end
       end
 
       def close
