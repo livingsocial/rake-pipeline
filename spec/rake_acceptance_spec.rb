@@ -47,7 +47,11 @@ describe "A realistic pipeline" do
 
   define_method(:output_should_exist) do
     output = File.join(tmp, "public/javascripts/application.js")
+    temp   = File.join(tmp, "temporary")
+
     File.exists?(output).should be_true
+    File.exists?(temp).should be_true
+
     File.read(output).should == expected_output
   end
 
@@ -55,7 +59,7 @@ describe "A realistic pipeline" do
     concat = ConcatFilter.new
     concat.input_root = tmp
     concat.input_files = inputs.keys
-    concat.output_root = File.join(tmp, "concat_filter")
+    concat.output_root = File.join(tmp, "temporary", "concat_filter")
     concat.output_name = proc { |input| "javascripts/application.js" }
 
     strip_asserts = StripAssertsFilter.new
@@ -73,9 +77,10 @@ describe "A realistic pipeline" do
 
   it "can be configured using the pipeline" do
     pipeline = Rake::Pipeline.new
-    pipeline.input_root = tmp
-    pipeline.output_root = "public"
+    pipeline.input_root = File.expand_path(tmp)
+    pipeline.output_root = File.expand_path("public")
     pipeline.input_files = inputs.keys
+    pipeline.tempdir = "temporary"
 
     concat = ConcatFilter.new
     concat.output_name = proc { |input| "javascripts/application.js" }
@@ -93,6 +98,8 @@ describe "A realistic pipeline" do
 
   it "can be configured using the pipeline DSL" do
     tasks = Rake::Pipeline.build do
+      tmpdir "temporary"
+
       input tmp, inputs.keys
       filter(ConcatFilter) { "javascripts/application.js" }
       filter(StripAssertsFilter) { |input| input }

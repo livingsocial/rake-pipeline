@@ -32,6 +32,11 @@ describe "Rake::Pipeline" do
     lambda { pipeline.relative_input_files }.should raise_error(Rake::Pipeline::Error)
   end
 
+  it "accepts a temporary directory" do
+    pipeline.tempdir = "tmp"
+    pipeline.tempdir.should == "tmp"
+  end
+
   it "accepts an output directory" do
     pipeline.output_root = "public"
     pipeline.output_root.should == "public"

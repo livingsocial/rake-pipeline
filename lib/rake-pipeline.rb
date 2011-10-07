@@ -10,10 +10,12 @@ module Rake
     attr_accessor :output_root
     attr_accessor :input_files
     attr_accessor :filters
+    attr_accessor :tempdir
 
     def initialize
       @filters = []
       @tmp_id = 0
+      @tempdir = "tmp"
     end
 
     def self.build(&block)
@@ -36,6 +38,10 @@ module Rake
 
       def output(root)
         self.output_root = root
+      end
+
+      def tmpdir(root)
+        self.tempdir = root
       end
     end
 
@@ -63,7 +69,8 @@ module Rake
         filter.input_files = current_input_files
 
         if next_filter
-          current_input_root = filter.output_root = generate_tmpname
+          tmp = File.expand_path(File.join(self.tempdir, generate_tmpname))
+          current_input_root = filter.output_root = tmp
         else
           filter.output_root = File.expand_path(output_root)
         end

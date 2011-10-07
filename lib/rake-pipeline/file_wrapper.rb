@@ -3,21 +3,36 @@ module Rake
     class UnopenedFile < StandardError
     end
 
+    # This class wraps a file for consumption inside of filters. It is
+    # initialized with a root and path, and filters usually use the
+    # `read` and `write` methods to work with these files.
+    #
+    # The `root` and `path` parameters are provided by the `Filter`
+    # class' internal implementation. Individual filters do not need
+    # to worry about them.
+    #
+    # The root of a FileWrapper is always an absolute path.
     class FileWrapper < Struct.new(:root, :path)
       def initialize(*)
         super
         @created_file = nil
       end
 
+      # A FileWrapper is equal to another FileWrapper if they have the
+      # same `root` and `path`
       def ==(other)
         root == other.root && path == other.path
       end
 
+      # Similarly, generate a FileWrapper's hash from its `root` and
+      # `path`.
       def hash
         [root, path].hash
       end
 
+      # The full path of a FileWrapper is its root joined with its path
       def fullpath
+        raise "#{root}, #{path}" unless root =~ /^\//
         File.join(root, path)
       end
 
