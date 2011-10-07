@@ -4,6 +4,11 @@ module Rake
     end
 
     class FileWrapper < Struct.new(:root, :path)
+      def initialize(*)
+        super
+        @created_file = nil
+      end
+
       def ==(other)
         root == other.root && path == other.path
       end
@@ -26,13 +31,25 @@ module Rake
 
       def create
         FileUtils.mkdir_p(File.dirname(fullpath))
-        @created_file = File.open(fullpath, "w")
+        created_file = File.open(fullpath, "w")
+
+        if block_given?
+          yield created_file
+        else
+          @created_file = created_file
+        end
+      ensure
+        created_file.close if block_given?
       end
 
       def close
         raise IOError, "closed stream" unless @created_file
         @created_file.close
         @created_file = nil
+      end
+
+      def closed?
+        @created_file.nil?
       end
 
       def write(string)

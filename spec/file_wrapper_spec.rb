@@ -85,6 +85,16 @@ describe "Rake::Pipeline::FileWrapper" do
     lambda { file.write "This. Is. jQuery" }.should raise_error(Rake::Pipeline::UnopenedFile)
   end
 
+  it "supports a block form of create that closes the file at the end" do
+    file.create do |f|
+      f.write "HI"
+    end
+
+    File.exists?(jquery).should == true
+    File.read(jquery).should == "HI"
+    file.closed?.should == true
+  end
+
   it "writes to the file system if the file was created" do
     new_file = file.create
     file.write "This. Is. jQuery"
