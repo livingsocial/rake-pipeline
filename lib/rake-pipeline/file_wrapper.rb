@@ -3,9 +3,14 @@ module Rake
     class UnopenedFile < StandardError
     end
 
-    class FileWrapper
-      attr_accessor :root
-      attr_accessor :path
+    class FileWrapper < Struct.new(:root, :path)
+      def ==(other)
+        root == other.root && path == other.path
+      end
+
+      def hash
+        [root, path].hash
+      end
 
       def fullpath
         File.join(root, path)
@@ -34,6 +39,12 @@ module Rake
         raise UnopenedFile unless @created_file
         @created_file.write(string)
       end
+
+      def inspect
+        "#<FileWrapper root=#{root.inspect} path=#{path.inspect}>"
+      end
+
+      alias to_s inspect
     end
   end
 end

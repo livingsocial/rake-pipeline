@@ -8,6 +8,31 @@ describe "Rake::Pipeline::FileWrapper" do
     file.path = "javascripts/jquery.js"
   end
 
+  it "is equal to another FileWrapper if the root and path are the same" do
+    other = Rake::Pipeline::FileWrapper.new
+    other.root = root
+    other.path = "javascripts/jquery.js"
+
+    file.should == other
+    file.hash.should == other.hash
+  end
+
+  it "is not equal to another FileWrapper if the root is the same but the path is different" do
+    other = Rake::Pipeline::FileWrapper.new
+    other.root = root
+    other.path = "javascripts/jquery2.js"
+
+    file.should_not == other
+  end
+
+  it "is not equal to another FileWrapper if the root is different but the path is the same" do
+    other = Rake::Pipeline::FileWrapper.new
+    other.root = "/"
+    other.path = "javascripts/jquery.js"
+
+    file.should_not == other
+  end
+
   it "has a fullpath" do
     file.fullpath.should == jquery
   end

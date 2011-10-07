@@ -14,4 +14,6 @@ Gem::Specification.new do |gem|
   gem.name          = "rake-pipeline"
   gem.require_paths = ["lib"]
   gem.version       = Rake::Pipeline::VERSION
+
+  gem.add_development_dependency "rspec"
 end

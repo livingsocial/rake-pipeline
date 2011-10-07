@@ -1,7 +1,9 @@
-require "rake-pipeline/version"
+require "rake-pipeline/file_wrapper"
+require "rake-pipeline/filter"
 
 module Rake
-  module Pipeline
-    # Your code goes here...
+  class Pipeline
+    attr_accessor :root
+    attr_accessor :glob
   end
 end
