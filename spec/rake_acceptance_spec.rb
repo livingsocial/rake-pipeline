@@ -1,4 +1,6 @@
-inputs = {
+describe "A realistic pipeline" do
+
+INPUTS = {
 
 "app/javascripts/jquery.js" => <<-HERE,
 var jQuery = {};
@@ -12,14 +14,13 @@ HERE
 
 }
 
-expected_output = <<-HERE
+EXPECTED_OUTPUT = <<-HERE
 var jQuery = {};
 var SC = {};
 
 SC.hi = function() { console.log("hi"); };
 HERE
 
-describe "A realistic pipeline" do
   class ConcatFilter < Rake::Pipeline::Filter
     def generate_output(inputs, output)
       inputs.each do |input|
@@ -39,26 +40,26 @@ describe "A realistic pipeline" do
   before do
     Rake.application = Rake::Application.new
 
-    inputs.each do |name, string|
+    INPUTS.each do |name, string|
       mkdir_p File.dirname(File.join(tmp, name))
       File.open(File.join(tmp, name), "w") { |file| file.write(string) }
     end
   end
 
-  define_method(:output_should_exist) do
+  def output_should_exist(expected = EXPECTED_OUTPUT)
     output = File.join(tmp, "public/javascripts/application.js")
     temp   = File.join(tmp, "temporary")
 
     File.exists?(output).should be_true
     File.exists?(temp).should be_true
 
-    File.read(output).should == expected_output
+    File.read(output).should == expected
   end
 
   it "can successfully apply filters" do
     concat = ConcatFilter.new
     concat.input_root = tmp
-    concat.input_files = inputs.keys
+    concat.input_files = INPUTS.keys
     concat.output_root = File.join(tmp, "temporary", "concat_filter")
     concat.output_name = proc { |input| "javascripts/application.js" }
 
@@ -76,7 +77,6 @@ describe "A realistic pipeline" do
   end
 
   it "can be configured using the pipeline" do
-    pending "Make the pipeline use its own Rake::Application"
     pipeline = Rake::Pipeline.new
     pipeline.input_root = File.expand_path(tmp)
     pipeline.output_root = File.expand_path("public")
@@ -95,19 +95,54 @@ describe "A realistic pipeline" do
     output_should_exist
   end
 
-  it "can be configured using the pipeline DSL" do
-    pending "Make the pipeline use its own Rake::Application"
-    pipeline = Rake::Pipeline.build do
-      tmpdir "temporary"
+  describe "using the pipeline DSL" do
+    pipeline = nil
 
-      input tmp, "app/javascripts/*.js"
-      filter(ConcatFilter) { "javascripts/application.js" }
-      filter(StripAssertsFilter) { |input| input }
-      output "public"
+    before do
+      pipeline = Rake::Pipeline.build do
+        tmpdir "temporary"
+
+        input tmp, "app/javascripts/*.js"
+        filter(ConcatFilter) { "javascripts/application.js" }
+        filter(StripAssertsFilter) { |input| input }
+        output "public"
+      end
     end
 
-    pipeline.invoke
+    it "can be configured using the pipeline DSL" do
+      pipeline.invoke
+      output_should_exist
+    end
 
-    output_should_exist
+    it "can be configured using the pipeline DSL with an alternate Rake application" do
+      pipeline.rake_application = Rake::Application.new
+      pipeline.invoke
+      output_should_exist
+    end
+
+    it "can be invoked repeatedly to reflected updated changes" do
+      pipeline.invoke
+
+      old_time = Time.now - 10
+      Dir[File.join(tmp, "**/*.js")].each do |file|
+        File.utime(old_time, old_time, file)
+      end
+
+      File.open(File.join(tmp, "app/javascripts/jquery.js"), "w") do |file|
+        file.write "var jQuery = {};\njQuery.trim = function() {};\n"
+      end
+
+      expected = <<-HERE.gsub(/^ {8}/, '')
+        var jQuery = {};
+        jQuery.trim = function() {};
+        var SC = {};
+
+        SC.hi = function() { console.log("hi"); };
+      HERE
+
+      pipeline.invoke
+
+      output_should_exist(expected)
+    end
   end
 end

@@ -2,6 +2,13 @@ require "rake-pipeline/file_wrapper"
 require "rake-pipeline/filter"
 
 module Rake
+  class Task
+    def recursively_reenable(app)
+      reenable
+      prerequisites.each { |dep| app[dep].recursively_reenable(app) }
+    end
+  end
+
   class Pipeline
     class Error < StandardError
     end
@@ -35,6 +42,10 @@ module Rake
       def tmpdir(root)
         pipeline.tmpdir = root
       end
+
+      def rake_application(app)
+        pipeline.rake_application = app
+      end
     end
 
     attr_accessor :input_root, :output_root, :input_files, :tmpdir
@@ -48,7 +59,7 @@ module Rake
     def self.build(&block)
       pipeline = Pipeline.new
       DSL.evaluate(pipeline, &block)
-      pipeline.rake_tasks
+      pipeline
     end
 
     def relative_input_files
@@ -75,7 +86,7 @@ module Rake
 
         if next_filter
           tmp = File.expand_path(File.join(self.tmpdir, generate_tmpname))
-          current_input_root = filter.output_root = tmp
+          current_input_root = filter.output_root = tmp unless filter.output_root
         else
           filter.output_root = File.expand_path(output_root)
         end
@@ -88,23 +99,36 @@ module Rake
       @rake_application || Rake.application
     end
 
-      def rake_application=(rake_application)
-        @rake_application = rake_application
-        @filters.each { |filter| filter.rake_application = rake_application }
-      end
+    def rake_application=(rake_application)
+      @rake_application = rake_application
+      @filters.each { |filter| filter.rake_application = rake_application }
+      @rake_tasks = nil
+    end
 
-      def add_filters(*filters)
-        filters.each { |filter| filter.rake_application = rake_application }
-        @filters.concat(filters)
-      end
-      alias add_filter add_filters
+    def add_filters(*filters)
+      filters.each { |filter| filter.rake_application = rake_application }
+      @filters.concat(filters)
+    end
+    alias add_filter add_filters
+
+    def invoke
+      self.rake_application = Rake::Application.new unless @rake_application
+
+      rake_tasks.each { |task| task.recursively_reenable(rake_application) }
+      rake_tasks.each { |task| task.invoke }
+    end
 
     def rake_tasks
-      build
+      @rake_tasks ||= begin
+        tasks = nil
+        build
 
-      (@filters + [nil]).each_cons(2) do |filter, next_filter|
-        tasks = filter.rake_tasks
-        return tasks unless next_filter
+        (@filters + [nil]).each_cons(2) do |filter, next_filter|
+          tasks = filter.rake_tasks
+          break unless next_filter
+        end
+
+        tasks
       end
     end
 
