@@ -1,3 +1,5 @@
+require "rack"
+
 module Rake
   class Pipeline
     class Middleware

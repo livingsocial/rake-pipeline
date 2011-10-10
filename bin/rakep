@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+require "rake-pipeline"
+require "rake-pipeline/middleware"
+require "rack/server"
+
+module Rake
+  class Pipeline
+    class Server < Rack::Server
+      def app
+        not_found = [404, { "Content-Type" => "text/plain" }, ["not found"]]
+        config = "rake_pipeline_config.rb"
+
+        pipeline_source = File.read(config)
+
+        pipeline = Pipeline.class_eval "build do\n#{pipeline_source}\nend", config, 1
+        pipeline_app = Middleware.new(not_found)
+        pipeline_app.pipeline = pipeline
+        pipeline_app
+      end
+    end
+  end
+end
+
+Rake::Pipeline::Server.new.start
