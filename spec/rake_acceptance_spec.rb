@@ -89,7 +89,7 @@ describe "A realistic pipeline" do
     strip_asserts = StripAssertsFilter.new
     strip_asserts.output_name = proc { |input| input }
 
-    pipeline.filters << concat << strip_asserts
+    pipeline.add_filters(concat, strip_asserts)
     pipeline.invoke
 
     output_should_exist

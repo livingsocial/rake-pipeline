@@ -25,7 +25,7 @@ module Rake
       def filter(filter_class, &block)
         filter = filter_class.new
         filter.output_name = block
-        pipeline.filters << filter
+        pipeline.add_filter(filter)
       end
 
       def output(root)
@@ -37,8 +37,7 @@ module Rake
       end
     end
 
-    attr_accessor :input_root, :output_root, :input_files, :filters, :tmpdir
-    attr_writer :rake_application
+    attr_accessor :input_root, :output_root, :input_files, :tmpdir
 
     def initialize
       @filters = []
@@ -70,7 +69,7 @@ module Rake
       current_input_root = File.expand_path(input_root)
       current_input_files = relative_input_files
 
-      (filters + [nil]).each_cons(2) do |filter, next_filter|
+      (@filters + [nil]).each_cons(2) do |filter, next_filter|
         filter.input_root = current_input_root
         filter.input_files = current_input_files
 
@@ -89,10 +88,21 @@ module Rake
       @rake_application || Rake.application
     end
 
+      def rake_application=(rake_application)
+        @rake_application = rake_application
+        @filters.each { |filter| filter.rake_application = rake_application }
+      end
+
+      def add_filters(*filters)
+        filters.each { |filter| filter.rake_application = rake_application }
+        @filters.concat(filters)
+      end
+      alias add_filter add_filters
+
     def rake_tasks
       build
 
-      (filters + [nil]).each_cons(2) do |filter, next_filter|
+      (@filters + [nil]).each_cons(2) do |filter, next_filter|
         tasks = filter.rake_tasks
         return tasks unless next_filter
       end

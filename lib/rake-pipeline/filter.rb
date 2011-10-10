@@ -5,7 +5,6 @@ module Rake
     class Filter
       attr_accessor :input_files, :input_root
       attr_accessor :output_name, :output_root
-      attr_accessor :filters
 
       attr_writer :rake_application
 
@@ -35,7 +34,7 @@ module Rake
       def rake_tasks
         outputs.map do |output, inputs|
           prerequisites = inputs.map(&:fullpath)
-          prerequisites.each { |path| Rake::FileTask.define_task(path) }
+          prerequisites.each { |path| rake_application.define_task(Rake::FileTask, path) }
 
           rake_application.define_task(Rake::FileTask, output.fullpath => prerequisites) do
             output.create do
