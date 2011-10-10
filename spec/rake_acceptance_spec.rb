@@ -98,6 +98,13 @@ HERE
   describe "using the pipeline DSL" do
     pipeline = nil
 
+    def age_existing_files
+      old_time = Time.now - 10
+      Dir[File.join(tmp, "**/*.js")].each do |file|
+        File.utime(old_time, old_time, file)
+      end
+    end
+
     before do
       pipeline = Rake::Pipeline.build do
         tmpdir "temporary"
@@ -122,11 +129,7 @@ HERE
 
     it "can be invoked repeatedly to reflected updated changes" do
       pipeline.invoke
-
-      old_time = Time.now - 10
-      Dir[File.join(tmp, "**/*.js")].each do |file|
-        File.utime(old_time, old_time, file)
-      end
+      age_existing_files
 
       File.open(File.join(tmp, "app/javascripts/jquery.js"), "w") do |file|
         file.write "var jQuery = {};\njQuery.trim = function() {};\n"
@@ -141,6 +144,27 @@ HERE
       HERE
 
       pipeline.invoke
+
+      output_should_exist(expected)
+    end
+
+    it "can be restarted to reflect new files" do
+      pipeline.invoke
+      age_existing_files
+
+      File.open(File.join(tmp, "app/javascripts/history.js"), "w") do |file|
+        file.write "var History = {};\n"
+      end
+
+      pipeline.invoke_clean
+
+      expected = <<-HERE.gsub(/^ {8}/, '')
+        var History = {};
+        var jQuery = {};
+        var SC = {};
+
+        SC.hi = function() { console.log("hi"); };
+      HERE
 
       output_should_exist(expected)
     end

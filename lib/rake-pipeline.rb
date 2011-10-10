@@ -81,14 +81,19 @@ module Rake
       current_input_files = relative_input_files
 
       (@filters + [nil]).each_cons(2) do |filter, next_filter|
-        filter.input_root = current_input_root
         filter.input_files = current_input_files
 
-        if next_filter
-          tmp = File.expand_path(File.join(self.tmpdir, generate_tmpname))
-          current_input_root = filter.output_root = tmp unless filter.output_root
-        else
-          filter.output_root = File.expand_path(output_root)
+        # if filters are being reinvoked, they should keep their roots but
+        # get updated with new files.
+        unless filter.output_root
+          filter.input_root = current_input_root
+
+          if next_filter
+            tmp = File.expand_path(File.join(self.tmpdir, generate_tmpname))
+            current_input_root = filter.output_root = tmp
+          else
+            filter.output_root = File.expand_path(output_root)
+          end
         end
 
         current_input_files = filter.output_files
@@ -118,14 +123,18 @@ module Rake
       rake_tasks.each { |task| task.invoke }
     end
 
+    def invoke_clean
+      @rake_tasks = @rake_application = nil
+      invoke
+    end
+
     def rake_tasks
       @rake_tasks ||= begin
         tasks = nil
         build
 
-        (@filters + [nil]).each_cons(2) do |filter, next_filter|
+        @filters.each do |filter|
           tasks = filter.rake_tasks
-          break unless next_filter
         end
 
         tasks
