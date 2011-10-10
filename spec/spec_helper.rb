@@ -22,6 +22,13 @@ class Rake::Pipeline
         mkdir_p dir
         touch file
       end
+
+      def age_existing_files
+        old_time = Time.now - 10
+        Dir[File.join(tmp, "**/*.js")].each do |file|
+          File.utime(old_time, old_time, file)
+        end
+      end
     end
   end
 end

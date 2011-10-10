@@ -98,13 +98,6 @@ HERE
   describe "using the pipeline DSL" do
     pipeline = nil
 
-    def age_existing_files
-      old_time = Time.now - 10
-      Dir[File.join(tmp, "**/*.js")].each do |file|
-        File.utime(old_time, old_time, file)
-      end
-    end
-
     before do
       pipeline = Rake::Pipeline.build do
         tmpdir "temporary"
