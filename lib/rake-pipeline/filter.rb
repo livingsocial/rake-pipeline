@@ -3,11 +3,11 @@ require "rake"
 module Rake
   class Pipeline
     class Filter
-      attr_accessor :input_files
-      attr_accessor :output_name
-      attr_accessor :input_root
-      attr_accessor :output_root
+      attr_accessor :input_files, :input_root
+      attr_accessor :output_name, :output_root
       attr_accessor :filters
+
+      attr_writer :rake_application
 
       def outputs
         hash = {}
@@ -28,12 +28,16 @@ module Rake
         end
       end
 
+      def rake_application
+        @rake_application || Rake.application
+      end
+
       def rake_tasks
         outputs.map do |output, inputs|
           prerequisites = inputs.map(&:fullpath)
           prerequisites.each { |path| Rake::FileTask.define_task(path) }
 
-          Rake::FileTask.define_task(output.fullpath => prerequisites) do
+          rake_application.define_task(Rake::FileTask, output.fullpath => prerequisites) do
             output.create do
               generate_output(inputs, output)
             end

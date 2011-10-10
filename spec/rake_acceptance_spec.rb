@@ -76,6 +76,7 @@ describe "A realistic pipeline" do
   end
 
   it "can be configured using the pipeline" do
+    pending "Make the pipeline use its own Rake::Application"
     pipeline = Rake::Pipeline.new
     pipeline.input_root = File.expand_path(tmp)
     pipeline.output_root = File.expand_path("public")
@@ -89,15 +90,14 @@ describe "A realistic pipeline" do
     strip_asserts.output_name = proc { |input| input }
 
     pipeline.filters << concat << strip_asserts
-
-    Rake::Task.define_task(:default => pipeline.rake_tasks)
-    Rake.application[:default].invoke
+    pipeline.invoke
 
     output_should_exist
   end
 
   it "can be configured using the pipeline DSL" do
-    tasks = Rake::Pipeline.build do
+    pending "Make the pipeline use its own Rake::Application"
+    pipeline = Rake::Pipeline.build do
       tmpdir "temporary"
 
       input tmp, "app/javascripts/*.js"
@@ -106,8 +106,7 @@ describe "A realistic pipeline" do
       output "public"
     end
 
-    Rake::Task.define_task(:default => tasks)
-    Rake.application[:default].invoke
+    pipeline.invoke
 
     output_should_exist
   end

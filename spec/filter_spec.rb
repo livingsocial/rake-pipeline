@@ -26,6 +26,16 @@ describe "Rake::Pipeline::Filter" do
     filter.output_root.should == path
   end
 
+  it "accepts a Rake::Application to install tasks into" do
+    app = Rake::Application.new
+    filter.rake_application = app
+    filter.rake_application.should == app
+  end
+
+  it "makes Rake.application the default rake_application" do
+    filter.rake_application.should == Rake.application
+  end
+
   it "accepts a proc to convert the input name into an output name" do
     conversion = proc { |input| input }
     filter.output_name = conversion
@@ -103,12 +113,26 @@ describe "Rake::Pipeline::Filter" do
       filter.input_files = input_files
     end
 
-    def output_task(path)
-      Rake::FileTask.define_task(File.join(output_root, path))
+    def output_task(path, app=Rake.application)
+      app.define_task(Rake::FileTask, File.join(output_root, path))
     end
 
     def input_task(path)
       Rake::FileTask.define_task(File.join(input_root, path))
+    end
+
+    it "does not generate Rake tasks onto Rake.application if an alternate application is supplied" do
+      app = Rake::Application.new
+      filter.rake_application = app
+      filter.output_name = proc { |input| input }
+      tasks = filter.rake_tasks
+
+      input_files.each do |path|
+        task = output_task(path, app)
+        tasks.include?(task).should == true
+        Rake.application.tasks.include?(task).should == false
+        app.tasks.include?(task).should == true
+      end
     end
 
     it "with a simple output_name proc that outputs to a single file" do
