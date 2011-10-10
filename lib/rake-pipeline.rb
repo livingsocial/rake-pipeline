@@ -37,11 +37,8 @@ module Rake
       end
     end
 
-    attr_accessor :input_root
-    attr_accessor :output_root
-    attr_accessor :input_files
-    attr_accessor :filters
-    attr_accessor :tmpdir
+    attr_accessor :input_root, :output_root, :input_files, :filters, :tmpdir
+    attr_writer :rake_application
 
     def initialize
       @filters = []
@@ -86,6 +83,10 @@ module Rake
 
         current_input_files = filter.output_files
       end
+    end
+
+    def rake_application
+      @rake_application || Rake.application
     end
 
     def rake_tasks
