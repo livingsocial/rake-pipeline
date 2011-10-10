@@ -79,7 +79,7 @@ describe "A realistic pipeline" do
     pipeline = Rake::Pipeline.new
     pipeline.input_root = File.expand_path(tmp)
     pipeline.output_root = File.expand_path("public")
-    pipeline.input_files = inputs.keys
+    pipeline.input_files = "app/javascripts/*.js"
     pipeline.tmpdir = "temporary"
 
     concat = ConcatFilter.new
@@ -100,7 +100,7 @@ describe "A realistic pipeline" do
     tasks = Rake::Pipeline.build do
       tmpdir "temporary"
 
-      input tmp, inputs.keys
+      input tmp, "app/javascripts/*.js"
       filter(ConcatFilter) { "javascripts/application.js" }
       filter(StripAssertsFilter) { |input| input }
       output "public"

@@ -62,7 +62,7 @@ describe "Rake::Pipeline" do
 
       inputs = Dir["app/assets/javascripts/**/*.js"]
       pipeline.input_root = "app/assets"
-      pipeline.input_files = inputs
+      pipeline.input_files = "javascripts/**/*.js"
       pipeline.output_root = "public"
     end
 

@@ -63,7 +63,8 @@ module Rake
 
       expanded_root = Regexp.escape(File.expand_path(input_root))
 
-      input_files.map do |file|
+      files = Dir[File.join(input_root, input_files)]
+      files.map do |file|
         File.expand_path(file).sub(%r{^#{expanded_root}/}, '')
       end
     end
