@@ -55,7 +55,7 @@ describe "Rake::Pipeline Middleware" do
       output "public"
     end
 
-    middleware.pipeline = pipeline
+    middleware.pipelines = [pipeline]
 
     get "/javascripts/application.js"
   end
