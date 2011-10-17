@@ -6,19 +6,40 @@ INPUTS = {
 var jQuery = {};
 HERE
 
-"app/javascripts/sproutcore.js" => <<-HERE
+"app/javascripts/sproutcore.js" => <<-HERE,
 var SC = {};
 assert(SC);
 SC.hi = function() { console.log("hi"); };
 HERE
 
+"app/stylesheets/jquery.css" => <<-HERE,
+#jquery {
+  color: red;
+}
+HERE
+
+"app/stylesheets/sproutcore.css" => <<-HERE
+#sproutcore {
+  color: green;
+}
+HERE
+
 }
 
-EXPECTED_OUTPUT = <<-HERE
+EXPECTED_JS_OUTPUT = <<-HERE
 var jQuery = {};
 var SC = {};
 
 SC.hi = function() { console.log("hi"); };
+HERE
+
+EXPECTED_CSS_OUTPUT = <<-HERE
+#jquery {
+  color: red;
+}
+#sproutcore {
+  color: green;
+}
 HERE
 
   class ConcatFilter < Rake::Pipeline::Filter
@@ -46,7 +67,7 @@ HERE
     end
   end
 
-  def output_should_exist(expected = EXPECTED_OUTPUT)
+  def output_should_exist(expected = EXPECTED_JS_OUTPUT)
     output = File.join(tmp, "public/javascripts/application.js")
     temp   = File.join(tmp, "temporary")
 
@@ -59,7 +80,7 @@ HERE
   it "can successfully apply filters" do
     concat = ConcatFilter.new
     concat.input_root = tmp
-    concat.input_files = INPUTS.keys
+    concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }
     concat.output_root = File.join(tmp, "temporary", "concat_filter")
     concat.output_name = proc { |input| "javascripts/application.js" }
 
@@ -127,7 +148,9 @@ HERE
           SC.hi = function() { console.log("hi"); };
         HERE
 
+        $billy = true
         pipeline.invoke
+        $billy = false
 
         output_should_exist(expected)
       end
@@ -178,6 +201,36 @@ HERE
           filter ConcatFilter, "javascripts/application.js"
           filter StripAssertsFilter
           output "public"
+        end
+      end
+    end
+
+    describe "a nested pipeline DSL" do
+      it_behaves_like "the pipeline DSL"
+
+      def output_should_exist(expected=EXPECTED_JS_OUTPUT)
+        super
+
+        css    = File.join(tmp, "public/stylesheets/application.css")
+
+        File.exists?(css).should be_true
+        File.read(css).should == EXPECTED_CSS_OUTPUT
+      end
+
+      before do
+        @pipeline = Rake::Pipeline.build do
+          tmpdir "temporary"
+          input tmp
+          output "public"
+
+          files "app/javascripts/*.js" do
+            filter ConcatFilter, "javascripts/application.js"
+            filter StripAssertsFilter
+          end
+
+          files "app/stylesheets/*.css" do
+            filter ConcatFilter, "stylesheets/application.css"
+          end
         end
       end
     end

@@ -80,7 +80,7 @@ describe "Rake::Pipeline" do
       pipeline.relative_input_files.should == files
     end
 
-    it "configures the filters with outputs and inputs with #build" do
+    it "configures the filters with outputs and inputs with #rake_tasks" do
       concat = ConcatFilter.new
       concat.output_name = proc { |input| "javascripts/application.js" }
 
@@ -88,7 +88,7 @@ describe "Rake::Pipeline" do
       strip_asserts.output_name = proc { |input| input }
 
       pipeline.add_filters concat, strip_asserts
-      pipeline.build
+      pipeline.rake_tasks
 
       concat.input_root.should == File.expand_path(pipeline.input_root)
       concat.input_files.should == pipeline.relative_input_files
