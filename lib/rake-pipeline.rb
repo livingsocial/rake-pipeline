@@ -29,7 +29,13 @@ module Rake
         pipeline.input_files = files
       end
 
-      def filter(filter_class, &block)
+      def filter(filter_class, string=nil, &block)
+        block ||= if string
+          proc { string }
+        else
+          proc { |input| input }
+        end
+
         filter = filter_class.new
         filter.output_name = block
         pipeline.add_filter(filter)

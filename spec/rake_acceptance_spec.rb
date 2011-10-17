@@ -96,70 +96,90 @@ HERE
   end
 
   describe "using the pipeline DSL" do
-    pipeline = nil
 
-    before do
-      pipeline = Rake::Pipeline.build do
-        tmpdir "temporary"
+    attr_reader :pipeline
 
-        input tmp, "app/javascripts/*.js"
-        filter(ConcatFilter) { "javascripts/application.js" }
-        filter(StripAssertsFilter) { |input| input }
-        output "public"
+    shared_examples_for "the pipeline DSL" do
+      it "can be configured using the pipeline DSL" do
+        pipeline.invoke
+        output_should_exist
+      end
+
+      it "can be configured using the pipeline DSL with an alternate Rake application" do
+        pipeline.rake_application = Rake::Application.new
+        pipeline.invoke
+        output_should_exist
+      end
+
+      it "can be invoked repeatedly to reflected updated changes" do
+        pipeline.invoke
+        age_existing_files
+
+        File.open(File.join(tmp, "app/javascripts/jquery.js"), "w") do |file|
+          file.write "var jQuery = {};\njQuery.trim = function() {};\n"
+        end
+
+        expected = <<-HERE.gsub(/^ {10}/, '')
+          var jQuery = {};
+          jQuery.trim = function() {};
+          var SC = {};
+
+          SC.hi = function() { console.log("hi"); };
+        HERE
+
+        pipeline.invoke
+
+        output_should_exist(expected)
+      end
+
+      it "can be restarted to reflect new files" do
+        pipeline.invoke
+        age_existing_files
+
+        File.open(File.join(tmp, "app/javascripts/history.js"), "w") do |file|
+          file.write "var History = {};\n"
+        end
+
+        pipeline.invoke_clean
+
+        expected = <<-HERE.gsub(/^ {10}/, '')
+          var History = {};
+          var jQuery = {};
+          var SC = {};
+
+          SC.hi = function() { console.log("hi"); };
+        HERE
+
+        output_should_exist(expected)
       end
     end
 
-    it "can be configured using the pipeline DSL" do
-      pipeline.invoke
-      output_should_exist
-    end
+    describe "the raw pipeline DSL" do
+      it_behaves_like "the pipeline DSL"
 
-    it "can be configured using the pipeline DSL with an alternate Rake application" do
-      pipeline.rake_application = Rake::Application.new
-      pipeline.invoke
-      output_should_exist
-    end
-
-    it "can be invoked repeatedly to reflected updated changes" do
-      pipeline.invoke
-      age_existing_files
-
-      File.open(File.join(tmp, "app/javascripts/jquery.js"), "w") do |file|
-        file.write "var jQuery = {};\njQuery.trim = function() {};\n"
+      before do
+        @pipeline = Rake::Pipeline.build do
+          tmpdir "temporary"
+          input tmp, "app/javascripts/*.js"
+          filter(ConcatFilter) { "javascripts/application.js" }
+          filter(StripAssertsFilter) { |input| input }
+          output "public"
+        end
       end
-
-      expected = <<-HERE.gsub(/^ {8}/, '')
-        var jQuery = {};
-        jQuery.trim = function() {};
-        var SC = {};
-
-        SC.hi = function() { console.log("hi"); };
-      HERE
-
-      pipeline.invoke
-
-      output_should_exist(expected)
     end
 
-    it "can be restarted to reflect new files" do
-      pipeline.invoke
-      age_existing_files
+    describe "the raw pipeline DSL" do
+      it_behaves_like "the pipeline DSL"
 
-      File.open(File.join(tmp, "app/javascripts/history.js"), "w") do |file|
-        file.write "var History = {};\n"
+      before do
+        @pipeline = Rake::Pipeline.build do
+          tmpdir "temporary"
+          input tmp, "app/javascripts/*.js"
+          filter ConcatFilter, "javascripts/application.js"
+          filter StripAssertsFilter
+          output "public"
+        end
       end
-
-      pipeline.invoke_clean
-
-      expected = <<-HERE.gsub(/^ {8}/, '')
-        var History = {};
-        var jQuery = {};
-        var SC = {};
-
-        SC.hi = function() { console.log("hi"); };
-      HERE
-
-      output_should_exist(expected)
     end
   end
 end
