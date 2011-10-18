@@ -13,17 +13,11 @@ module Rake
 
         pipeline_source = File.read(config)
 
-        @pipelines = []
-
-        instance_eval pipeline_source, config, 1
+        pipeline = Pipeline.class_eval "build do\n#{pipeline_source}\nend", config, 1
 
         pipeline_app = Middleware.new(not_found)
-        pipeline_app.pipelines = @pipelines
+        pipeline_app.pipeline = pipeline
         pipeline_app
-      end
-
-      def pipeline(&block)
-        @pipelines << Pipeline.build(&block)
       end
     end
   end

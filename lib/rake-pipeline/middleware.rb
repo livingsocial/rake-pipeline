@@ -3,20 +3,18 @@ require "rack"
 module Rake
   class Pipeline
     class Middleware
-      attr_accessor :pipelines
+      attr_accessor :pipeline
 
       def initialize(app)
         @app = app
-        @pipelines = []
+        @pipeline = nil
       end
 
       def call(env)
-        for pipeline in @pipelines
-          pipeline.invoke_clean
+        pipeline.invoke_clean
 
-          path = env["PATH_INFO"]
-          file = Dir[File.join(pipeline.output_root, path)].first
-        end
+        path = env["PATH_INFO"]
+        file = Dir[File.join(pipeline.output_root, path)].first
 
         if file
           content_type = Rack::Mime.mime_type(File.extname(path), "text/plain")
