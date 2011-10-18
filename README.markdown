@@ -127,7 +127,7 @@ at the same files in both development and production.
 To compile all assets before deployment, simply run:
 
 ```
-rakep build
+$ rakep build
 ```
 
 # Encodings
