@@ -113,6 +113,15 @@ This will stop `Rake::Pipeline` from trying to interpret the
 input files as `UTF-8`, which obviously will not work on
 binary data.
 
+# Preview Server
+
+To start up the preview server, run `rakep`. This will start up
+a server that automatically recompiles files for you on the fly
+and serves up the files you need.
+
+This should allow you to have a single index.html file pointing
+at the same files in both development and production.
+
 # Encodings
 
 If a filter does not specify that it processes binary files,
