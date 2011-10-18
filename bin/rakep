@@ -23,4 +23,11 @@ module Rake
   end
 end
 
-Rake::Pipeline::Server.new.start
+if ARGV[0] == "build"
+  config = "rake_pipeline_config.rb"
+  pipeline_source = File.read(config)
+  pipeline = Rake::Pipeline.class_eval "build do\n#{pipeline_source}\nend", config, 1
+  pipeline.invoke
+else
+  Rake::Pipeline::Server.new.start
+end

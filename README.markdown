@@ -122,6 +122,14 @@ and serves up the files you need.
 This should allow you to have a single index.html file pointing
 at the same files in both development and production.
 
+# Compiling Assets
+
+To compile all assets before deployment, simply run:
+
+```
+rakep build
+```
+
 # Encodings
 
 If a filter does not specify that it processes binary files,
