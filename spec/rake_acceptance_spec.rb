@@ -1,7 +1,6 @@
 require "rake-pipeline/filters"
 
 describe "A realistic pipeline" do
-  ConcatFilter = Rake::Pipeline::ConcatFilter
 
 INPUTS = {
 
@@ -44,14 +43,6 @@ EXPECTED_CSS_OUTPUT = <<-HERE
   color: green;
 }
 HERE
-
-  class StripAssertsFilter < Rake::Pipeline::Filter
-    def generate_output(inputs, output)
-      inputs.each do |input|
-        output.write input.read.gsub(%r{^\s*assert\(.*\)\s*;?\s*$}m, '')
-      end
-    end
-  end
 
   before do
     Rake.application = Rake::Application.new

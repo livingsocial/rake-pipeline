@@ -8,6 +8,14 @@ module Rake
 
       attr_writer :rake_application
 
+      def self.processes_binary_files
+        define_method(:encoding) { "BINARY" }
+      end
+
+      def encoding
+        "UTF-8"
+      end
+
       def outputs
         hash = {}
 
@@ -46,11 +54,11 @@ module Rake
 
     private
       def input_wrapper(file)
-        FileWrapper.new(input_root, file)
+        FileWrapper.new(input_root, file, encoding)
       end
 
       def output_wrapper(file)
-        FileWrapper.new(output_root, file)
+        FileWrapper.new(output_root, file, encoding)
       end
     end
   end

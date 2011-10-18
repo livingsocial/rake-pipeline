@@ -1,5 +1,6 @@
 require "rake-pipeline/file_wrapper"
 require "rake-pipeline/filter"
+require "rake-pipeline/filters"
 
 module Rake
   class Task
@@ -11,6 +12,9 @@ module Rake
 
   class Pipeline
     class Error < StandardError
+    end
+
+    class EncodingError < Error
     end
 
     class DSL
@@ -54,9 +58,12 @@ module Rake
       end
 
       def files(glob, &block)
+        block ||= proc { filter Rake::Pipeline::ConcatFilter }
         new_pipeline = pipeline.build(&block)
         new_pipeline.input_files = glob
       end
+
+      alias file files
     end
 
     attr_accessor :input_files
@@ -71,7 +78,7 @@ module Rake
 
     def self.build(&block)
       pipeline = Pipeline.new
-      DSL.evaluate(pipeline, &block)
+      DSL.evaluate(pipeline, &block) if block
       pipeline
     end
 

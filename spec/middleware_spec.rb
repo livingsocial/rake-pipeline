@@ -1,16 +1,9 @@
 require "rake-pipeline/middleware"
+require "rake-pipeline/filters"
 require "rack/test"
 
 describe "Rake::Pipeline Middleware" do
   include Rack::Test::Methods
-
-  class ConcatFilter < Rake::Pipeline::Filter
-    def generate_output(inputs, output)
-      inputs.each do |input|
-        output.write input.read
-      end
-    end
-  end
 
   class StripAssertsFilter < Rake::Pipeline::Filter
     def generate_output(inputs, output)
@@ -20,7 +13,7 @@ describe "Rake::Pipeline Middleware" do
     end
   end
 
-  INPUTS = {
+  inputs = {
     "app/javascripts/jquery.js" => "var jQuery = {};\n",
 
     "app/javascripts/sproutcore.js" => <<-HERE.gsub(/^ {6}/, '')
@@ -30,7 +23,7 @@ describe "Rake::Pipeline Middleware" do
     HERE
   }
 
-  EXPECTED_OUTPUT = <<-HERE.gsub(/^ {4}/, '')
+  expected_output = <<-HERE.gsub(/^ {4}/, '')
     var jQuery = {};
     var SC = {};
 
@@ -43,7 +36,7 @@ describe "Rake::Pipeline Middleware" do
     app = lambda { |env| [404, {}, ['not found']] }
     middleware = Rake::Pipeline::Middleware.new(app)
 
-    INPUTS.each do |name, string|
+    inputs.each do |name, string|
       mkdir_p File.dirname(File.join(tmp, name))
       File.open(File.join(tmp, name), "w") { |file| file.write(string) }
     end
@@ -65,7 +58,7 @@ describe "Rake::Pipeline Middleware" do
   it "returns files relative to the output directory" do
     last_response.should be_ok
 
-    last_response.body.should == EXPECTED_OUTPUT
+    last_response.body.should == expected_output
     last_response.headers["Content-Type"].should == "application/javascript"
   end
 

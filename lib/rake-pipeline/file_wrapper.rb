@@ -12,17 +12,20 @@ module Rake
     # to worry about them.
     #
     # The root of a FileWrapper is always an absolute path.
-    class FileWrapper < Struct.new(:root, :path)
-      def initialize(*)
-        super
+    class FileWrapper
+      attr_accessor :root, :path, :encoding
+
+      def initialize(root=nil, path=nil, encoding="UTF-8")
+        @root, @path, @encoding = root, path, encoding
         @created_file = nil
       end
 
       # A FileWrapper is equal to another FileWrapper if they have the
       # same `root` and `path`
-      def ==(other)
+      def eql?(other)
         root == other.root && path == other.path
       end
+      alias == eql?
 
       # Similarly, generate a FileWrapper's hash from its `root` and
       # `path`.
@@ -41,12 +44,18 @@ module Rake
       end
 
       def read
-        File.read(fullpath)
+        contents = File.read(fullpath, :encoding => encoding)
+
+        unless contents.valid_encoding?
+          raise EncodingError, "The file at the path #{fullpath} is not valid UTF-8. Please save it again as UTF-8."
+        end
+
+        contents
       end
 
       def create
         FileUtils.mkdir_p(File.dirname(fullpath))
-        @created_file = File.open(fullpath, "w")
+        @created_file = File.open(fullpath, "w:#{encoding}")
 
         if block_given?
           yield @created_file
