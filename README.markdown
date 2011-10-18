@@ -113,6 +113,15 @@ This will stop `Rake::Pipeline` from trying to interpret the
 input files as `UTF-8`, which obviously will not work on
 binary data.
 
+# Built-In Filters
+
+At the current time, `Rake::Pipeline` comes with a single built-in
+filter: `Rake::Pipeline::ConcatFilter`. Its implementation is
+the same as the `ConcatFilter` shown above.
+
+You will usually use it to specify the output file for the files
+specified by a `file` or `files` block.
+
 # Preview Server
 
 To start up the preview server, run `rakep`. This will start up
