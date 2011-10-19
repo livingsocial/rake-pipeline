@@ -1,3 +1,10 @@
+require 'simplecov'
+SimpleCov.start do
+  add_group "lib", "lib"
+  add_group "spec", "spec"
+end
+
+
 require "rake-pipeline"
 require "rake-pipeline/filters"
 
