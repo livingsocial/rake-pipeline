@@ -41,6 +41,10 @@ module Rake
       "rake-pipeline-tmp-#{@tmp_id += 1}"
     end
 
+    def generate_tmpdir
+      File.join(tmpdir, self.class.generate_tmpname)
+    end
+
     def build(&block)
       pipeline = self.class.build(&block)
       pipeline.input_root = input_root
@@ -67,8 +71,8 @@ module Rake
 
     def input_files
       return @input_files || begin
-        unless input_root && input_glob
-          raise Rake::Pipeline::Error, "You cannot get relative input files without " \
+        if !input_root || !input_glob
+          raise Rake::Pipeline::Error, "You cannot get input files without " \
                                        "first providing input files and an input root"
         end
 
@@ -135,27 +139,26 @@ module Rake
 
   protected
     def setup_filters
-      return if @filters.empty?
+      last = @filters.last
 
-      current_input_files = input_files
-
-      (@filters + [nil]).each_cons(2) do |filter, next_filter|
-        filter.input_files = current_input_files
+      @filters.inject(input_files) do |current_inputs, filter|
+        filter.input_files = current_inputs
 
         # if filters are being reinvoked, they should keep their roots but
         # get updated with new files.
-        unless filter.output_root
-          if next_filter
-            tmp = File.expand_path(File.join(self.tmpdir, self.class.generate_tmpname))
-            filter.output_root = tmp
+        filter.output_root ||= begin
+          output = if filter == last
+            output_root
           else
-            filter.output_root = File.expand_path(output_root)
+            generate_tmpdir
           end
+
+          File.expand_path(output)
         end
 
         filter.setup_filters if filter.respond_to?(:setup_filters)
 
-        current_input_files = filter.output_files
+        filter.output_files
       end
     end
 
