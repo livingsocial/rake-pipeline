@@ -19,7 +19,7 @@ describe "Rake::Pipeline" do
 
   it "accepts a input root" do
     pipeline.input_root = "app/assets"
-    pipeline.input_root.should == "app/assets"
+    pipeline.input_root.should == File.expand_path("app/assets")
   end
 
   it "raises an exception on #relative_input_files if input_files are not provided" do
@@ -34,12 +34,12 @@ describe "Rake::Pipeline" do
 
   it "accepts a temporary directory" do
     pipeline.tmpdir = "tmp"
-    pipeline.tmpdir.should == "tmp"
+    pipeline.tmpdir.should == File.expand_path("tmp")
   end
 
   it "accepts an output directory" do
     pipeline.output_root = "public"
-    pipeline.output_root.should == "public"
+    pipeline.output_root.should == File.expand_path("public")
   end
 
   it "accepts a rake application" do
@@ -57,7 +57,7 @@ describe "Rake::Pipeline" do
     pipeline.add_filter filter
   end
 
-  describe "when working with input" do
+  shared_examples_for "when working with input" do
     def input_file(path, root=File.join(tmp, "app/assets"))
       Rake::Pipeline::FileWrapper.new root, path
     end
@@ -80,7 +80,7 @@ describe "Rake::Pipeline" do
       end
 
       pipeline.input_root = "app/assets"
-      pipeline.input_glob = "javascripts/**/*.js"
+      setup_input(pipeline)
       pipeline.output_root = "public"
     end
 
@@ -119,12 +119,12 @@ describe "Rake::Pipeline" do
 
         tasks.size.should == 1
         task = tasks[0]
-        task.name.should == File.join(tmp, pipeline.output_root, "javascripts/application.js")
+        task.name.should == File.join(pipeline.output_root, "javascripts/application.js")
 
         deps = task.prerequisites
         deps.size.should == 2
-        deps[0].should == File.join(tmp, pipeline.input_root, "javascripts/jquery.js")
-        deps[1].should == File.join(tmp, pipeline.input_root, "javascripts/sproutcore.js")
+        deps[0].should == File.join(pipeline.input_root, "javascripts/jquery.js")
+        deps[1].should == File.join(pipeline.input_root, "javascripts/sproutcore.js")
 
         Rake.application.tasks.size.should == 3
       end
@@ -135,6 +135,60 @@ describe "Rake::Pipeline" do
         tasks = pipeline.rake_tasks
 
         Rake.application.tasks.size.should == 0
+      end
+    end
+
+    describe "using nested pipelines" do
+      it "wires up the filters correctly" do
+        concat = ConcatFilter.new
+        concat.output_name = proc { |input| "javascripts/application.js" }
+
+        pipeline.add_filter concat
+
+        sub_pipeline = Rake::Pipeline.new
+
+        strip_asserts = StripAssertsFilter.new
+        strip_asserts.output_name = proc { |input| input }
+
+        sub_pipeline.add_filter strip_asserts
+        pipeline.add_filter sub_pipeline
+
+        sub_pipeline.rake_application.should == pipeline.rake_application
+
+        pipeline.rake_tasks
+
+        concat.input_files.should == pipeline.input_files
+        sub_pipeline.input_files.should == concat.output_files
+        strip_asserts.input_files.should == sub_pipeline.input_files
+
+        sub_pipeline.input_files.each { |file| file.root.should == concat.output_root }
+        strip_asserts.input_files.each { |file| file.root.should == concat.output_root }
+
+        strip_asserts.output_root.should == sub_pipeline.output_root
+        sub_pipeline.output_root.should == pipeline.output_root
+        sub_pipeline.output_files.should == pipeline.output_files
+      end
+    end
+  end
+
+  describe "using a glob for input files" do
+    it_behaves_like "when working with input"
+
+    def setup_input(pipeline)
+      pipeline.input_glob = "javascripts/**/*.js"
+    end
+  end
+
+  describe "using an array for input files" do
+    it_behaves_like "when working with input"
+
+    def setup_input(pipeline)
+      Dir.chdir("app/assets") do
+        files = Dir["javascripts/**/*.js"]
+        wrappers = files.map do |file|
+          Rake::Pipeline::FileWrapper.new(File.join(tmp, "app/assets"), file)
+        end
+        pipeline.input_files = wrappers
       end
     end
   end

@@ -2,6 +2,7 @@ require "rake-pipeline/file_wrapper"
 require "rake-pipeline/filter"
 require "rake-pipeline/filters"
 require "rake-pipeline/dsl"
+require "rake-pipeline/matcher"
 
 module Rake
   class Task
@@ -19,7 +20,7 @@ module Rake
     end
 
     attr_accessor :input_glob
-    attr_reader   :input_root, :output_root, :tmpdir
+    attr_reader   :input_root, :output_root, :output_files, :tmpdir
 
     def initialize
       @filters = []
@@ -43,40 +44,46 @@ module Rake
     def build(&block)
       pipeline = self.class.build(&block)
       pipeline.input_root = input_root
-      pipeline.output_root = output_root
+      pipeline.output_root = File.expand_path(output_root)
       pipeline.tmpdir = tmpdir
       @pipelines << pipeline
       pipeline
     end
 
     def input_root=(root)
-      @input_root = root
+      @input_root = File.expand_path(root)
       @pipelines.each { |pipeline| pipeline.input_root = root }
     end
 
     def output_root=(root)
-      @output_root = root
+      @output_root = File.expand_path(root)
       @pipelines.each { |pipeline| pipeline.output_root = root }
     end
 
     def tmpdir=(dir)
-      @tmpdir = dir
+      @tmpdir = File.expand_path(dir)
       @pipelines.each { |pipeline| pipeline.tmpdir = dir }
     end
 
     def input_files
-      unless input_root && input_glob
-        raise Rake::Pipeline::Error, "You cannot get relative input files without " \
-                                     "first providing input files and an input root"
-      end
+      return @input_files || begin
+        unless input_root && input_glob
+          raise Rake::Pipeline::Error, "You cannot get relative input files without " \
+                                       "first providing input files and an input root"
+        end
 
-      expanded_root = File.expand_path(input_root)
-      files = Dir[File.join(expanded_root, input_glob)]
+        expanded_root = File.expand_path(input_root)
+        files = Dir[File.join(expanded_root, input_glob)]
 
-      files.map do |file|
-        relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
-        FileWrapper.new(expanded_root, relative_path)
+        files.map do |file|
+          relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
+          FileWrapper.new(expanded_root, relative_path)
+        end
       end
+    end
+
+    def input_files=(files)
+      @input_files = files
     end
 
     def rake_application
@@ -124,6 +131,10 @@ module Rake
       end
     end
 
+    def output_files
+      @filters.last.output_files unless @filters.empty?
+    end
+
   private
     def process_filters
       return if @filters.empty?
@@ -147,5 +158,9 @@ module Rake
         current_input_files = filter.output_files
       end
     end
+
+    # for Pipelines, this is every file, but it may be overridden
+    # by subclasses
+    alias eligible_input_files input_files
   end
 end
