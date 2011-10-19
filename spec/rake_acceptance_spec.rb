@@ -209,7 +209,7 @@ HERE
       before do
         @pipeline = Rake::Pipeline.build do
           tmpdir "temporary"
-          input tmp
+          input tmp, "**/*.{js,css}"
           output "public"
 
           files "app/javascripts/*.js" do
