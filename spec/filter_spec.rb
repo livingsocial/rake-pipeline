@@ -117,6 +117,7 @@ describe "Rake::Pipeline::Filter" do
       app = Rake::Application.new
       filter.rake_application = app
       filter.output_name = proc { |input| input }
+      filter.generate_rake_tasks
       tasks = filter.rake_tasks
 
       input_files.each do |file|
@@ -138,6 +139,7 @@ describe "Rake::Pipeline::Filter" do
         filter_runs += 1
       end
 
+      filter.generate_rake_tasks
       tasks = filter.rake_tasks
       tasks.should == [output_task("javascripts/application.js")]
       tasks[0].prerequisites.should == input_files.map { |i| i.fullpath }
@@ -158,6 +160,7 @@ describe "Rake::Pipeline::Filter" do
         filter_runs += 1
       end
 
+      filter.generate_rake_tasks
       tasks = filter.rake_tasks
       tasks.should == input_files.map { |file| output_task(file.path) }
       tasks.each_with_index do |task, index|
@@ -187,6 +190,7 @@ describe "Rake::Pipeline::Filter" do
         filter_runs += 1
       end
 
+      filter.generate_rake_tasks
       tasks = filter.rake_tasks
       tasks.should == [output_task("javascripts/jquery.js"), output_task("javascripts/sproutcore.js")]
 

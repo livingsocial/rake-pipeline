@@ -81,8 +81,8 @@ HERE
     strip_asserts.output_root = File.join(tmp, "public")
     strip_asserts.output_name = proc { |input| input }
 
-    concat.rake_tasks
-    Rake::Task.define_task(:default => strip_asserts.rake_tasks)
+    concat.generate_rake_tasks
+    Rake::Task.define_task(:default => strip_asserts.generate_rake_tasks)
     Rake.application[:default].invoke
 
     output_should_exist

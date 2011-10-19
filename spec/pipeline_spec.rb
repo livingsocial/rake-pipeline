@@ -96,7 +96,7 @@ describe "Rake::Pipeline" do
       strip_asserts.output_name = proc { |input| input }
 
       pipeline.add_filters concat, strip_asserts
-      pipeline.rake_tasks
+      pipeline.setup
 
       concat.input_files.should == pipeline.input_files
       strip_asserts.input_files.each { |file| file.root.should == concat.output_root }
@@ -115,6 +115,7 @@ describe "Rake::Pipeline" do
       end
 
       it "generates rake tasks in Rake.application" do
+        pipeline.setup
         tasks = pipeline.rake_tasks
 
         tasks.size.should == 1
@@ -132,6 +133,7 @@ describe "Rake::Pipeline" do
       it "generates rake tasks is an alternate Rake::Application" do
         app = Rake::Application.new
         pipeline.rake_application = app
+        pipeline.setup
         tasks = pipeline.rake_tasks
 
         Rake.application.tasks.size.should == 0
@@ -155,6 +157,7 @@ describe "Rake::Pipeline" do
 
         sub_pipeline.rake_application.should == pipeline.rake_application
 
+        pipeline.setup
         pipeline.rake_tasks
 
         concat.input_files.should == pipeline.input_files

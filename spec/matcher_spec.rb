@@ -43,7 +43,7 @@ describe "a matcher" do
     concat.output_name = proc { |input| "app.js" }
     @matcher.add_filter concat
 
-    @matcher.rake_tasks
+    @matcher.setup
 
     @matcher.output_files.should == [
       file_wrapper("app.js", File.join(tmp, "tmp1")),

@@ -20,7 +20,7 @@ module Rake
     end
 
     attr_accessor :input_glob
-    attr_reader   :input_root, :output_root, :output_files, :tmpdir
+    attr_reader   :input_root, :output_root, :output_files, :tmpdir, :rake_tasks
 
     def initialize
       @filters = []
@@ -82,6 +82,10 @@ module Rake
       end
     end
 
+    # for Pipelines, this is every file, but it may be overridden
+    # by subclasses
+    alias eligible_input_files input_files
+
     def input_files=(files)
       @input_files = files
     end
@@ -105,8 +109,10 @@ module Rake
     def invoke(invoke_children=true)
       self.rake_application = Rake::Application.new unless @rake_application
 
-      rake_tasks.each { |task| task.recursively_reenable(rake_application) }
-      rake_tasks.each { |task| task.invoke }
+      setup
+
+      @rake_tasks.each { |task| task.recursively_reenable(rake_application) }
+      @rake_tasks.each { |task| task.invoke }
 
       @pipelines.each { |pipeline| pipeline.invoke } if invoke_children
     end
@@ -118,25 +124,17 @@ module Rake
       @pipelines.each { |pipeline| pipeline.invoke_clean }
     end
 
-    def rake_tasks
-      @rake_tasks ||= begin
-        tasks = []
-        process_filters
-
-        @filters.each do |filter|
-          tasks = filter.rake_tasks
-        end
-
-        tasks
-      end
+    def setup
+      setup_filters
+      generate_rake_tasks
     end
 
     def output_files
       @filters.last.output_files unless @filters.empty?
     end
 
-  private
-    def process_filters
+  protected
+    def setup_filters
       return if @filters.empty?
 
       current_input_files = input_files
@@ -155,12 +153,24 @@ module Rake
           end
         end
 
+        filter.setup_filters if filter.respond_to?(:setup_filters)
+
         current_input_files = filter.output_files
       end
     end
 
-    # for Pipelines, this is every file, but it may be overridden
-    # by subclasses
-    alias eligible_input_files input_files
+    def generate_rake_tasks
+      @rake_tasks ||= begin
+        tasks = []
+
+        @filters.each do |filter|
+          # TODO: Don't generate rake tasks if we aren't
+          # creating a new Rake::Application
+          tasks = filter.generate_rake_tasks
+        end
+
+        tasks
+      end
+    end
   end
 end

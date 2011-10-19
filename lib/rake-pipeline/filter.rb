@@ -4,6 +4,7 @@ module Rake
   class Pipeline
     class Filter
       attr_accessor :input_files, :output_name, :output_root
+      attr_reader :rake_tasks
       attr_writer :rake_application
 
       def self.processes_binary_files
@@ -43,8 +44,8 @@ module Rake
         @rake_application || Rake.application
       end
 
-      def rake_tasks
-        outputs.map do |output, inputs|
+      def generate_rake_tasks
+        @rake_tasks = outputs.map do |output, inputs|
           prerequisites = inputs.map(&:fullpath)
           prerequisites.each { |path| rake_application.define_task(Rake::FileTask, path) }
 
