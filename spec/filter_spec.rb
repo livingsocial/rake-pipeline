@@ -37,8 +37,8 @@ describe "Rake::Pipeline::Filter" do
 
   it "accepts a proc to convert the input name into an output name" do
     conversion = proc { |input| input }
-    filter.output_name = conversion
-    filter.output_name.should == conversion
+    filter.output_name_generator = conversion
+    filter.output_name_generator.should == conversion
   end
 
   describe "using the output_name proc to converting the input names into a hash" do
@@ -48,8 +48,8 @@ describe "Rake::Pipeline::Filter" do
     end
 
     it "with a simple output_name proc that outputs to a single file" do
-      output_name = proc { |input| "application.js" }
-      filter.output_name = output_name
+      output_name_generator = proc { |input| "application.js" }
+      filter.output_name_generator = output_name_generator
 
       filter.outputs.should == {
         output_file("application.js") => input_files
@@ -59,8 +59,8 @@ describe "Rake::Pipeline::Filter" do
     end
 
     it "with a 1:1 output_name proc" do
-      output_name = proc { |input| input }
-      filter.output_name = output_name
+      output_name_generator = proc { |input| input }
+      filter.output_name_generator = output_name_generator
       outputs = filter.outputs
 
       outputs.keys.should == input_files.map { |f| output_file(f.path) }
@@ -70,8 +70,8 @@ describe "Rake::Pipeline::Filter" do
     end
 
     it "with a more complicated proc" do
-      output_name = proc { |input| input.split(/[-.]/, 2).first + ".js" }
-      filter.output_name = output_name
+      output_name_generator = proc { |input| input.split(/[-.]/, 2).first + ".js" }
+      filter.output_name_generator = output_name_generator
       outputs = filter.outputs
 
       outputs.keys.should == [output_file("jquery.js"), output_file("sproutcore.js")]
@@ -116,7 +116,7 @@ describe "Rake::Pipeline::Filter" do
     it "does not generate Rake tasks onto Rake.application if an alternate application is supplied" do
       app = Rake::Application.new
       filter.rake_application = app
-      filter.output_name = proc { |input| input }
+      filter.output_name_generator = proc { |input| input }
       filter.generate_rake_tasks
       tasks = filter.rake_tasks
 
@@ -131,7 +131,7 @@ describe "Rake::Pipeline::Filter" do
     it "with a simple output_name proc that outputs to a single file" do
       filter_runs = 0
 
-      filter.output_name = proc { |input| "javascripts/application.js" }
+      filter.output_name_generator = proc { |input| "javascripts/application.js" }
       filter.generate_output_block = proc do |inputs, output|
         inputs.should == input_files
         output.should == output_file("javascripts/application.js")
@@ -152,7 +152,7 @@ describe "Rake::Pipeline::Filter" do
     it "with a 1:1 output_name proc" do
       filter_runs = 0
 
-      filter.output_name = proc { |input| input }
+      filter.output_name_generator = proc { |input| input }
       filter.generate_output_block = proc do |inputs, output|
         inputs.should == [input_files[filter_runs]]
         output.should == output_file(input_files[filter_runs].path)
@@ -175,7 +175,7 @@ describe "Rake::Pipeline::Filter" do
     it "with a more complicated proc" do
       filter_runs = 0
 
-      filter.output_name = proc { |input| input.match(%r{javascripts/[^-.]*})[0] + ".js" }
+      filter.output_name_generator = proc { |input| input.match(%r{javascripts/[^-.]*})[0] + ".js" }
       filter.generate_output_block = proc do |inputs, output|
         if output.path == "javascripts/jquery.js"
           inputs.should == [input_file("javascripts/jquery.js"), input_file("javascripts/jquery-ui.js")]

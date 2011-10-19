@@ -74,12 +74,12 @@ HERE
     concat = concat_filter.new
     concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
     concat.output_root = File.join(tmp, "temporary", "concat_filter")
-    concat.output_name = proc { |input| "javascripts/application.js" }
+    concat.output_name_generator = proc { |input| "javascripts/application.js" }
 
     strip_asserts = strip_asserts_filter.new
     strip_asserts.input_files = concat.output_files
     strip_asserts.output_root = File.join(tmp, "public")
-    strip_asserts.output_name = proc { |input| input }
+    strip_asserts.output_name_generator = proc { |input| input }
 
     concat.generate_rake_tasks
     Rake::Task.define_task(:default => strip_asserts.generate_rake_tasks)
@@ -96,10 +96,10 @@ HERE
     pipeline.tmpdir = "temporary"
 
     concat = concat_filter.new
-    concat.output_name = proc { |input| "javascripts/application.js" }
+    concat.output_name_generator = proc { |input| "javascripts/application.js" }
 
     strip_asserts = strip_asserts_filter.new
-    strip_asserts.output_name = proc { |input| input }
+    strip_asserts.output_name_generator = proc { |input| input }
 
     pipeline.add_filters(concat, strip_asserts)
     pipeline.invoke

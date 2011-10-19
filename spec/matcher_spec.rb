@@ -40,7 +40,7 @@ describe "a matcher" do
     @matcher.output_root = "tmp1"
 
     concat = Rake::Pipeline::ConcatFilter.new
-    concat.output_name = proc { |input| "app.js" }
+    concat.output_name_generator = proc { |input| "app.js" }
     @matcher.add_filter concat
 
     @matcher.setup

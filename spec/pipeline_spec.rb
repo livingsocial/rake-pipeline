@@ -90,10 +90,10 @@ describe "Rake::Pipeline" do
 
     it "configures the filters with outputs and inputs with #rake_tasks" do
       concat = ConcatFilter.new
-      concat.output_name = proc { |input| "javascripts/application.js" }
+      concat.output_name_generator = proc { |input| "javascripts/application.js" }
 
       strip_asserts = StripAssertsFilter.new
-      strip_asserts.output_name = proc { |input| input }
+      strip_asserts.output_name_generator = proc { |input| input }
 
       pipeline.add_filters concat, strip_asserts
       pipeline.setup
@@ -110,7 +110,7 @@ describe "Rake::Pipeline" do
 
       before do
         concat = ConcatFilter.new
-        concat.output_name = proc { |input| "javascripts/application.js" }
+        concat.output_name_generator = proc { |input| "javascripts/application.js" }
         pipeline.add_filter concat
       end
 
@@ -143,14 +143,14 @@ describe "Rake::Pipeline" do
     describe "using nested pipelines" do
       it "wires up the filters correctly" do
         concat = ConcatFilter.new
-        concat.output_name = proc { |input| "javascripts/application.js" }
+        concat.output_name_generator = proc { |input| "javascripts/application.js" }
 
         pipeline.add_filter concat
 
         sub_pipeline = Rake::Pipeline.new
 
         strip_asserts = StripAssertsFilter.new
-        strip_asserts.output_name = proc { |input| input }
+        strip_asserts.output_name_generator = proc { |input| input }
 
         sub_pipeline.add_filter strip_asserts
         pipeline.add_filter sub_pipeline

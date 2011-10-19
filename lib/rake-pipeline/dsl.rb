@@ -25,7 +25,7 @@ module Rake
         end
 
         filter = filter_class.new
-        filter.output_name = block
+        filter.output_name_generator = block
         pipeline.add_filter(filter)
       end
 
@@ -44,7 +44,6 @@ module Rake
       def files(glob, &block)
         block ||= proc { filter Rake::Pipeline::ConcatFilter }
         new_pipeline = pipeline.build(&block)
-        new_pipeline.input_root = pipeline.input_root
         new_pipeline.input_glob = glob
       end
 
