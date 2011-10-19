@@ -7,17 +7,16 @@ describe "Rake::Pipeline::Filter" do
     Rake::Pipeline::FileWrapper.new(file_root, path)
   end
 
-  let(:filter) { Rake::Pipeline::Filter.new }
-
-  it "accepts a list of input files" do
-    filter.input_files = []
-    filter.input_files.should == []
+  let(:filter)      { Rake::Pipeline::Filter.new }
+  let(:input_root)  { File.join(tmp, "app/assets") }
+  let(:output_root) { File.join(tmp, "filter1/app/assets") }
+  let(:input_files) do
+    %w(jquery.js jquery-ui.js sproutcore.js).map { |f| input_file(f) }
   end
 
-  it "accepts a root directory for the inputs" do
-    path = File.expand_path(tmp, "app/assets")
-    filter.input_root = path
-    filter.input_root.should == path
+  it "accepts a series of FileWrapper objects for the input" do
+    filter.input_files = input_files
+    filter.input_files.should == input_files
   end
 
   it "accepts a root directory for the outputs" do
@@ -43,12 +42,7 @@ describe "Rake::Pipeline::Filter" do
   end
 
   describe "using the output_name proc to converting the input names into a hash" do
-    let(:input_files) { %w(jquery.js jquery-ui.js sproutcore.js) }
-    let(:input_root)  { File.join(tmp, "app/assets") }
-    let(:output_root) { File.join(tmp, "filter1/app/assets") }
-
     before do
-      filter.input_root = input_root
       filter.output_root = output_root
       filter.input_files = input_files
     end
@@ -58,11 +52,10 @@ describe "Rake::Pipeline::Filter" do
       filter.output_name = output_name
 
       filter.outputs.should == {
-        output_file("application.js") => 
-          input_files.map { |i| input_file(i) }
+        output_file("application.js") => input_files
       }
 
-      filter.output_files.should == [output_file("application.js").path]
+      filter.output_files.should == [output_file("application.js")]
     end
 
     it "with a 1:1 output_name proc" do
@@ -70,10 +63,10 @@ describe "Rake::Pipeline::Filter" do
       filter.output_name = output_name
       outputs = filter.outputs
 
-      outputs.keys.should == input_files.map { |f| output_file(f) }
-      outputs.values.should == input_files.map { |f| [input_file(f)] }
+      outputs.keys.should == input_files.map { |f| output_file(f.path) }
+      outputs.values.should == input_files.map { |f| [f] }
 
-      filter.output_files.should == input_files.map { |f| output_file(f).path }
+      filter.output_files.should == input_files.map { |file| output_file(file.path) }
     end
 
     it "with a more complicated proc" do
@@ -84,7 +77,7 @@ describe "Rake::Pipeline::Filter" do
       outputs.keys.should == [output_file("jquery.js"), output_file("sproutcore.js")]
       outputs.values.should == [[input_file("jquery.js"), input_file("jquery-ui.js")], [input_file("sproutcore.js")]]
 
-      filter.output_files.should == [output_file("jquery.js").path, output_file("sproutcore.js").path]
+      filter.output_files.should == [output_file("jquery.js"), output_file("sproutcore.js")]
     end
   end
 
@@ -97,18 +90,17 @@ describe "Rake::Pipeline::Filter" do
       end
     end
 
-    def input_path(path)
-      File.join(input_root, path)
-    end
-
     let(:filter)      { TestFilter.new }
-    let(:input_files) { %w(javascripts/jquery.js javascripts/jquery-ui.js javascripts/sproutcore.js) }
     let(:input_root)  { File.join(tmp, "app/assets") }
     let(:output_root) { File.join(tmp, "filter1/app/assets") }
+    let(:input_files) do
+      %w(jquery.js jquery-ui.js sproutcore.js).map do |file|
+        input_file("javascripts/#{file}")
+      end
+    end
 
     before do
       Rake.application = Rake::Application.new
-      filter.input_root = input_root
       filter.output_root = output_root
       filter.input_files = input_files
     end
@@ -127,8 +119,8 @@ describe "Rake::Pipeline::Filter" do
       filter.output_name = proc { |input| input }
       tasks = filter.rake_tasks
 
-      input_files.each do |path|
-        task = output_task(path, app)
+      input_files.each do |file|
+        task = output_task(file.path, app)
         tasks.include?(task).should == true
         Rake.application.tasks.include?(task).should == false
         app.tasks.include?(task).should == true
@@ -140,7 +132,7 @@ describe "Rake::Pipeline::Filter" do
 
       filter.output_name = proc { |input| "javascripts/application.js" }
       filter.generate_output_block = proc do |inputs, output|
-        inputs.should == input_files.map { |i| input_file(i) }
+        inputs.should == input_files
         output.should == output_file("javascripts/application.js")
 
         filter_runs += 1
@@ -148,7 +140,7 @@ describe "Rake::Pipeline::Filter" do
 
       tasks = filter.rake_tasks
       tasks.should == [output_task("javascripts/application.js")]
-      tasks[0].prerequisites.should == input_files.map { |i| input_path(i) }
+      tasks[0].prerequisites.should == input_files.map { |i| i.fullpath }
 
       tasks.each(&:invoke)
 
@@ -160,16 +152,16 @@ describe "Rake::Pipeline::Filter" do
 
       filter.output_name = proc { |input| input }
       filter.generate_output_block = proc do |inputs, output|
-        inputs.should == [input_file(input_files[filter_runs])]
-        output.should == output_file(input_files[filter_runs])
+        inputs.should == [input_files[filter_runs]]
+        output.should == output_file(input_files[filter_runs].path)
 
         filter_runs += 1
       end
 
       tasks = filter.rake_tasks
-      tasks.should == input_files.map { |path| output_task(path) }
+      tasks.should == input_files.map { |file| output_task(file.path) }
       tasks.each_with_index do |task, index|
-        task.prerequisites.should == [input_path(input_files[index])]
+        task.prerequisites.should == [input_files[index].fullpath]
       end
 
       tasks.each(&:invoke)
@@ -199,11 +191,11 @@ describe "Rake::Pipeline::Filter" do
       tasks.should == [output_task("javascripts/jquery.js"), output_task("javascripts/sproutcore.js")]
 
       tasks[0].prerequisites.should == [
-        input_path("javascripts/jquery.js"),
-        input_path("javascripts/jquery-ui.js")
+        File.join(input_root, "javascripts/jquery.js"),
+        File.join(input_root, "javascripts/jquery-ui.js")
       ]
 
-      tasks[1].prerequisites.should == [input_path("javascripts/sproutcore.js")]
+      tasks[1].prerequisites.should == [File.join(input_root, "javascripts/sproutcore.js")]
 
       tasks.each(&:invoke)
 

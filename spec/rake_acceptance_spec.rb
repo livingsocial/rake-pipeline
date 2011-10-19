@@ -53,6 +53,10 @@ HERE
     end
   end
 
+  def input_wrapper(path)
+    Rake::Pipeline::FileWrapper.new(tmp, path)
+  end
+
   def output_should_exist(expected = EXPECTED_JS_OUTPUT)
     output = File.join(tmp, "public/javascripts/application.js")
     temp   = File.join(tmp, "temporary")
@@ -63,16 +67,17 @@ HERE
     File.read(output).should == expected
   end
 
+  concat_filter = Rake::Pipeline::ConcatFilter
+  strip_asserts_filter = Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
+
   it "can successfully apply filters" do
-    concat = ConcatFilter.new
-    concat.input_root = tmp
-    concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }
+    concat = concat_filter.new
+    concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
     concat.output_root = File.join(tmp, "temporary", "concat_filter")
     concat.output_name = proc { |input| "javascripts/application.js" }
 
-    strip_asserts = StripAssertsFilter.new
-    strip_asserts.input_root = concat.output_root
-    strip_asserts.input_files = concat.outputs.keys.map { |file| file.path }
+    strip_asserts = strip_asserts_filter.new
+    strip_asserts.input_files = concat.output_files
     strip_asserts.output_root = File.join(tmp, "public")
     strip_asserts.output_name = proc { |input| input }
 
@@ -87,13 +92,13 @@ HERE
     pipeline = Rake::Pipeline.new
     pipeline.input_root = File.expand_path(tmp)
     pipeline.output_root = File.expand_path("public")
-    pipeline.input_files = "app/javascripts/*.js"
+    pipeline.input_glob = "app/javascripts/*.js"
     pipeline.tmpdir = "temporary"
 
-    concat = ConcatFilter.new
+    concat = concat_filter.new
     concat.output_name = proc { |input| "javascripts/application.js" }
 
-    strip_asserts = StripAssertsFilter.new
+    strip_asserts = strip_asserts_filter.new
     strip_asserts.output_name = proc { |input| input }
 
     pipeline.add_filters(concat, strip_asserts)
@@ -134,9 +139,7 @@ HERE
           SC.hi = function() { console.log("hi"); };
         HERE
 
-        $billy = true
         pipeline.invoke
-        $billy = false
 
         output_should_exist(expected)
       end
@@ -170,8 +173,8 @@ HERE
         @pipeline = Rake::Pipeline.build do
           tmpdir "temporary"
           input tmp, "app/javascripts/*.js"
-          filter(ConcatFilter) { "javascripts/application.js" }
-          filter(StripAssertsFilter) { |input| input }
+          filter(concat_filter) { "javascripts/application.js" }
+          filter(strip_asserts_filter) { |input| input }
           output "public"
         end
       end
@@ -184,8 +187,8 @@ HERE
         @pipeline = Rake::Pipeline.build do
           tmpdir "temporary"
           input tmp, "app/javascripts/*.js"
-          filter ConcatFilter, "javascripts/application.js"
-          filter StripAssertsFilter
+          filter concat_filter, "javascripts/application.js"
+          filter strip_asserts_filter
           output "public"
         end
       end
@@ -210,12 +213,12 @@ HERE
           output "public"
 
           files "app/javascripts/*.js" do
-            filter ConcatFilter, "javascripts/application.js"
-            filter StripAssertsFilter
+            filter concat_filter, "javascripts/application.js"
+            filter strip_asserts_filter
           end
 
           files "app/stylesheets/*.css" do
-            filter ConcatFilter, "stylesheets/application.css"
+            filter concat_filter, "stylesheets/application.css"
           end
         end
       end

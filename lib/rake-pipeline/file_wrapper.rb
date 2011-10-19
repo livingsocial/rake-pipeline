@@ -23,6 +23,7 @@ module Rake
       # A FileWrapper is equal to another FileWrapper if they have the
       # same `root` and `path`
       def eql?(other)
+        return false unless other.is_a?(self.class)
         root == other.root && path == other.path
       end
       alias == eql?

@@ -1,6 +1,7 @@
 require "rake-pipeline/file_wrapper"
 require "rake-pipeline/filter"
 require "rake-pipeline/filters"
+require "rake-pipeline/dsl"
 
 module Rake
   class Task
@@ -17,56 +18,7 @@ module Rake
     class EncodingError < Error
     end
 
-    class DSL
-      attr_reader :pipeline
-
-      def self.evaluate(pipeline, &block)
-        new(pipeline).instance_eval(&block)
-      end
-
-      def initialize(pipeline)
-        @pipeline = pipeline
-      end
-
-      def input(root, files=nil)
-        pipeline.input_root = root
-        pipeline.input_files = files
-      end
-
-      def filter(filter_class, string=nil, &block)
-        block ||= if string
-          proc { string }
-        else
-          proc { |input| input }
-        end
-
-        filter = filter_class.new
-        filter.output_name = block
-        pipeline.add_filter(filter)
-      end
-
-      def output(root)
-        pipeline.output_root = root
-      end
-
-      def tmpdir(root)
-        pipeline.tmpdir = root
-      end
-
-      def rake_application(app)
-        pipeline.rake_application = app
-      end
-
-      def files(glob, &block)
-        block ||= proc { filter Rake::Pipeline::ConcatFilter }
-        new_pipeline = pipeline.build(&block)
-        new_pipeline.input_files = glob
-      end
-
-      alias file files
-    end
-
-    attr_accessor :input_files
+    attr_accessor :input_glob
     attr_reader   :input_root, :output_root, :tmpdir
 
     def initialize
@@ -112,17 +64,18 @@ module Rake
       @pipelines.each { |pipeline| pipeline.tmpdir = dir }
     end
 
-    def relative_input_files
-      unless input_root && input_files
+    def input_files
+      unless input_root && input_glob
         raise Rake::Pipeline::Error, "You cannot get relative input files without " \
                                      "first providing input files and an input root"
       end
 
-      expanded_root = Regexp.escape(File.expand_path(input_root))
+      expanded_root = File.expand_path(input_root)
+      files = Dir[File.join(expanded_root, input_glob)]
 
-      files = Dir[File.join(input_root, input_files)]
       files.map do |file|
-        File.expand_path(file).sub(%r{^#{expanded_root}/}, '')
+        relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
+        FileWrapper.new(expanded_root, relative_path)
       end
     end
 
@@ -175,8 +128,7 @@ module Rake
     def process_filters
       return if @filters.empty?
 
-      current_input_root = File.expand_path(input_root)
-      current_input_files = relative_input_files
+      current_input_files = input_files
 
       (@filters + [nil]).each_cons(2) do |filter, next_filter|
         filter.input_files = current_input_files
@@ -184,11 +136,9 @@ module Rake
         # if filters are being reinvoked, they should keep their roots but
         # get updated with new files.
         unless filter.output_root
-          filter.input_root = current_input_root
-
           if next_filter
             tmp = File.expand_path(File.join(self.tmpdir, self.class.generate_tmpname))
-            current_input_root = filter.output_root = tmp
+            filter.output_root = tmp
           else
             filter.output_root = File.expand_path(output_root)
           end

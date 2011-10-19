@@ -3,9 +3,7 @@ require "rake"
 module Rake
   class Pipeline
     class Filter
-      attr_accessor :input_files, :input_root
-      attr_accessor :output_name, :output_root
-
+      attr_accessor :input_files, :output_name, :output_root
       attr_writer :rake_application
 
       def self.processes_binary_files
@@ -16,14 +14,20 @@ module Rake
         "UTF-8"
       end
 
+      def input_files=(files)
+        @input_files = files.map do |file|
+          FileWrapper.new(file.root, file.path, encoding)
+        end
+      end
+
       def outputs
         hash = {}
 
         input_files.each do |file|
-          output = output_wrapper(output_name.call(file))
+          output = output_wrapper(output_name.call(file.path))
 
           hash[output] ||= []
-          hash[output] << input_wrapper(file)
+          hash[output] << file
         end
 
         hash
@@ -31,7 +35,7 @@ module Rake
 
       def output_files
         input_files.inject([]) do |array, file|
-          array |= [output_name.call(file)]
+          array |= [output_wrapper(output_name.call(file.path))]
         end
       end
 
@@ -53,10 +57,6 @@ module Rake
       end
 
     private
-      def input_wrapper(file)
-        FileWrapper.new(input_root, file, encoding)
-      end
-
       def output_wrapper(file)
         FileWrapper.new(output_root, file, encoding)
       end

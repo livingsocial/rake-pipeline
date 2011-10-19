@@ -24,12 +24,12 @@ describe "Rake::Pipeline" do
 
   it "raises an exception on #relative_input_files if input_files are not provided" do
     pipeline.input_root = "app/assets"
-    lambda { pipeline.relative_input_files }.should raise_error(Rake::Pipeline::Error)
+    lambda { pipeline.input_files }.should raise_error(Rake::Pipeline::Error)
   end
 
   it "raises an exception on #relative_input_files if input_root is not provided" do
-    pipeline.input_files = Dir["app/assets/javascripts/**/*.js"]
-    lambda { pipeline.relative_input_files }.should raise_error(Rake::Pipeline::Error)
+    pipeline.input_glob = "app/assets/javascripts/**/*.js"
+    lambda { pipeline.input_files }.should raise_error(Rake::Pipeline::Error)
   end
 
   it "accepts a temporary directory" do
@@ -58,26 +58,34 @@ describe "Rake::Pipeline" do
   end
 
   describe "when working with input" do
-    files = %w(javascripts/jquery.js javascripts/sproutcore.js)
+    def input_file(path, root=File.join(tmp, "app/assets"))
+      Rake::Pipeline::FileWrapper.new root, path
+    end
+
+    let(:files) do
+      %w(javascripts/jquery.js javascripts/sproutcore.js).map do |filename|
+        input_file(filename)
+      end
+    end
 
     before do
       Rake.application = Rake::Application.new
 
-      files.each do |filename|
-        mkdir_p File.join(tmp, "app/assets", File.dirname(filename))
+      files.each do |file|
+        mkdir_p File.dirname(file.fullpath)
 
-        File.open(File.join(tmp, "app/assets", filename), "w") do |file|
-          file.write "// This is #{filename}\n"
+        File.open(file.fullpath, "w") do |file|
+          file.write "// This is #{file.path}\n"
         end
       end
 
       pipeline.input_root = "app/assets"
-      pipeline.input_files = "javascripts/**/*.js"
+      pipeline.input_glob = "javascripts/**/*.js"
       pipeline.output_root = "public"
     end
 
     it "accepts a list of relative input files" do
-      pipeline.relative_input_files.should == files
+      pipeline.input_files.should == files
     end
 
     it "configures the filters with outputs and inputs with #rake_tasks" do
@@ -90,11 +98,10 @@ describe "Rake::Pipeline" do
       pipeline.add_filters concat, strip_asserts
       pipeline.rake_tasks
 
-      concat.input_root.should == File.expand_path(pipeline.input_root)
-      concat.input_files.should == pipeline.relative_input_files
-      concat.output_root.should == strip_asserts.input_root
+      concat.input_files.should == pipeline.input_files
+      strip_asserts.input_files.each { |file| file.root.should == concat.output_root }
 
-      strip_asserts.input_files.should == ["javascripts/application.js"]
+      strip_asserts.input_files.should == [input_file("javascripts/application.js", concat.output_root)]
       strip_asserts.output_root.should == File.expand_path(pipeline.output_root)
     end
 
