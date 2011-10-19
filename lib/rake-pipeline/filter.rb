@@ -46,18 +46,21 @@ module Rake
 
       def generate_rake_tasks
         @rake_tasks = outputs.map do |output, inputs|
-          prerequisites = inputs.map(&:fullpath)
-          prerequisites.each { |path| rake_application.define_task(Rake::FileTask, path) }
+          dependencies = inputs.map(&:fullpath)
 
-          rake_application.define_task(Rake::FileTask, output.fullpath => prerequisites) do
-            output.create do
-              generate_output(inputs, output)
-            end
+          dependencies.each { |path| create_file_task(path) }
+
+          create_file_task(output.fullpath, dependencies) do
+            output.create { generate_output(inputs, output) }
           end
         end
       end
 
     private
+      def create_file_task(output, deps=[], &block)
+        rake_application.define_task(Rake::FileTask, output => deps, &block)
+      end
+
       def output_wrapper(file)
         FileWrapper.new(output_root, file, encoding)
       end

@@ -70,19 +70,16 @@ module Rake
     end
 
     def input_files
-      return @input_files || begin
-        if !input_root || !input_glob
-          raise Rake::Pipeline::Error, "You cannot get input files without " \
-                                       "first providing input files and an input root"
-        end
+      return @input_files if @input_files
 
-        expanded_root = File.expand_path(input_root)
-        files = Dir[File.join(expanded_root, input_glob)]
+      assert_input_provided
 
-        files.map do |file|
-          relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
-          FileWrapper.new(expanded_root, relative_path)
-        end
+      expanded_root = File.expand_path(input_root)
+      files = Dir[File.join(expanded_root, input_glob)]
+
+      files.map do |file|
+        relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
+        FileWrapper.new(expanded_root, relative_path)
       end
     end
 
@@ -173,6 +170,13 @@ module Rake
         end
 
         tasks
+      end
+    end
+
+    def assert_input_provided
+      if !input_root || !input_glob
+        raise Rake::Pipeline::Error, "You cannot get input files without " \
+                                     "first providing input files and an input root"
       end
     end
   end

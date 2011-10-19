@@ -12,16 +12,23 @@ module Rake
 
       def call(env)
         pipeline.invoke_clean
-
         path = env["PATH_INFO"]
-        file = Dir[File.join(pipeline.output_root, path)].first
 
-        if file
-          content_type = Rack::Mime.mime_type(File.extname(path), "text/plain")
-          [200, { "Content-Type" => content_type }, File.open(file, "r")]
+        if filename = file_for(path)
+          [ 200, headers_for(path), File.open(filename, "r") ]
         else
           @app.call(env)
         end
+      end
+
+    private
+      def file_for(path)
+        Dir[File.join(pipeline.output_root, path)].first
+      end
+
+      def headers_for(path)
+        mime = Rack::Mime.mime_type(File.extname(path), "text/plain")
+        { "Content-Type" => mime }
       end
     end
   end
