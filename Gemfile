@@ -6,4 +6,6 @@ gem "ruby-debug19"
 gem "flay"
 gem "flog"
 
-gem 'simplecov', :require => false
+gem "simplecov", :require => false
+gem "yard"
+gem "rdiscount"
