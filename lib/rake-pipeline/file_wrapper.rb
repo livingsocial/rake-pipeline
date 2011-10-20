@@ -73,7 +73,7 @@ module Rake
       # Read the contents of the file represented by the {FileWrapper}.
       #
       # Read the file using the {FileWrapper}'s encoding, which will result in
-      # this method returning a {String} tagged with the {FileWrapper}'s encoding.
+      # this method returning a +String+ tagged with the {FileWrapper}'s encoding.
       #
       # @return [String] the contents of the file
       # @raise [EncodingError] when the contents of the file are not valid in the
@@ -129,7 +129,7 @@ module Rake
       end
 
       # Write a String to a previously opened file. This method is called repeatedly
-      # by a {Filter}'s {#generate_output} method and does not create a brand new
+      # by a {Filter}'s +#generate_output+ method and does not create a brand new
       # file for each invocation.
       #
       # @raise [UnopenedFile] if the file is not already opened.

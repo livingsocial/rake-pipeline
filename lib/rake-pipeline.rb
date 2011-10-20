@@ -23,6 +23,62 @@ module Rake
   # A Pipeline is responsible for taking a directory of input
   # files, applying a number of filters to the inputs, and
   # outputting them into an output directory.
+  #
+  # The normal way to build and configure a pipeline is by
+  # using {.build}. Inside the block passed to {.build}, all
+  # methods of {DSL} are available.
+  #
+  # @see DSL Rake::Pipeline::DSL for information on the methods
+  #   available inside the block.
+  #
+  # @example
+  #   !!!ruby
+  #   Rake::Pipeline.build do
+  #     # process all js, css and html files in app/assets
+  #     input "app/assets", "**/*.{js,coffee,css,scss,html}"
+  #
+  #     # processed files should be outputted to public
+  #     output "public"
+  #
+  #     # process all coffee files
+  #     match "*.coffee" do
+  #       # compile all CoffeeScript files. the output file
+  #       # for the compilation should be the input name
+  #       # with the .coffee extension replaced with .js
+  #       filter(CoffeeCompiler) do |input|
+  #         input.sub(/\.coffee$/, '.js')
+  #       end
+  #     end
+  #
+  #     # specify filters for js files. this includes the
+  #     # output of the previous step, which converted
+  #     # coffee files to js files
+  #     match "*.js" do
+  #       # first, wrap all JS files in a custom filter
+  #       filter ClosureFilter
+  #       # then, concatenate all JS files into a single file
+  #       filter Rake::Pipeline::ConcatFilter, "application.js"
+  #     end
+  #
+  #     # specify filters for css and scss files
+  #     match "*.{css,scss}" do
+  #       # compile CSS and SCSS files using the SCSS
+  #       # compiler. if an input file has the extension
+  #       # scss, replace it with css
+  #       filter(ScssCompiler) do |input|
+  #         input.sub(/\.scss$/, 'css')
+  #       end
+  #       # then, concatenate all CSS files into a single file
+  #       filter Rake::Pipeline::ConcatFilter, "application.css"
+  #     end
+  #
+  #     # the remaining files not specified by a matcher (the
+  #     # HTML files) are simply copied over.
+  #
+  #     # you can also specify filters here that will apply to
+  #     # all processed files (application.js and application.css)
+  #     # up until this point, as well as the HTML files.
+  #   end
   class Pipeline
     class Error < StandardError
     end
@@ -63,7 +119,7 @@ module Rake
     # Build a new pipeline taking a block. The block will
     # be evaluated by the Rake::Pipeline::DSL class.
     #
-    # @see Rake::Pipeline::Filter
+    # @see Rake::Pipeline::Filter Rake::Pipeline::Filter
     #
     # @example
     #   Rake::Pipeline.build do
@@ -72,6 +128,10 @@ module Rake
     #
     #     filter Rake::Pipeline::ConcatFilter, "app.js"
     #   end
+    #
+    # @see DSL the Rake::Pipeline::DSL documentation.
+    #   All instance methods of DSL are available inside
+    #   the build block.
     #
     # @return [Rake::Pipeline] the newly configured pipeline
     def self.build(&block)
@@ -82,6 +142,7 @@ module Rake
 
     @tmp_id = 0
 
+    # @return [void]
     def build(&block)
       pipeline = self.class.build(&block)
       pipeline.input_root = input_root
@@ -205,6 +266,13 @@ module Rake
       "rake-pipeline-tmp-#{@tmp_id += 1}"
     end
 
+    # Set up the filters. This will loop through all of the filters for
+    # the current pipeline and wire up their input_files and output_files.
+    #
+    # Because matchers implement the filter API, matchers will also be
+    # set up as part of this process.
+    #
+    # @return [void]
     def setup_filters
       last = @filters.last
 
@@ -229,10 +297,16 @@ module Rake
       end
     end
 
+    # Generate a new temporary directory name under the main tmpdir.
+    #
+    # @return [void]
     def generate_tmpdir
       File.join(tmpdir, self.class.generate_tmpname)
     end
 
+    # Generate all of the rake tasks for this pipeline.
+    #
+    # @return [void]
     def generate_rake_tasks
       @rake_tasks ||= begin
         tasks = []
@@ -247,6 +321,10 @@ module Rake
       end
     end
 
+    # Assert that an input root and glob were both provided.
+    #
+    # @raise Rake::Pipeline::Error if input root or glob were missing.
+    # @return [void]
     def assert_input_provided
       if !input_root || !input_glob
         raise Rake::Pipeline::Error, "You cannot get input files without " \

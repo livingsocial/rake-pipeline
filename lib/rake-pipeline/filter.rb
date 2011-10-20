@@ -35,6 +35,9 @@ module Rake
     # FileWrapper like `read` and `write` that abstract the details
     # from you.
     #
+    # @see ConcatFilter Rake::Pipeline::ConcatFilter for another
+    #   example filter implementation.
+    #
     # @abstract
     class Filter
       # @return [Array<FileWrapper>] an Array of FileWrappers that
@@ -121,7 +124,7 @@ module Rake
       #       ]
       #     }
       #
-      # Each output file becomes a Rake task, which invokes the {#generate_output}
+      # Each output file becomes a Rake task, which invokes the +#generate_output+
       # method defined by the subclass of {Filter} with the Array of inputs and
       # the output (all as {FileWrapper}s).
       #
@@ -143,7 +146,7 @@ module Rake
       # output files. It is the same as +outputs.keys+.
       #
       # @see #outputs
-      # @return Array<FileWrapper>
+      # @return [Array<FileWrapper>]
       def output_files
         input_files.inject([]) do |array, file|
           array |= [output_wrapper(output_name_generator.call(file.path))]
@@ -174,6 +177,7 @@ module Rake
       end
 
     private
+      # @attr_reader
       def encoding
         "UTF-8"
       end
