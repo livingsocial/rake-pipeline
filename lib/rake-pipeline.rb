@@ -21,6 +21,12 @@ module Rake
     end
   end
 
+  class FileTask
+    def <=>(other)
+      [name, prerequisites] <=> [other.name, other.prerequisites]
+    end
+  end
+
   # A Pipeline is responsible for taking a directory of input
   # files, applying a number of filters to the inputs, and
   # outputting them into an output directory.
@@ -130,7 +136,7 @@ module Rake
     #
     # @return [Rake::Pipeline] the newly configured pipeline
     def self.build(&block)
-      pipeline = Pipeline.new
+      pipeline = new
       DSL.evaluate(pipeline, &block) if block
       pipeline
     end
@@ -139,11 +145,17 @@ module Rake
 
     # @return [void]
     def build(&block)
-      pipeline = self.class.build(&block)
-      pipeline.input_root = input_root
+      pipeline = copy(&block)
       pipeline.output_root = File.expand_path(output_root)
-      pipeline.tmpdir = tmpdir
       @pipelines << pipeline
+      pipeline
+    end
+
+    def copy(target_class=self.class, &block)
+      pipeline = target_class.build(&block)
+      pipeline.input_root = input_root
+      pipeline.tmpdir = tmpdir
+      pipeline.rake_application = rake_application
       pipeline
     end
 

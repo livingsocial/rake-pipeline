@@ -60,6 +60,10 @@ module Rake
         File.join(root, path)
       end
 
+      def <=>(other)
+        [root, path, encoding] <=> [other.root, other.path, other.encoding]
+      end
+
       # Does the file represented by the {FileWrapper} exist in the file system?
       #
       # @return [true,false]
@@ -76,9 +80,13 @@ module Rake
       # @raise [EncodingError] when the contents of the file are not valid in the
       #   expected encoding specified in {#encoding}.
       def read
-        contents = File.read(fullpath, :encoding => encoding)
+        contents = if "".respond_to?(:encode)
+          File.read(fullpath, :encoding => encoding)
+        else
+          File.read(fullpath)
+        end
 
-        unless contents.valid_encoding?
+        if "".respond_to?(:encode) && !contents.valid_encoding?
           raise EncodingError, "The file at the path #{fullpath} is not valid UTF-8. Please save it again as UTF-8."
         end
 
@@ -93,7 +101,12 @@ module Rake
       # @return [File] if a block was not given
       def create
         FileUtils.mkdir_p(File.dirname(fullpath))
-        @created_file = File.open(fullpath, "w:#{encoding}")
+
+        @created_file = if "".respond_to?(:encode)
+          File.open(fullpath, "w:#{encoding}")
+        else
+          File.open(fullpath, "w")
+        end
 
         if block_given?
           yield @created_file

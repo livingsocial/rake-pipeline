@@ -200,7 +200,7 @@ HERE
       def output_should_exist(expected=EXPECTED_JS_OUTPUT)
         super
 
-        css    = File.join(tmp, "public/stylesheets/application.css")
+        css = File.join(tmp, "public/stylesheets/application.css")
 
         File.exists?(css).should be_true
         File.read(css).should == EXPECTED_CSS_OUTPUT
@@ -219,6 +219,38 @@ HERE
 
           files "app/stylesheets/*.css" do
             filter concat_filter, "stylesheets/application.css"
+          end
+        end
+      end
+    end
+
+    describe "using the matcher spec" do
+      it_behaves_like "the pipeline DSL"
+
+      def output_should_exist(expected=EXPECTED_JS_OUTPUT)
+        super
+
+        css = File.join(tmp, "public/stylesheets/application.css")
+
+        File.exists?(css).should be_true
+        File.read(css).should == EXPECTED_CSS_OUTPUT
+      end
+
+      before do
+        @pipeline = Rake::Pipeline.build do
+          tmpdir "temporary"
+          input File.join(tmp, "app"), "**/*.{js,css}"
+          output "public"
+
+          match "*.js" do
+            filter strip_asserts_filter
+          end
+
+          filter(concat_filter) do |input|
+            location = File.dirname(input).split(File::SEPARATOR).last
+            extension = File.extname(input)
+
+            File.join(location, "application#{extension}")
           end
         end
       end

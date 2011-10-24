@@ -87,6 +87,13 @@ module Rake
         pipeline.add_filter(filter)
       end
 
+      def match(pattern, &block)
+        matcher = pipeline.copy(Matcher, &block)
+        matcher.glob = pattern
+        pipeline.add_filter matcher
+        matcher
+      end
+
       # Specify the output directory for the pipeline.
       #
       # @param [String] root the output directory.

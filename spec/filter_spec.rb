@@ -63,8 +63,8 @@ describe "Rake::Pipeline::Filter" do
       filter.output_name_generator = output_name_generator
       outputs = filter.outputs
 
-      outputs.keys.should == input_files.map { |f| output_file(f.path) }
-      outputs.values.should == input_files.map { |f| [f] }
+      outputs.keys.sort.should == input_files.map { |f| output_file(f.path) }.sort
+      outputs.values.flatten.sort.should == input_files.sort
 
       filter.output_files.should == input_files.map { |file| output_file(file.path) }
     end
@@ -154,17 +154,18 @@ describe "Rake::Pipeline::Filter" do
 
       filter.output_name_generator = proc { |input| input }
       filter.generate_output_block = proc do |inputs, output|
-        inputs.should == [input_files[filter_runs]]
-        output.should == output_file(input_files[filter_runs].path)
+        inputs.should == [input_file(output.path)]
 
         filter_runs += 1
       end
 
       filter.generate_rake_tasks
       tasks = filter.rake_tasks
-      tasks.should == input_files.map { |file| output_task(file.path) }
-      tasks.each_with_index do |task, index|
-        task.prerequisites.should == [input_files[index].fullpath]
+      tasks.sort.should == input_files.map { |file| output_task(file.path) }.sort
+      tasks.each do |task|
+        name = task.name.sub(/^#{Regexp.escape(output_root)}/, '')
+        prereq = File.join(input_root, name)
+        task.prerequisites.should == [prereq]
       end
 
       tasks.each(&:invoke)
@@ -192,14 +193,14 @@ describe "Rake::Pipeline::Filter" do
 
       filter.generate_rake_tasks
       tasks = filter.rake_tasks
-      tasks.should == [output_task("javascripts/jquery.js"), output_task("javascripts/sproutcore.js")]
+      tasks.sort.should == [output_task("javascripts/jquery.js"), output_task("javascripts/sproutcore.js")].sort
 
-      tasks[0].prerequisites.should == [
+      tasks.sort[0].prerequisites.should == [
         File.join(input_root, "javascripts/jquery.js"),
         File.join(input_root, "javascripts/jquery-ui.js")
       ]
 
-      tasks[1].prerequisites.should == [File.join(input_root, "javascripts/sproutcore.js")]
+      tasks.sort[1].prerequisites.should == [File.join(input_root, "javascripts/sproutcore.js")]
 
       tasks.each(&:invoke)
 
