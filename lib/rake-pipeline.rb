@@ -115,7 +115,6 @@ module Rake
 
     def initialize
       @filters = []
-      @tmp_id = 0
       @tmpdir = "tmp"
     end
 
@@ -143,7 +142,7 @@ module Rake
       pipeline
     end
 
-    @tmp_id = 0
+    @@tmp_id = 0
 
     # Copy the current pipeline's attributes over.
     #
@@ -278,7 +277,7 @@ module Rake
     #
     # @return [String] a unique temporary directory name
     def self.generate_tmpname
-      "rake-pipeline-tmp-#{@tmp_id += 1}"
+      "rake-pipeline-tmp-#{@@tmp_id += 1}"
     end
 
     # Set up the filters. This will loop through all of the filters for
