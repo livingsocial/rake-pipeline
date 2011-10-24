@@ -10,8 +10,10 @@ describe "a matcher" do
     @matcher.input_files = @files
   end
 
-  def file_wrapper(file, root=tmp)
-    Rake::Pipeline::FileWrapper.new(root, file)
+  def file_wrapper(file, options={})
+    root = options[:root] || tmp
+    encoding = options[:encoding] || "UTF-8"
+    Rake::Pipeline::FileWrapper.new(root, file, encoding)
   end
 
   it "accepts input files" do
@@ -45,8 +47,13 @@ describe "a matcher" do
 
     @matcher.setup
 
+    concat.input_files.should == [
+      file_wrapper("jquery.js", :encoding => "BINARY"),
+      file_wrapper("sproutcore.js", :encoding => "BINARY")
+    ]
+
     @matcher.output_files.should == [
-      file_wrapper("app.js", File.join(tmp, "tmp1")),
+      file_wrapper("app.js", :root => File.join(tmp, "tmp1")),
       file_wrapper("sproutcore.css")
     ]
   end

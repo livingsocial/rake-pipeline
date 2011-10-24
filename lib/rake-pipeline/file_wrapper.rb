@@ -1,8 +1,5 @@
 module Rake
   class Pipeline
-    class UnopenedFile < StandardError
-    end
-
     # This class wraps a file for consumption inside of filters. It is
     # initialized with a root and path, and filters usually use the
     # {#read} and {#write} methods to work with these files.

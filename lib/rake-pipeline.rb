@@ -3,6 +3,7 @@ require "rake-pipeline/filter"
 require "rake-pipeline/filters"
 require "rake-pipeline/dsl"
 require "rake-pipeline/matcher"
+require "rake-pipeline/error"
 
 module Rake
   # Override Rake::Task to support recursively re-enabling
@@ -80,12 +81,6 @@ module Rake
   #     # up until this point, as well as the HTML files.
   #   end
   class Pipeline
-    class Error < StandardError
-    end
-
-    class EncodingError < Error
-    end
-
     # @return [String] a glob representing the input files
     attr_accessor :input_glob
 
@@ -276,7 +271,7 @@ module Rake
     def setup_filters
       last = @filters.last
 
-      @filters.inject(input_files) do |current_inputs, filter|
+      @filters.inject(eligible_input_files) do |current_inputs, filter|
         filter.input_files = current_inputs
 
         # if filters are being reinvoked, they should keep their roots but
