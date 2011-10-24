@@ -125,14 +125,6 @@ module Rake
       def rake_application(app)
         pipeline.rake_application = app
       end
-
-      def files(glob, &block)
-        block ||= proc { filter Rake::Pipeline::ConcatFilter }
-        new_pipeline = pipeline.build(&block)
-        new_pipeline.input_glob = glob
-      end
-
-      alias file files
     end
   end
 end

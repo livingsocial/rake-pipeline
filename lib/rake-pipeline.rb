@@ -22,6 +22,9 @@ module Rake
   end
 
   class FileTask
+    # implement Ruby protocol for sorting
+    #
+    # @return [Fixnum]
     def <=>(other)
       [name, prerequisites] <=> [other.name, other.prerequisites]
     end
@@ -114,7 +117,6 @@ module Rake
       @filters = []
       @tmp_id = 0
       @tmpdir = "tmp"
-      @pipelines = []
     end
 
     # Build a new pipeline taking a block. The block will
@@ -143,14 +145,14 @@ module Rake
 
     @tmp_id = 0
 
-    # @return [void]
-    def build(&block)
-      pipeline = copy(&block)
-      pipeline.output_root = File.expand_path(output_root)
-      @pipelines << pipeline
-      pipeline
-    end
-
+    # Copy the current pipeline's attributes over.
+    #
+    # @param [Class] target_class the class to create a new
+    #   instance of. Defaults to the class of the current
+    #   pipeline. Is overridden in {Matcher}
+    # @param [Proc] block a block to pass to the {DSL DSL}
+    # @return [Pipeline] the new pipeline
+    # @api private
     def copy(target_class=self.class, &block)
       pipeline = target_class.build(&block)
       pipeline.input_root = input_root
@@ -159,19 +161,25 @@ module Rake
       pipeline
     end
 
+    # Set the input root of this pipeline and expand its path.
+    #
+    # @param [String] root this pipeline's input root
     def input_root=(root)
       @input_root = File.expand_path(root)
-      @pipelines.each { |pipeline| pipeline.input_root = root }
     end
 
+    # Set the output root of this pipeline and expand its path.
+    #
+    # @param [String] root this pipeline's output root
     def output_root=(root)
       @output_root = File.expand_path(root)
-      @pipelines.each { |pipeline| pipeline.output_root = root }
     end
 
+    # Set the temporary directory for this pipeline and expand its path.
+    #
+    # @param [String] root this pipeline's temporary directory
     def tmpdir=(dir)
       @tmpdir = File.expand_path(dir)
-      @pipelines.each { |pipeline| pipeline.tmpdir = dir }
     end
 
     # If you specify a glob for #input_glob, this method will
@@ -229,15 +237,13 @@ module Rake
     # pick up new input files added to the file system.
     #
     # @return [void]
-    def invoke(invoke_children=true)
+    def invoke
       self.rake_application = Rake::Application.new unless @rake_application
 
       setup
 
       @rake_tasks.each { |task| task.recursively_reenable(rake_application) }
       @rake_tasks.each { |task| task.invoke }
-
-      @pipelines.each { |pipeline| pipeline.invoke } if invoke_children
     end
 
     # Pick up any new files added to the inputs and process them through
@@ -246,9 +252,7 @@ module Rake
     # @return [void]
     def invoke_clean
       @rake_tasks = @rake_application = nil
-
-      invoke(false)
-      @pipelines.each { |pipeline| pipeline.invoke_clean }
+      invoke
     end
 
     # Set up the filters and generate rake tasks. In general, this method
@@ -261,6 +265,10 @@ module Rake
       generate_rake_tasks
     end
 
+    # A list of the output files that invoking this pipeline will
+    # generate.
+    #
+    # @return [Array<FileWrapper>]
     def output_files
       @filters.last.output_files unless @filters.empty?
     end

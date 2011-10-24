@@ -20,21 +20,9 @@ describe "a matcher" do
     @matcher.input_files.should == @files
   end
 
-  describe "accepting glob patterns" do
-    it "converts **" do
-      @matcher.glob = "**/application.js"
-      @matcher.pattern.should == %r{.*/application\.js$}i
-    end
-
-    it "converts *" do
-      @matcher.glob = "*.js"
-      @matcher.pattern.should == /[^#{sep}]*\.js$/i
-    end
-
-    it "converts {}" do
-      @matcher.glob = "*.{js,css}"
-      @matcher.pattern.should == /[^#{sep}]*\.(js|css)$/i
-    end
+  it "accepts a glob" do
+    @matcher.glob = "*.js"
+    @matcher.glob.should == "*.js"
   end
 
   it "only processes files matching the matcher" do

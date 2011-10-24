@@ -139,39 +139,6 @@ describe "Rake::Pipeline" do
         Rake.application.tasks.size.should == 0
       end
     end
-
-    describe "using nested pipelines" do
-      it "wires up the filters correctly" do
-        concat = ConcatFilter.new
-        concat.output_name_generator = proc { |input| "javascripts/application.js" }
-
-        pipeline.add_filter concat
-
-        sub_pipeline = Rake::Pipeline.new
-
-        strip_asserts = StripAssertsFilter.new
-        strip_asserts.output_name_generator = proc { |input| input }
-
-        sub_pipeline.add_filter strip_asserts
-        pipeline.add_filter sub_pipeline
-
-        sub_pipeline.rake_application.should == pipeline.rake_application
-
-        pipeline.setup
-        pipeline.rake_tasks
-
-        concat.input_files.should == pipeline.input_files
-        sub_pipeline.input_files.should == concat.output_files
-        strip_asserts.input_files.should == sub_pipeline.input_files
-
-        sub_pipeline.input_files.each { |file| file.root.should == concat.output_root }
-        strip_asserts.input_files.each { |file| file.root.should == concat.output_root }
-
-        strip_asserts.output_root.should == sub_pipeline.output_root
-        sub_pipeline.output_root.should == pipeline.output_root
-        sub_pipeline.output_files.should == pipeline.output_files
-      end
-    end
   end
 
   describe "using a glob for input files" do

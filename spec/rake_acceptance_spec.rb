@@ -194,36 +194,6 @@ HERE
       end
     end
 
-    describe "a nested pipeline DSL" do
-      it_behaves_like "the pipeline DSL"
-
-      def output_should_exist(expected=EXPECTED_JS_OUTPUT)
-        super
-
-        css = File.join(tmp, "public/stylesheets/application.css")
-
-        File.exists?(css).should be_true
-        File.read(css).should == EXPECTED_CSS_OUTPUT
-      end
-
-      before do
-        @pipeline = Rake::Pipeline.build do
-          tmpdir "temporary"
-          input tmp, "**/*.{js,css}"
-          output "public"
-
-          files "app/javascripts/*.js" do
-            filter concat_filter, "javascripts/application.js"
-            filter strip_asserts_filter
-          end
-
-          files "app/stylesheets/*.css" do
-            filter concat_filter, "stylesheets/application.css"
-          end
-        end
-      end
-    end
-
     describe "using the matcher spec" do
       it_behaves_like "the pipeline DSL"
 
