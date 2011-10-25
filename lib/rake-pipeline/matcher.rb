@@ -16,11 +16,30 @@ module Rake
     # In general, you should not use Matcher directly. Instead use
     # {DSL#match} in the block passed to {Pipeline.build}.
     class Matcher < Pipeline
+      attr_reader :glob
+
       # A glob matcher that a filter's input files must match
       # in order to be processed by the filter.
       #
       # @return [String]
-      attr_accessor :glob
+      def glob=(pattern)
+        pattern = Regexp.escape(pattern)
+
+        # replace \{x,y,z\} with (x|y|z)
+        pattern.gsub!(/\\\{([^\}]*)\\\}/) do
+          pipes = $1.split(",").join("|")
+          "(#{pipes})"
+        end
+
+        # replace \*\* with .*
+        pattern.gsub!(%r{\\\*\\\*/?}, ".*")
+
+        # replace \* with [^/]*
+        pattern.gsub!("\\*", "[^#{File::SEPARATOR}]*")
+
+        # create a new anchored, insensitive regex
+        @pattern = Regexp.new("#{pattern}$", "i")
+      end
 
       # A list of the output files that invoking this pipeline will
       # generate. This will include the outputs of files matching
@@ -33,7 +52,7 @@ module Rake
       # @return [Array<FileWrapper>]
       def output_files
         super + input_files.reject do |file|
-          File.fnmatch(glob, file.path, File::FNM_PATHNAME)
+          file.path =~ @pattern
         end
       end
 
@@ -44,7 +63,7 @@ module Rake
       # @return [Array<FileWrapper>]
       def eligible_input_files
         input_files.select do |file|
-          File.fnmatch(glob, file.path, File::FNM_PATHNAME)
+          file.path =~ @pattern
         end
       end
     end
