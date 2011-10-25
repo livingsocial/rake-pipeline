@@ -45,4 +45,41 @@ describe "a matcher" do
       file_wrapper("sproutcore.css")
     ]
   end
+
+  def should_match_glob(glob, files)
+    @matcher.glob = glob
+    @matcher.output_root = "tmp1"
+
+    concat = Rake::Pipeline::ConcatFilter.new
+    concat.output_name_generator = proc { |input| input }
+    @matcher.add_filter concat
+
+    @matcher.setup
+
+    @matcher.output_files.should == files
+  end
+
+  it "understands */* style globs" do
+    @matcher.input_files << file_wrapper("javascripts/backbone.js")
+
+    should_match_glob "*/*.js", [
+      file_wrapper("javascripts/backbone.js", :encoding => "BINARY", :root => File.join(tmp, "tmp1")),
+      file_wrapper("jquery.js"),
+      file_wrapper("sproutcore.js"),
+      file_wrapper("sproutcore.css")
+    ]
+  end
+
+  it "understands **/* style globs" do
+    @matcher.input_files << file_wrapper("javascripts/backbone.js")
+
+    output_root = File.join(tmp, "tmp1")
+
+    should_match_glob "**/*.js", [
+      file_wrapper("jquery.js", :encoding => "BINARY", :root => output_root),
+      file_wrapper("sproutcore.js", :encoding => "BINARY", :root => output_root),
+      file_wrapper("javascripts/backbone.js", :encoding => "BINARY", :root => output_root),
+      file_wrapper("sproutcore.css")
+    ]
+  end
 end

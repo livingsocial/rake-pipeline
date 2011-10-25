@@ -212,7 +212,7 @@ HERE
           input File.join(tmp, "app"), "**/*.{js,css}"
           output "public"
 
-          match "*.js" do
+          match "**/*.js" do
             filter strip_asserts_filter
           end
 

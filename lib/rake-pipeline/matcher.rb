@@ -33,7 +33,7 @@ module Rake
       # @return [Array<FileWrapper>]
       def output_files
         super + input_files.reject do |file|
-          File.fnmatch(glob, file.path)
+          File.fnmatch(glob, file.path, File::FNM_PATHNAME)
         end
       end
 
@@ -44,7 +44,7 @@ module Rake
       # @return [Array<FileWrapper>]
       def eligible_input_files
         input_files.select do |file|
-          File.fnmatch(glob, file.path)
+          File.fnmatch(glob, file.path, File::FNM_PATHNAME)
         end
       end
     end
