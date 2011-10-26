@@ -63,6 +63,13 @@ describe "a matcher" do
       file_wrapper("sproutcore.js"),
       file_wrapper("sproutcore.css")
     ]
+
+    should_match_glob "proutcore*.js", [
+      file_wrapper("jquery.js"),
+      file_wrapper("sproutcore.js"),
+      file_wrapper("sproutcore.css"),
+      file_wrapper("javascripts/backbone.js")
+    ]
   end
 
   it "understands **/* style globs" do
@@ -75,6 +82,19 @@ describe "a matcher" do
       file_wrapper("sproutcore.js", :encoding => "BINARY", :root => output_root),
       file_wrapper("javascripts/backbone.js", :encoding => "BINARY", :root => output_root),
       file_wrapper("sproutcore.css")
+    ]
+  end
+
+  it "understands {foo,bar}/* style globs" do
+    @matcher.input_files << file_wrapper("javascripts/backbone.js")
+
+    output_root = File.join(tmp, "tmp1")
+
+    should_match_glob "{jquery,sproutcore}.js", [
+      file_wrapper("jquery.js", :encoding => "BINARY", :root => output_root),
+      file_wrapper("sproutcore.js", :encoding => "BINARY", :root => output_root),
+      file_wrapper("sproutcore.css"),
+      file_wrapper("javascripts/backbone.js")
     ]
   end
 end

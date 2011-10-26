@@ -1,3 +1,5 @@
+require "strscan"
+
 module Rake
   class Pipeline
     # A Matcher is a type of pipeline that restricts its
@@ -23,22 +25,52 @@ module Rake
       #
       # @return [String]
       def glob=(pattern)
-        pattern = Regexp.escape(pattern)
+        scanner = StringScanner.new(pattern)
 
-        # replace \{x,y,z\} with (x|y|z)
-        pattern.gsub!(/\\\{([^\}]*)\\\}/) do
-          pipes = $1.split(",").join("|")
-          "(#{pipes})"
+        output, pos = "", 0
+
+        # keep scanning until end of String
+        until scanner.eos?
+
+          # look for **/, *, {...}, or the end of the string
+          new_chars = scanner.scan_until %r{
+              \*\*/
+            | \*
+            | \{[^\}]*\}
+            | $
+          }x
+
+          # get the new part of the string up to the match
+          before = new_chars[0, new_chars.size - scanner.matched_size]
+
+          # get the match and new position
+          match = scanner.matched
+          pos = scanner.pos
+
+          # add any literal characters to the output
+          output << Regexp.escape(before) if before
+
+          output << case match
+          when "**/"
+            # **/ matches the beginning of the path or
+            # any number of characters followed by a "/"
+            "(^|.*/)"
+          when "*"
+            # * matches any number of non-"/" characters
+            "[^/]*"
+          when /\{.*\}/
+            # {...} is split over "," and glued back together
+            # as an or condition
+            "(" + match[1...-1].gsub(",", "|") + ")"
+          else String
+            # otherwise, we've grabbed until the end
+            match
+          end
         end
 
-        # replace \*\* with .*
-        pattern.gsub!(%r{\\\*\\\*/?}, ".*")
-
-        # replace \* with [^/]*
-        pattern.gsub!("\\*", "[^#{File::SEPARATOR}]*")
-
-        # create a new anchored, insensitive regex
-        @pattern = Regexp.new("#{pattern}$", "i")
+        # anchor the pattern either at the beginning of the
+        # path or at any "/" character
+        @pattern = Regexp.new("(^|/)#{output}$", "i")
       end
 
       # A list of the output files that invoking this pipeline will

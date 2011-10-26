@@ -66,6 +66,8 @@ module Rake
       #   filter should define new rake tasks on.
       attr_writer :rake_application
 
+      attr_writer :file_wrapper_class
+
       # Invoke this method in a subclass of Filter to declare that
       # it expects to work with BINARY data, and that data that is
       # not valid UTF-8 should be allowed.
@@ -73,6 +75,10 @@ module Rake
       # @return [void]
       def self.processes_binary_files
         define_method(:encoding) { "BINARY" }
+      end
+
+      def initialize(file_wrapper_class=FileWrapper)
+        @file_wrapper_class = file_wrapper_class
       end
 
       # Set the input files to a list of FileWrappers. The filter
@@ -86,7 +92,7 @@ module Rake
       # @param [Array<FileWrapper>] a list of FileWrapper objects
       def input_files=(files)
         @input_files = files.map do |file|
-          FileWrapper.new(file.root, file.path, encoding)
+          file.with_encoding(encoding)
         end
       end
 
@@ -187,7 +193,7 @@ module Rake
       end
 
       def output_wrapper(file)
-        FileWrapper.new(output_root, file, encoding)
+        @file_wrapper_class.new(output_root, file, encoding)
       end
     end
   end

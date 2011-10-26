@@ -32,6 +32,10 @@ module Rake
         @created_file = nil
       end
 
+      def with_encoding(encoding)
+        self.class.new(@root, @path, encoding)
+      end
+
       # A {FileWrapper} is equal to another {FileWrapper} for hashing purposes
       # if they have the same {#root} and {#path}
       #

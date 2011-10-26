@@ -1,22 +1,6 @@
 describe "Rake::Pipeline" do
   let(:pipeline) { Rake::Pipeline.new }
 
-  class ConcatFilter < Rake::Pipeline::Filter
-    def generate_output(inputs, output)
-      inputs.each do |input|
-        output.write input.read
-      end
-    end
-  end
-
-  class StripAssertsFilter < Rake::Pipeline::Filter
-    def generate_output(inputs, output)
-      inputs.each do |input|
-        output.write input.read.gsub(%r{^\s*assert\(.*\)\s*;?\s*$}m, '')
-      end
-    end
-  end
-
   it "accepts a input root" do
     pipeline.input_root = "app/assets"
     pipeline.input_root.should == File.expand_path("app/assets")
