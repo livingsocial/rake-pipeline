@@ -113,18 +113,6 @@ module Rake
       def tmpdir(root)
         pipeline.tmpdir = root
       end
-
-      # Specify a rake application to use for the pipeline.
-      #
-      # You should rarely have to use this unless you know
-      # what you're doing. This defaults to +Rake.application+.
-      #
-      # @api private
-      # @param [Rake::Application] app a +Rake::Application+
-      # @return [void]
-      def rake_application(app)
-        pipeline.rake_application = app
-      end
     end
   end
 end

@@ -127,4 +127,11 @@ describe "Rake::Pipeline Middleware" do
     last_response.body.should == "<html>JAVASCRIPT</html>"
     last_response.headers["Content-Type"].should == "text/html"
   end
+
+  it "falls back to the app" do
+    get "/zomg.notfound"
+
+    last_response.body.should == "not found"
+    last_response.status.should == 404
+  end
 end
