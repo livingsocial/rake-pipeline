@@ -46,9 +46,9 @@ module Rake
       #   should find its input files.
       # @param [String] glob a file pattern that represents
       #   the list of all files that the pipeline should
-      #   process.
+      #   process. The default is +"**/*"+.
       # @return [void]
-      def input(root, glob)
+      def input(root, glob="**/*")
         pipeline.input_root = root
         pipeline.input_glob = glob
       end

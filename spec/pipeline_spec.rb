@@ -149,6 +149,14 @@ describe "Rake::Pipeline" do
     end
   end
 
+  describe "using a glob containing directories for input files" do
+    it_behaves_like "when working with input"
+
+    def setup_input(pipeline)
+      pipeline.input_glob = "**/*"
+    end
+  end
+
   describe "using an array for input files" do
     it_behaves_like "when working with input"
 

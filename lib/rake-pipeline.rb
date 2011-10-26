@@ -194,7 +194,7 @@ module Rake
       assert_input_provided
 
       expanded_root = File.expand_path(input_root)
-      files = Dir[File.join(expanded_root, input_glob)]
+      files = Dir[File.join(expanded_root, input_glob)].select { |f| File.file?(f) }
 
       files.map do |file|
         relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')

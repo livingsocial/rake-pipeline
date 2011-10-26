@@ -5,6 +5,8 @@ require "rack/test"
 describe "Rake::Pipeline Middleware" do
   include Rack::Test::Methods
 
+  ConcatFilter = Rake::Pipeline::SpecHelpers::Filters::ConcatFilter
+
   class StripAssertsFilter < Rake::Pipeline::Filter
     def generate_output(inputs, output)
       inputs.each do |input|
@@ -16,11 +18,14 @@ describe "Rake::Pipeline Middleware" do
   inputs = {
     "app/javascripts/jquery.js" => "var jQuery = {};\n",
 
-    "app/javascripts/sproutcore.js" => <<-HERE.gsub(/^ {6}/, '')
+    "app/javascripts/sproutcore.js" => <<-HERE.gsub(/^ {6}/, ''),
       var SC = {};
       assert(SC);
       SC.hi = function() { console.log("hi"); };
     HERE
+
+    "app/index.html" => "<html>HI</html>",
+    "app/javascripts/index.html" => "<html>JAVASCRIPT</html>"
   }
 
   expected_output = <<-HERE.gsub(/^ {4}/, '')
@@ -42,9 +47,16 @@ describe "Rake::Pipeline Middleware" do
     end
 
     pipeline = Rake::Pipeline.build do
-      input tmp, "app/javascripts/*.js"
-      filter(ConcatFilter) { "javascripts/application.js" }
-      filter(StripAssertsFilter) { |input| input }
+      input tmp, "app/**/*"
+
+      match "*.js" do
+        filter(ConcatFilter) { "javascripts/application.js" }
+        filter(StripAssertsFilter) { |input| input }
+      end
+
+      # copy the rest
+      filter(ConcatFilter) { |input| input.sub(/^app\//, '') }
+
       output "public"
     end
 
@@ -102,5 +114,17 @@ describe "Rake::Pipeline Middleware" do
 
     last_response.body.should == expected
     last_response.headers["Content-Type"].should == "application/javascript"
+  end
+
+  it "returns index.html for directories" do
+    get "/"
+
+    last_response.body.should == "<html>HI</html>"
+    last_response.headers["Content-Type"].should == "text/html"
+
+    get "/javascripts"
+
+    last_response.body.should == "<html>JAVASCRIPT</html>"
+    last_response.headers["Content-Type"].should == "text/html"
   end
 end

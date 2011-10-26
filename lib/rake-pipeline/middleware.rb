@@ -15,13 +15,24 @@ module Rake
         path = env["PATH_INFO"]
 
         if filename = file_for(path)
-          [ 200, headers_for(path), File.open(filename, "r") ]
-        else
-          @app.call(env)
+          if File.directory?(filename)
+            index = File.join(filename, "index.html")
+            filename = index if File.file?(index)
+          end
+
+          if filename
+            return response_for(filename)
+          end
         end
+
+        @app.call(env)
       end
 
     private
+      def response_for(file)
+        [ 200, headers_for(file), File.open(file, "r") ]
+      end
+
       def file_for(path)
         Dir[File.join(pipeline.output_root, path)].first
       end
