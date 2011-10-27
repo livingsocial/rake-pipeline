@@ -12,9 +12,6 @@ module Rake
     # {Pipeline#input_root input_root} should be +"app"+,
     # and its glob would be +"*.js"+.
     #
-    # Internally, Matcher uses +File.fnmatch+ to do its
-    # matching.
-    #
     # In general, you should not use Matcher directly. Instead use
     # {DSL#match} in the block passed to {Pipeline.build}.
     class Matcher < Pipeline

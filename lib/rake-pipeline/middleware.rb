@@ -2,14 +2,32 @@ require "rack"
 
 module Rake
   class Pipeline
+    # This middleware is used to provide a server that will continuously
+    # compile your files on demand.
+    #
+    # @example
+    #   !!!ruby
+    #   use Rake::Pipeline::Middleware, Rake::Pipeline.build {
+    #     input "app/assets"
+    #     output "public"
+    #
+    #     ...
+    #   }
     class Middleware
       attr_accessor :pipeline
 
-      def initialize(app)
+      # @param [#call] a Rack application
+      # @param [Pipeline] a Rake::Pipeline
+      def initialize(app, pipeline)
         @app = app
-        @pipeline = nil
+        @pipeline = pipeline
       end
 
+      # Automatically compiles your assets if required and
+      # serves them up.
+      #
+      # @param [Hash] env a Rack environment
+      # @return [Array(Fixnum, Hash, #each)] A rack response
       def call(env)
         pipeline.invoke_clean
         path = env["PATH_INFO"]

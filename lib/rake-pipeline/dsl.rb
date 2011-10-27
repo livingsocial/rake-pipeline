@@ -87,6 +87,37 @@ module Rake
         pipeline.add_filter(filter)
       end
 
+      # Apply a number of filters, but only to files matching
+      # a particular pattern.
+      #
+      # Inside the block passed to {#match match}, you may
+      # specify any number of filters that should be applied
+      # to files matching the pattern.
+      #
+      # @param [String] pattern a glob pattern to match
+      # @param [Proc] block a block that supplies filters
+      # @return [Matcher]
+      #
+      # @example
+      #   !!!ruby
+      #   Pipeline.build do
+      #     input "app/assets"
+      #     output "public"
+      #
+      #     # compile coffee files into JS files
+      #     match "*.coffee" do
+      #       filter CompileCoffee do |input|
+      #         input.sub(/coffee$/, "js")
+      #       end
+      #     end
+      #
+      #     # because the previous step converted coffeee
+      #     # into JS, the coffee files will be included here
+      #     match "*.js" do
+      #       filter MinifyFilter
+      #       filter Rake::Pipeline::ConcatFilter, "application.js"
+      #     end
+      #   end
       def match(pattern, &block)
         matcher = pipeline.copy(Matcher, &block)
         matcher.glob = pattern

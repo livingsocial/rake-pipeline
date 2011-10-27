@@ -5,6 +5,7 @@ require "rake-pipeline/dsl"
 require "rake-pipeline/matcher"
 require "rake-pipeline/error"
 
+# Use the Rake namespace
 module Rake
   # Override Rake::Task to support recursively re-enabling
   # a task and its dependencies.
@@ -21,6 +22,7 @@ module Rake
     end
   end
 
+  # Override Rake::FileTask to make it sortable
   class FileTask
     # implement Ruby protocol for sorting
     #

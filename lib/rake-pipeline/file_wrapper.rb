@@ -32,6 +32,12 @@ module Rake
         @created_file = nil
       end
 
+      # Create a new {FileWrapper FileWrapper} with the same root and
+      # path as this {FileWrapper FileWrapper}, but with a specified
+      # encoding.
+      #
+      # @param [String] encoding the encoding for the new object
+      # @return [FileWrapper]
       def with_encoding(encoding)
         self.class.new(@root, @path, encoding)
       end
@@ -64,6 +70,10 @@ module Rake
         File.join(root, path)
       end
 
+      # Make FileWrappers sortable
+      #
+      # @param [FileWrapper] other {FileWrapper FileWrapper}
+      # @return [Fixnum] -1, 0, or 1
       def <=>(other)
         [root, path, encoding] <=> [other.root, other.path, other.encoding]
       end

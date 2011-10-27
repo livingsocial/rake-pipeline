@@ -15,15 +15,24 @@ A sample +AssetFile+ looks like this:
   input "assets"
   output "public"
 
-  files "**/*.js" do
+  # this block will take all JS inputs, wrap them in a closure,
+  # add some additional metadata, and concatenate them all into
+  # application.scripts.js.
+  match "*.js" do
     filter ClosureWrapper
     filter DataWrapper
-    filter Rake::Pipeline::ConcatFilter, "application.js"
+    filter Rake::Pipeline::ConcatFilter, "application.scripts.js"
   end
 
-  file "**/*.{html,css}" do
+  # this block will take all HTML and CSS inputs, convert them
+  # into JavaScript
+  match "*/*.{html,css}" do
     filter DataWrapper
     filter Rake::Pipeline::ConcatFilter, "application.assets.js"
+  end
+
+  match "*.js" do
+    filter Rake::Pipeline::ConcatFilter, "application.js"
   end
 
   files "**/*.{png,jpg}"
@@ -34,17 +43,9 @@ The available options are:
 
 * {Rake::Pipeline::DSL#input input}: the directory containing your input files
 * {Rake::Pipeline::DSL#output output}: the directory to place your output files
-* {Rake::Pipeline::DSL#file file} or {Rake::Pipeline::DSL#files files}: a glob pattern of files you would
   like to process
   * if you do not specify a block, the files will be
     copied over directly.
-* inside a {Rake::Pipeline::DSL#file file} or {Rake::Pipeline::DSL#files files} block:
-  * {Rake::Pipeline::DSL#filter filter}: A filter that should be applied to your
-    input. A filter is a class.
-  * An optional second parameter to {Rake::Pipeline::DSL#filter filter} specifies
-    what output file to use for each input. You can
-    also specify a block, which takes the input name
-    and returns an output name.
 
 = Filters
 
@@ -114,10 +115,6 @@ binary data.
 At the current time, +Rake::Pipeline+ comes with a single built-in
 filter: {Rake::Pipeline::ConcatFilter}. Its implementation is
 the same as the `ConcatFilter` shown above.
-
-You will usually use it to specify the output file for the files
-specified by a {Rake::Pipeline::DSL#file file} or
-{Rake::Pipeline::DSL#files files} block.
 
 = Preview Server
 
