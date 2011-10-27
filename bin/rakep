@@ -15,9 +15,7 @@ module Rake
 
         pipeline = Pipeline.class_eval "build do\n#{pipeline_source}\nend", config, 1
 
-        pipeline_app = Middleware.new(not_found)
-        pipeline_app.pipeline = pipeline
-        pipeline_app
+        Middleware.new(not_found, pipeline)
       end
     end
   end

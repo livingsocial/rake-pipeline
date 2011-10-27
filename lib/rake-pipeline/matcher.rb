@@ -32,6 +32,7 @@ module Rake
           # look for **/, *, {...}, or the end of the string
           new_chars = scanner.scan_until %r{
               \*\*/
+            | /\*\*/
             | \*
             | \{[^\}]*\}
             | $
@@ -48,6 +49,10 @@ module Rake
           output << Regexp.escape(before) if before
 
           output << case match
+          when "/**/"
+            # /**/ matches either a "/" followed by any number
+            # of characters or a single "/"
+            "(/.*|/)"
           when "**/"
             # **/ matches the beginning of the path or
             # any number of characters followed by a "/"
