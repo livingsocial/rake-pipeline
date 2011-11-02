@@ -15,7 +15,7 @@ module Rake
 
         pipeline = Pipeline.class_eval "build do\n#{pipeline_source}\nend", config, 1
 
-        Middleware.new(not_found, pipeline)
+        Rack::Lock.new(Middleware.new(not_found, pipeline))
       end
     end
   end
