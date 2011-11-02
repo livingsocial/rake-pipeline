@@ -118,6 +118,7 @@ module Rake
     def initialize
       @filters = []
       @tmpdir = "tmp"
+      @mutex = Mutex.new
     end
 
     # Build a new pipeline taking a block. The block will
@@ -239,12 +240,14 @@ module Rake
     #
     # @return [void]
     def invoke
-      self.rake_application = Rake::Application.new unless @rake_application
+      @mutex.synchronize do
+        self.rake_application = Rake::Application.new unless @rake_application
 
-      setup
+        setup
 
-      @rake_tasks.each { |task| task.recursively_reenable(rake_application) }
-      @rake_tasks.each { |task| task.invoke }
+        @rake_tasks.each { |task| task.recursively_reenable(rake_application) }
+        @rake_tasks.each { |task| task.invoke }
+      end
     end
 
     # Pick up any new files added to the inputs and process them through
