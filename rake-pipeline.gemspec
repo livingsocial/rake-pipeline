@@ -2,10 +2,10 @@
 require File.expand_path('../lib/rake-pipeline/version', __FILE__)
 
 Gem::Specification.new do |gem|
-  gem.authors       = ["TODO: Write your name"]
+  gem.authors       = ["Yehuda Katz", "Tom Dale"]
   gem.email         = ["wycats@gmail.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = "Simple Asset Management"
+  gem.summary       = "Simple Asset Management"
   gem.homepage      = ""
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
