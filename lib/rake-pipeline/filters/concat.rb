@@ -24,7 +24,7 @@ module Rake
     #       directory = File.dirname(input)
     #       ext = File.extname(input)
     #
-    #       "#{directory}.#{ext}"
+    #       "#{directory}#{ext}"
     #     end
     #   end
     class ConcatFilter < Rake::Pipeline::Filter
