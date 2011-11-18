@@ -4,6 +4,7 @@ require "rake-pipeline/filters"
 require "rake-pipeline/dsl"
 require "rake-pipeline/matcher"
 require "rake-pipeline/error"
+require "thread"
 
 # Use the Rake namespace
 module Rake
