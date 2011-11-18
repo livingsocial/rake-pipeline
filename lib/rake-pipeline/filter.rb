@@ -19,7 +19,7 @@ module Rake
     #
     #   class ClosureFilter < Rake::Pipeline::Filter
     #     def generate_output(inputs, output)
-    #       inputs.each do |output|
+    #       inputs.each do |input|
     #         output.write "(function() { #{input.read.to_json} })()"
     #       end
     #     end
