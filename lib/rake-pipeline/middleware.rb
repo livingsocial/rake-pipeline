@@ -35,7 +35,7 @@ module Rake
         if filename = file_for(path)
           if File.directory?(filename)
             index = File.join(filename, "index.html")
-            filename = index if File.file?(index)
+            filename = File.file?(index) ? index : nil
           end
 
           if filename
