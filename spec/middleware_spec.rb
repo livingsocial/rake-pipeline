@@ -25,7 +25,8 @@ describe "Rake::Pipeline Middleware" do
     HERE
 
     "app/index.html" => "<html>HI</html>",
-    "app/javascripts/index.html" => "<html>JAVASCRIPT</html>"
+    "app/javascripts/index.html" => "<html>JAVASCRIPT</html>",
+    "app/empty_dir" => nil
   }
 
   expected_output = <<-HERE.gsub(/^ {4}/, '')
@@ -57,8 +58,13 @@ describe "Rake::Pipeline Middleware" do
     middleware = Rake::Pipeline::Middleware.new(app, pipeline)
 
     inputs.each do |name, string|
-      mkdir_p File.dirname(File.join(tmp, name))
-      File.open(File.join(tmp, name), "w") { |file| file.write(string) }
+      path = File.join(tmp, name)
+      if string
+        mkdir_p File.dirname(path)
+        File.open(path, "w") { |file| file.write(string) }
+      else
+        mkdir_p path
+      end
     end
 
     get "/javascripts/application.js"
@@ -125,6 +131,13 @@ describe "Rake::Pipeline Middleware" do
 
     last_response.body.should == "<html>JAVASCRIPT</html>"
     last_response.headers["Content-Type"].should == "text/html"
+  end
+
+  it "ignores directories without index.html" do
+    get "/empty_dir"
+
+    last_response.body.should == "not found"
+    last_response.status.should == 404
   end
 
   it "falls back to the app" do
