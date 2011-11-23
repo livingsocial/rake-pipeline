@@ -39,12 +39,6 @@ describe "Rake::Pipeline Middleware" do
 
   before do
     app = lambda { |env| [404, {}, ['not found']] }
-    middleware = Rake::Pipeline::Middleware.new(app)
-
-    inputs.each do |name, string|
-      mkdir_p File.dirname(File.join(tmp, name))
-      File.open(File.join(tmp, name), "w") { |file| file.write(string) }
-    end
 
     pipeline = Rake::Pipeline.build do
       input tmp, "app/**/*"
@@ -60,7 +54,12 @@ describe "Rake::Pipeline Middleware" do
       output "public"
     end
 
-    middleware.pipeline = pipeline
+    middleware = Rake::Pipeline::Middleware.new(app, pipeline)
+
+    inputs.each do |name, string|
+      mkdir_p File.dirname(File.join(tmp, name))
+      File.open(File.join(tmp, name), "w") { |file| file.write(string) }
+    end
 
     get "/javascripts/application.js"
   end
