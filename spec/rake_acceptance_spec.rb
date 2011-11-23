@@ -20,10 +20,14 @@ HERE
 }
 HERE
 
-"app/stylesheets/sproutcore.css" => <<-HERE
+"app/stylesheets/sproutcore.css" => <<-HERE,
 #sproutcore {
   color: green;
 }
+HERE
+
+"app/index.html" => <<-HERE
+<html></html>
 HERE
 
 }
@@ -42,6 +46,10 @@ EXPECTED_CSS_OUTPUT = <<-HERE
 #sproutcore {
   color: green;
 }
+HERE
+
+EXPECTED_HTML_OUTPUT = <<-HERE
+<html></html>
 HERE
 
   before do
@@ -195,7 +203,6 @@ HERE
     end
 
     describe "using the matcher spec" do
-      it_behaves_like "the pipeline DSL"
 
       def output_should_exist(expected=EXPECTED_JS_OUTPUT)
         super
@@ -204,23 +211,27 @@ HERE
 
         File.exists?(css).should be_true
         File.read(css).should == EXPECTED_CSS_OUTPUT
+
+        html = File.join(tmp, "public/index.html")
+        File.exists?(html).should be_true
+        File.read(html).should == EXPECTED_HTML_OUTPUT
       end
+
+      it_behaves_like "the pipeline DSL"
 
       before do
         @pipeline = Rake::Pipeline.build do
           tmpdir "temporary"
-          input File.join(tmp, "app"), "**/*.{js,css}"
+          input File.join(tmp, "app"), "**/*.{js,css,html}"
           output "public"
 
           match "**/*.js" do
             filter strip_asserts_filter
+            filter concat_filter, "javascripts/application.js"
           end
 
-          filter(concat_filter) do |input|
-            location = File.dirname(input).split(File::SEPARATOR).last
-            extension = File.extname(input)
-
-            File.join(location, "application#{extension}")
+          match "**/*.css" do
+            filter concat_filter, "stylesheets/application.css"
           end
         end
       end
