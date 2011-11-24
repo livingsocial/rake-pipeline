@@ -35,9 +35,8 @@ A sample +AssetFile+ looks like this:
     filter Rake::Pipeline::ConcatFilter, "application.js"
   end
 
-  files "**/*.{png,jpg}"
-  files "**/index.html"
-  file "lib/battlemaster.js"
+  # copy any unprocessed files over to the output directory
+  filter Rake::Pipeline::ConcatFilter
 
 The available options are:
 
