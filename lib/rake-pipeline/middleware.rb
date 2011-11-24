@@ -20,6 +20,12 @@ module Rake
       # @param [Pipeline] a Rake::Pipeline
       def initialize(app, pipeline)
         @app = app
+
+        if pipeline.is_a?(String)
+          pipeline_source = File.read(pipeline)
+          pipeline = Pipeline.class_eval "build do\n#{pipeline_source}\nend", pipeline, 1
+        end
+
         @pipeline = pipeline
       end
 

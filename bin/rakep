@@ -11,11 +11,7 @@ module Rake
         not_found = proc { [404, { "Content-Type" => "text/plain" }, ["not found"]] }
         config = "AssetFile"
 
-        pipeline_source = File.read(config)
-
-        pipeline = Pipeline.class_eval "build do\n#{pipeline_source}\nend", config, 1
-
-        Middleware.new(not_found, pipeline)
+        Middleware.new(not_found, config)
       end
     end
   end
