@@ -27,19 +27,18 @@ describe "ConcatFilter" do
     end
   end
 
-  it "generates output" do
-    files = [
+  let(:input_files) {
+    [
       MemoryFileWrapper.new("/path/to/input", "javascripts/jquery.js", "UTF-8", "jQuery = {};"),
       MemoryFileWrapper.new("/path/to/input", "javascripts/sproutcore.js", "UTF-8", "SC = {};")
     ]
+  }
 
-    app = Rake::Application.new
-
-    filter = ::Rake::Pipeline::ConcatFilter.new(MemoryFileWrapper)
-    filter.input_files = files
+  it "generates output" do
+    filter = Rake::Pipeline::ConcatFilter.new { "application.js" }
+    filter.file_wrapper_class = MemoryFileWrapper
     filter.output_root = "/path/to/output"
-    filter.output_name_generator = proc { "application.js" }
-    filter.rake_application = app
+    filter.input_files = input_files
 
     filter.output_files.should == [MemoryFileWrapper.new("/path/to/output", "application.js", "BINARY")]
 
@@ -49,5 +48,13 @@ describe "ConcatFilter" do
     file = MemoryFileWrapper.files["/path/to/output/application.js"]
     file.body.should == "jQuery = {};SC = {};"
     file.encoding.should == "BINARY"
+  end
+
+  it "accepts a string to use as the output file name" do
+    filter = Rake::Pipeline::ConcatFilter.new("app.js")
+    filter.file_wrapper_class = MemoryFileWrapper
+    filter.output_root = "/path/to/output"
+    filter.input_files = input_files
+    filter.output_files.should == [MemoryFileWrapper.new("/path/to/output", "app.js", "BINARY")]
   end
 end

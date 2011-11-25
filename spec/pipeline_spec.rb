@@ -1,4 +1,7 @@
 describe "Rake::Pipeline" do
+  ConcatFilter = Rake::Pipeline::SpecHelpers::Filters::ConcatFilter
+  StripAssertsFilter = Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
+
   let(:pipeline) { Rake::Pipeline.new }
 
   it "accepts a input root" do

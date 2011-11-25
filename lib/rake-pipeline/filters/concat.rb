@@ -28,6 +28,15 @@ module Rake
     #     end
     #   end
     class ConcatFilter < Rake::Pipeline::Filter
+      # @param [String] string the name of the output file to
+      #   concatenate inputs to.
+      # @param [Proc] block a block to use as the Filter's
+      #   {#output_name_generator}.
+      def initialize(string=nil, &block)
+        block = proc { string } if string
+        super(&block)
+      end
+
       # @method encoding
       # @return [String] the String +"BINARY"+
       processes_binary_files
