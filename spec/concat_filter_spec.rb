@@ -35,7 +35,8 @@ describe "ConcatFilter" do
 
     app = Rake::Application.new
 
-    filter = ::Rake::Pipeline::ConcatFilter.new(MemoryFileWrapper)
+    filter = ::Rake::Pipeline::ConcatFilter.new
+    filter.file_wrapper_class = MemoryFileWrapper
     filter.input_files = files
     filter.output_root = "/path/to/output"
     filter.output_name_generator = proc { "application.js" }

@@ -77,8 +77,8 @@ module Rake
         define_method(:encoding) { "BINARY" }
       end
 
-      def initialize(file_wrapper_class=FileWrapper)
-        @file_wrapper_class = file_wrapper_class
+      def file_wrapper_class
+        @file_wrapper_class ||= FileWrapper
       end
 
       # Set the input files to a list of FileWrappers. The filter
@@ -193,7 +193,7 @@ module Rake
       end
 
       def output_wrapper(file)
-        @file_wrapper_class.new(output_root, file, encoding)
+        file_wrapper_class.new(output_root, file, encoding)
       end
     end
   end
