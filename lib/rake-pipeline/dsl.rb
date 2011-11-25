@@ -75,18 +75,12 @@ module Rake
       #   its outputs)
       #
       # @param [Class] filter_class the class of the filter.
-      # @param [String] string an output file name.
-      # @param [Proc] block an output file name generator
+      # @param [Array] ctor_args a list of arguments to pass
+      #   to the filter's constructor.
+      # @param [Proc] block an output file name generator.
       # @return [void]
-      def filter(filter_class, string=nil, &block)
-        block ||= if string
-          proc { string }
-        else
-          proc { |input| input }
-        end
-
-        filter = filter_class.new
-        filter.output_name_generator = block
+      def filter(filter_class, *ctor_args, &block)
+        filter = filter_class.new(*ctor_args, &block)
         pipeline.add_filter(filter)
       end
 

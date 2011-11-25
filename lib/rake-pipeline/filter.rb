@@ -68,6 +68,13 @@ module Rake
 
       attr_writer :file_wrapper_class
 
+      # @param [Proc] block a block to use as the Filter's
+      #   {#output_name_generator}.
+      def initialize(&block)
+        block ||= proc { |input| input }
+        @output_name_generator = block
+      end
+
       # Invoke this method in a subclass of Filter to declare that
       # it expects to work with BINARY data, and that data that is
       # not valid UTF-8 should be allowed.
@@ -77,8 +84,10 @@ module Rake
         define_method(:encoding) { "BINARY" }
       end
 
-      def initialize(file_wrapper_class=FileWrapper)
-        @file_wrapper_class = file_wrapper_class
+      # @return [Class] the class to use as the wrapper for output
+      #   files.
+      def file_wrapper_class
+        @file_wrapper_class ||= FileWrapper
       end
 
       # Set the input files to a list of FileWrappers. The filter
@@ -193,7 +202,7 @@ module Rake
       end
 
       def output_wrapper(file)
-        @file_wrapper_class.new(output_root, file, encoding)
+        file_wrapper_class.new(output_root, file, encoding)
       end
     end
   end
