@@ -41,6 +41,12 @@ describe "Rake::Pipeline::Filter" do
     filter.output_name_generator.should == conversion
   end
 
+  it "accepts a block constructor argument to convert the input name into an output name" do
+    conversion = proc { |input| "application.js" }
+    new_filter = Rake::Pipeline::Filter.new(&conversion)
+    new_filter.output_name_generator.should == conversion
+  end
+
   describe "using the output_name proc to converting the input names into a hash" do
     before do
       filter.output_root = output_root
