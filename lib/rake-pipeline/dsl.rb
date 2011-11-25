@@ -65,10 +65,8 @@ module Rake
       # By default, the block maps an input file into
       # an output file with the same name.
       #
-      # You can also specify a +String+, which will map
-      # all input files into the same output file. This
-      # is useful when you want to concatenate a list of
-      # files together.
+      # Any additional arguments passed to {#filter} will
+      # be passed on to the filter class's constructor.
       #
       # @see Filter#outputs Filter#output (for an example
       #   of how a list of input files gets mapped to
