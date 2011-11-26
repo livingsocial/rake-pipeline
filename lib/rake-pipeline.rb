@@ -100,6 +100,8 @@ module Rake
   #     # up until this point, as well as the HTML files.
   #   end
   class Pipeline
+    ASSET_FILE_NAME = "AssetFile"
+
     # @return [String] a glob representing the input files
     attr_accessor :input_glob
 
