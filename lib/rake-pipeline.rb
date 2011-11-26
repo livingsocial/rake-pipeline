@@ -4,6 +4,13 @@ require "rake-pipeline/filters"
 require "rake-pipeline/dsl"
 require "rake-pipeline/matcher"
 require "rake-pipeline/error"
+
+if defined?(Rails::Railtie)
+  require "rake-pipeline/railtie"
+elsif defined?(Rails)
+  require "rake-pipeline/rails_plugin"
+end
+
 require "thread"
 
 # Use the Rake namespace
