@@ -4,10 +4,6 @@ describe "Rake::Pipeline::DSL" do
   let(:pipeline) { Rake::Pipeline.new }
   let(:dsl) { Rake::Pipeline::DSL.new(pipeline) }
 
-  def filters_for(pipeline)
-    pipeline.instance_variable_get(:@filters)
-  end
-
   before do
     pipeline.input_root = "."
   end
@@ -36,17 +32,16 @@ describe "Rake::Pipeline::DSL" do
   describe "#filter" do
 
     it "adds a new instance of the filter class to the pipeline's filters" do
-      filters_for(pipeline).should be_empty
+      pipeline.filters.should be_empty
       dsl.filter ConcatFilter
-      filters = filters_for(pipeline)
-      filters.should_not be_empty
-      filters.last.should be_kind_of(ConcatFilter)
+      pipeline.filters.should_not be_empty
+      pipeline.filters.last.should be_kind_of(ConcatFilter)
     end
 
     it "takes a block to configure the filter's output file names" do
       generator = proc { |input| "main.js" }
       dsl.filter(ConcatFilter, &generator)
-      filters_for(pipeline).last.output_name_generator.should == generator
+      pipeline.filters.last.output_name_generator.should == generator
     end
 
     it "passes any extra arguments to the filter's constructor" do
@@ -58,8 +53,7 @@ describe "Rake::Pipeline::DSL" do
       end
 
       dsl.filter filter_class, "foo", "bar"
-      filter = filters_for(pipeline).last
-      filter.args.should == %w(foo bar)
+      pipeline.filters.last.args.should == %w(foo bar)
     end
   end
 
@@ -72,7 +66,7 @@ describe "Rake::Pipeline::DSL" do
 
     it "adds the new matcher to the pipeline's filters" do
       matcher = dsl.match("*.glob") {}
-      filters_for(pipeline).last.should == matcher
+      pipeline.filters.last.should == matcher
     end
   end
 

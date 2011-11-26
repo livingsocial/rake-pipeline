@@ -114,6 +114,9 @@ module Rake
     #   to the output directory when the pipeline is invoked
     attr_reader   :output_files
 
+    # @return [Array] this pipeline's filters.
+    attr_reader   :filters
+
     attr_writer :input_files
 
     def initialize
