@@ -22,6 +22,7 @@ module Rake
       #
       # @return [String]
       def glob=(pattern)
+        @glob = pattern
         scanner = StringScanner.new(pattern)
 
         output, pos = "", 0

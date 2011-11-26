@@ -20,6 +20,11 @@ describe "a matcher" do
     @matcher.input_files.should == @files
   end
 
+  it "can access its glob" do
+    @matcher.glob = "*.js"
+    @matcher.glob.should == "*.js"
+  end
+
   it "only processes files matching the matcher" do
     @matcher.glob = "*.js"
     @matcher.output_root = "tmp1"
