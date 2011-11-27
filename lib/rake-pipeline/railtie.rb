@@ -4,7 +4,7 @@ module Rake
   class Pipeline
     class Railtie < ::Rails::Railtie
       config.rake_pipeline_enabled = false
-      config.rake_pipeline_assetfile = 'AssetFile'
+      config.rake_pipeline_assetfile = 'Assetfile'
 
       initializer "rake-pipeline.assetfile" do |app|
         if config.rake_pipeline_enabled
