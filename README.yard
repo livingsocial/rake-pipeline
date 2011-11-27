@@ -6,10 +6,10 @@ output files based on input changes.
 
 = Usage
 
-The easiest way to use Rake::Pipeline is via a +AssetFile+ file in the
+The easiest way to use Rake::Pipeline is via a +Assetfile+ file in the
 root of your project.
 
-A sample +AssetFile+ looks like this:
+A sample +Assetfile+ looks like this:
 
   !!!ruby
   input "assets"

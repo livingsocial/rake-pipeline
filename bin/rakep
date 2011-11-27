@@ -9,7 +9,7 @@ module Rake
     class Server < Rack::Server
       def app
         not_found = proc { [404, { "Content-Type" => "text/plain" }, ["not found"]] }
-        config = "AssetFile"
+        config = "Assetfile"
 
         Middleware.new(not_found, config)
       end
@@ -18,7 +18,7 @@ module Rake
 end
 
 if ARGV[0] == "build"
-  config = "AssetFile"
+  config = "Assetfile"
   pipeline_source = File.read(config)
   pipeline = Rake::Pipeline.class_eval "build do\n#{pipeline_source}\nend", config, 1
   pipeline.invoke
