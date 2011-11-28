@@ -15,6 +15,8 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Rake::Pipeline::VERSION
 
+  gem.add_dependency "rake", "~> 0.9.0"
+
   gem.add_development_dependency "rspec"
   gem.add_development_dependency "rack-test"
 end
