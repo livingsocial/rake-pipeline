@@ -52,15 +52,6 @@ EXPECTED_HTML_OUTPUT = <<-HERE
 <html></html>
 HERE
 
-  before do
-    Rake.application = Rake::Application.new
-
-    INPUTS.each do |name, string|
-      mkdir_p File.dirname(File.join(tmp, name))
-      File.open(File.join(tmp, name), "w") { |file| file.write(string) }
-    end
-  end
-
   def input_wrapper(path)
     Rake::Pipeline::FileWrapper.new(tmp, path)
   end
@@ -78,45 +69,58 @@ HERE
   concat_filter = Rake::Pipeline::ConcatFilter
   strip_asserts_filter = Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
 
-  it "can successfully apply filters" do
-    concat = concat_filter.new
-    concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
-    concat.output_root = File.join(tmp, "temporary", "concat_filter")
-    concat.output_name_generator = proc { |input| "javascripts/application.js" }
-
-    strip_asserts = strip_asserts_filter.new
-    strip_asserts.input_files = concat.output_files
-    strip_asserts.output_root = File.join(tmp, "public")
-    strip_asserts.output_name_generator = proc { |input| input }
-
-    concat.generate_rake_tasks
-    Rake::Task.define_task(:default => strip_asserts.generate_rake_tasks)
-    Rake.application[:default].invoke
-
-    output_should_exist
+  def copy_files
+    INPUTS.each do |name, string|
+      mkdir_p File.dirname(File.join(tmp, name))
+      File.open(File.join(tmp, name), "w") { |file| file.write(string) }
+    end
   end
 
-  it "can be configured using the pipeline" do
-    pipeline = Rake::Pipeline.new
-    pipeline.input_root = File.expand_path(tmp)
-    pipeline.output_root = File.expand_path("public")
-    pipeline.input_glob = "app/javascripts/*.js"
-    pipeline.tmpdir = "temporary"
+  before do
+    Rake.application = Rake::Application.new
+    copy_files
+  end
 
-    concat = concat_filter.new
-    concat.output_name_generator = proc { |input| "javascripts/application.js" }
+  describe "the basics" do
+    it "can successfully apply filters" do
+      concat = concat_filter.new
+      concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
+      concat.output_root = File.join(tmp, "temporary", "concat_filter")
+      concat.output_name_generator = proc { |input| "javascripts/application.js" }
 
-    strip_asserts = strip_asserts_filter.new
-    strip_asserts.output_name_generator = proc { |input| input }
+      strip_asserts = strip_asserts_filter.new
+      strip_asserts.input_files = concat.output_files
+      strip_asserts.output_root = File.join(tmp, "public")
+      strip_asserts.output_name_generator = proc { |input| input }
 
-    pipeline.add_filters(concat, strip_asserts)
-    pipeline.invoke
+      concat.generate_rake_tasks
+      Rake::Task.define_task(:default => strip_asserts.generate_rake_tasks)
+      Rake.application[:default].invoke
 
-    output_should_exist
+      output_should_exist
+    end
+
+    it "can be configured using the pipeline" do
+      pipeline = Rake::Pipeline.new
+      pipeline.input_roots.push tmp
+      pipeline.output_root = File.expand_path("public")
+      pipeline.input_glob = "app/javascripts/*.js"
+      pipeline.tmpdir = "temporary"
+
+      concat = concat_filter.new
+      concat.output_name_generator = proc { |input| "javascripts/application.js" }
+
+      strip_asserts = strip_asserts_filter.new
+      strip_asserts.output_name_generator = proc { |input| input }
+
+      pipeline.add_filters(concat, strip_asserts)
+      pipeline.invoke
+
+      output_should_exist
+    end
   end
 
   describe "using the pipeline DSL" do
-
     attr_reader :pipeline
 
     shared_examples_for "the pipeline DSL" do
@@ -135,8 +139,12 @@ HERE
         pipeline.invoke
         age_existing_files
 
-        File.open(File.join(tmp, "app/javascripts/jquery.js"), "w") do |file|
-          file.write "var jQuery = {};\njQuery.trim = function() {};\n"
+        if respond_to?(:update_jquery)
+          update_jquery
+        else
+          File.open(File.join(tmp, "app/javascripts/jquery.js"), "w") do |file|
+            file.write "var jQuery = {};\njQuery.trim = function() {};\n"
+          end
         end
 
         expected = <<-HERE.gsub(/^ {10}/, '')
@@ -156,8 +164,12 @@ HERE
         pipeline.invoke
         age_existing_files
 
-        File.open(File.join(tmp, "app/javascripts/history.js"), "w") do |file|
-          file.write "var History = {};\n"
+        if respond_to?(:update_history)
+          update_history
+        else
+          File.open(File.join(tmp, "app/javascripts/history.js"), "w") do |file|
+            file.write "var History = {};\n"
+          end
         end
 
         pipeline.invoke_clean
@@ -174,7 +186,7 @@ HERE
       end
     end
 
-    describe "the raw pipeline DSL" do
+    describe "the raw pipeline DSL (with block strip_asserts_filter)" do
       it_behaves_like "the pipeline DSL"
 
       before do
@@ -188,7 +200,7 @@ HERE
       end
     end
 
-    describe "the raw pipeline DSL" do
+    describe "the raw pipeline DSL (with simple strip_asserts_filter)" do
       it_behaves_like "the pipeline DSL"
 
       before do
@@ -203,7 +215,6 @@ HERE
     end
 
     describe "using the matcher spec" do
-
       def output_should_exist(expected=EXPECTED_JS_OUTPUT)
         super
 
@@ -223,6 +234,74 @@ HERE
         @pipeline = Rake::Pipeline.build do
           tmpdir "temporary"
           input File.join(tmp, "app"), "**/*.{js,css,html}"
+          output "public"
+
+          match "**/*.js" do
+            filter strip_asserts_filter
+            filter concat_filter, "javascripts/application.js"
+          end
+
+          match "**/*.css" do
+            filter concat_filter, "stylesheets/application.css"
+          end
+        end
+      end
+    end
+
+    describe "using the matcher spec (with multiple inputs)" do
+      it_behaves_like "the pipeline DSL"
+
+      def tmp1
+        File.join(tmp, 'tmp1')
+      end
+
+      def tmp2
+        File.join(tmp, 'tmp2')
+      end
+
+      def update_jquery
+        File.open(File.join(tmp1, "app/javascripts/jquery.js"), "w") do |file|
+          file.write "var jQuery = {};\njQuery.trim = function() {};\n"
+        end
+      end
+
+      def update_history
+        File.open(File.join(tmp1, "app/javascripts/history.js"), "w") do |file|
+          file.write "var History = {};\n"
+        end
+      end
+
+      def copy_files
+        INPUTS.each do |name, string|
+          file = name =~ /\.js$/ ? File.join(tmp1, name) : File.join(tmp2, name)
+
+          mkdir_p File.dirname(file)
+          File.open(file, "w") { |f| f.write(string) }
+        end
+      end
+
+      def output_should_exist(expected=EXPECTED_JS_OUTPUT)
+        super
+
+        css = File.join(tmp, "public/stylesheets/application.css")
+
+        File.exists?(css).should be_true
+        File.read(css).should == EXPECTED_CSS_OUTPUT
+
+        html = File.join(tmp, "public/index.html")
+        File.exists?(html).should be_true
+        File.read(html).should == EXPECTED_HTML_OUTPUT
+      end
+
+      before do
+        tmp1 = self.tmp1
+        tmp2 = self.tmp2
+
+        @pipeline = Rake::Pipeline.build do
+          tmpdir "temporary"
+          input File.join(tmp1, "app"), "**/*.{js,css,html}"
+          input File.join(tmp2, "app"), "**/*.{js,css,html}"
+
           output "public"
 
           match "**/*.js" do

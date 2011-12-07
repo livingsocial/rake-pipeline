@@ -52,7 +52,7 @@ module Rake
       #   process. The default is +"**/*"+.
       # @return [void]
       def input(root, glob="**/*")
-        pipeline.input_root = root
+        pipeline.input_roots << root
         pipeline.input_glob = glob
       end
 

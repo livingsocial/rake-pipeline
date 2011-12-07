@@ -4,10 +4,6 @@ describe "Rake::Pipeline::DSL" do
   let(:pipeline) { Rake::Pipeline.new }
   let(:dsl) { Rake::Pipeline::DSL.new(pipeline) }
 
-  before do
-    pipeline.input_root = "."
-  end
-
   it "accepts a pipeline in its constructor" do
     dsl.pipeline.should == pipeline
   end
@@ -15,7 +11,7 @@ describe "Rake::Pipeline::DSL" do
   describe "#input" do
     it "configures the pipeline's input_root" do
       dsl.input "/app"
-      pipeline.input_root.should == "/app"
+      pipeline.input_roots.should == ["/app"]
     end
 
     it "configures the pipeline's input_glob" do

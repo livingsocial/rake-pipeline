@@ -103,8 +103,8 @@ module Rake
     # @return [String] a glob representing the input files
     attr_accessor :input_glob
 
-    # @return [String] the directory path for the input files.
-    attr_reader   :input_root
+    # @return [String] the directory paths for the input files.
+    attr_accessor :input_roots
 
     # @return [String] the directory path for the output files.
     attr_reader   :output_root
@@ -128,6 +128,7 @@ module Rake
 
     def initialize
       @filters = []
+      @input_roots = []
       @tmpdir = "tmp"
       @mutex = Mutex.new
     end
@@ -168,17 +169,10 @@ module Rake
     # @api private
     def copy(target_class=self.class, &block)
       pipeline = target_class.build(&block)
-      pipeline.input_root = input_root
+      pipeline.input_roots = input_roots
       pipeline.tmpdir = tmpdir
       pipeline.rake_application = rake_application
       pipeline
-    end
-
-    # Set the input root of this pipeline and expand its path.
-    #
-    # @param [String] root this pipeline's input root
-    def input_root=(root)
-      @input_root = File.expand_path(root)
     end
 
     # Set the output root of this pipeline and expand its path.
@@ -207,13 +201,19 @@ module Rake
 
       assert_input_provided
 
-      expanded_root = File.expand_path(input_root)
-      files = Dir[File.join(expanded_root, input_glob)].select { |f| File.file?(f) }
+      result = []
 
-      files.map do |file|
-        relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
-        FileWrapper.new(expanded_root, relative_path)
+      @input_roots.each do |input_root|
+        expanded_root = File.expand_path(input_root)
+        files = Dir[File.join(expanded_root, input_glob)].select { |f| File.file?(f) }
+
+        files.each do |file|
+          relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
+          result << FileWrapper.new(expanded_root, relative_path)
+        end
       end
+
+      result
     end
 
     # for Pipelines, this is every file, but it may be overridden
@@ -356,7 +356,7 @@ module Rake
     # @raise Rake::Pipeline::Error if input root or glob were missing.
     # @return [void]
     def assert_input_provided
-      if !input_root || !input_glob
+      if input_roots.empty? || !input_glob
         raise Rake::Pipeline::Error, "You cannot get input files without " \
                                      "first providing input files and an input root"
       end

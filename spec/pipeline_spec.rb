@@ -5,12 +5,12 @@ describe "Rake::Pipeline" do
   let(:pipeline) { Rake::Pipeline.new }
 
   it "accepts a input root" do
-    pipeline.input_root = "app/assets"
-    pipeline.input_root.should == File.expand_path("app/assets")
+    pipeline.input_roots.push "app/assets"
+    pipeline.input_roots.should == ["app/assets"]
   end
 
   it "raises an exception on #relative_input_files if input_files are not provided" do
-    pipeline.input_root = "app/assets"
+    pipeline.input_roots.push "app/assets"
     lambda { pipeline.input_files }.should raise_error(Rake::Pipeline::Error)
   end
 
@@ -55,6 +55,10 @@ describe "Rake::Pipeline" do
       end
     end
 
+    def setup_roots
+      pipeline.input_roots.push "app/assets"
+    end
+
     before do
       Rake.application = Rake::Application.new
 
@@ -66,7 +70,7 @@ describe "Rake::Pipeline" do
         end
       end
 
-      pipeline.input_root = "app/assets"
+      setup_roots
       setup_input(pipeline)
       pipeline.output_root = "public"
     end
@@ -111,8 +115,11 @@ describe "Rake::Pipeline" do
 
         deps = task.prerequisites
         deps.size.should == 2
-        deps[0].should == File.join(pipeline.input_root, "javascripts/jquery.js")
-        deps[1].should == File.join(pipeline.input_root, "javascripts/sproutcore.js")
+
+        root = File.expand_path(pipeline.input_roots.first)
+
+        deps[0].should == File.join(root, "javascripts/jquery.js")
+        deps[1].should == File.join(root, "javascripts/sproutcore.js")
 
         Rake.application.tasks.size.should == 3
       end
@@ -141,6 +148,37 @@ describe "Rake::Pipeline" do
 
     def setup_input(pipeline)
       pipeline.input_glob = "**/*"
+    end
+  end
+
+  describe "when using multiple input roots" do
+    it_behaves_like "when working with input"
+
+    def input_file(path, root=File.join(tmp, "app/assets"))
+      Rake::Pipeline::FileWrapper.new root, path
+    end
+
+    def setup_roots
+      pipeline.input_roots.push File.join(tmp, 'tmp1', "app/assets")
+      pipeline.input_roots.push File.join(tmp, 'tmp2', "app/assets")
+    end
+
+    def setup_input(pipeline)
+      pipeline.input_glob = "**/*"
+    end
+
+    let(:files) do
+      f = []
+
+      %w(javascripts/jquery.js javascripts/sproutcore.js).map do |filename|
+        f << input_file(filename, File.join(tmp, 'tmp1', "app/assets"))
+      end
+
+      %w(stylesheets/jquery.css stylesheets/sproutcore.css).map do |filename|
+        f << input_file(filename, File.join(tmp, 'tmp2', "app/assets"))
+      end
+
+      f
     end
   end
 
