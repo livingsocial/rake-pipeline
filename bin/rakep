@@ -1,21 +1,6 @@
 #!/usr/bin/env ruby
 
 require "rake-pipeline"
-require "rake-pipeline/middleware"
-require "rack/server"
-
-module Rake
-  class Pipeline
-    class Server < Rack::Server
-      def app
-        not_found = proc { [404, { "Content-Type" => "text/plain" }, ["not found"]] }
-        config = "Assetfile"
-
-        Middleware.new(not_found, config)
-      end
-    end
-  end
-end
 
 if ARGV[0] == "build"
   config = "Assetfile"
@@ -23,5 +8,21 @@ if ARGV[0] == "build"
   pipeline = Rake::Pipeline.class_eval "build do\n#{pipeline_source}\nend", config, 1
   pipeline.invoke
 else
+  require "rake-pipeline/middleware"
+  require "rack/server"
+  
+  module Rake
+    class Pipeline
+      class Server < Rack::Server
+        def app
+          not_found = proc { [404, { "Content-Type" => "text/plain" }, ["not found"]] }
+          config = "Assetfile"
+  
+          Middleware.new(not_found, config)
+        end
+      end
+    end
+  end
+
   Rake::Pipeline::Server.new.start
 end
