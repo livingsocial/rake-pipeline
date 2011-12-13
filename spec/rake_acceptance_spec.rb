@@ -102,9 +102,8 @@ HERE
 
     it "can be configured using the pipeline" do
       pipeline = Rake::Pipeline.new
-      pipeline.input_roots.push tmp
+      pipeline.add_input tmp, 'app/javascripts/*.js'
       pipeline.output_root = File.expand_path("public")
-      pipeline.input_glob = "app/javascripts/*.js"
       pipeline.tmpdir = "temporary"
 
       concat = concat_filter.new

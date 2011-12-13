@@ -9,19 +9,19 @@ describe "Rake::Pipeline::DSL" do
   end
 
   describe "#input" do
-    it "configures the pipeline's input_root" do
+    it "adds an input to the pipeline" do
       dsl.input "/app"
-      pipeline.input_roots.should == ["/app"]
+      pipeline.inputs["/app"].should == '**/*'
     end
 
-    it "configures the pipeline's input_glob" do
+    it "configures the input's glob" do
       dsl.input "/app", "*.js"
-      pipeline.input_glob.should == "*.js"
+      pipeline.inputs['/app'].should == "*.js"
     end
 
-    it "defaults the pipeline's input_glob to **/*" do
+    it "defaults input's glob to **/*" do
       dsl.input "/app"
-      pipeline.input_glob.should == "**/*"
+      pipeline.inputs['/app'].should == "**/*"
     end
   end
 

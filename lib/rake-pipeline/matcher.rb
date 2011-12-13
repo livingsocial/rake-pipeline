@@ -9,7 +9,7 @@ module Rake
     #
     # For instance, to restrict filters to operating on
     # JavaScript files in the +app+ directory, the Matcher's
-    # {Pipeline#input_roots input_roots} should include +"app"+,
+    # {Pipeline#inputs inputs} should include +"app"+,
     # and its glob would be +"*.js"+.
     #
     # In general, you should not use Matcher directly. Instead use
