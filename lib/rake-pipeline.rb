@@ -100,11 +100,9 @@ module Rake
   #     # up until this point, as well as the HTML files.
   #   end
   class Pipeline
-    # @return [String] a glob representing the input files
-    attr_accessor :input_glob
-
-    # @return [String] the directory paths for the input files.
-    attr_accessor :input_roots
+    # @return [Hash[String, String]] the directory paths for the input files
+    #   and their matching globs.
+    attr_accessor :inputs
 
     # @return [String] the directory path for the output files.
     attr_reader   :output_root
@@ -128,7 +126,7 @@ module Rake
 
     def initialize
       @filters = []
-      @input_roots = []
+      @inputs = {}
       @tmpdir = "tmp"
       @mutex = Mutex.new
     end
@@ -169,7 +167,7 @@ module Rake
     # @api private
     def copy(target_class=self.class, &block)
       pipeline = target_class.build(&block)
-      pipeline.input_roots = input_roots
+      pipeline.inputs = inputs
       pipeline.tmpdir = tmpdir
       pipeline.rake_application = rake_application
       pipeline
@@ -189,7 +187,17 @@ module Rake
       @tmpdir = File.expand_path(dir)
     end
 
-    # If you specify a glob for #input_glob, this method will
+    # Add an input directory, optionally filtering which files within
+    # the input directory are included.
+    #
+    # @param [String] root the input root directory; required
+    # @param [String] pattern a pattern to match within +root+;
+    #   optional; defaults to "**/*"
+    def add_input(root, pattern = '**/*')
+      @inputs[root] = pattern
+    end
+
+    # If you specify #inputs, this method will
     # calculate the input files for the directory. If you supply
     # input_files directly, this method will simply return the
     # input_files you supplied.
@@ -203,9 +211,9 @@ module Rake
 
       result = []
 
-      @input_roots.each do |input_root|
-        expanded_root = File.expand_path(input_root)
-        files = Dir[File.join(expanded_root, input_glob)].select { |f| File.file?(f) }
+      @inputs.each do |root, glob|
+        expanded_root = File.expand_path(root)
+        files = Dir[File.join(expanded_root, glob)].select { |f| File.file?(f) }
 
         files.each do |file|
           relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
@@ -356,7 +364,7 @@ module Rake
     # @raise Rake::Pipeline::Error if input root or glob were missing.
     # @return [void]
     def assert_input_provided
-      if input_roots.empty? || !input_glob
+      if inputs.empty?
         raise Rake::Pipeline::Error, "You cannot get input files without " \
                                      "first providing input files and an input root"
       end

@@ -5,17 +5,11 @@ describe "Rake::Pipeline" do
   let(:pipeline) { Rake::Pipeline.new }
 
   it "accepts a input root" do
-    pipeline.input_roots.push "app/assets"
-    pipeline.input_roots.should == ["app/assets"]
+    pipeline.add_input "app/assets"
+    pipeline.inputs["app/assets"].should == '**/*'
   end
 
   it "raises an exception on #relative_input_files if input_files are not provided" do
-    pipeline.input_roots.push "app/assets"
-    lambda { pipeline.input_files }.should raise_error(Rake::Pipeline::Error)
-  end
-
-  it "raises an exception on #relative_input_files if input_root is not provided" do
-    pipeline.input_glob = "app/assets/javascripts/**/*.js"
     lambda { pipeline.input_files }.should raise_error(Rake::Pipeline::Error)
   end
 
@@ -56,7 +50,7 @@ describe "Rake::Pipeline" do
     end
 
     def setup_roots
-      pipeline.input_roots.push "app/assets"
+      pipeline.add_input "app/assets"
     end
 
     before do
@@ -116,7 +110,7 @@ describe "Rake::Pipeline" do
         deps = task.prerequisites
         deps.size.should == 2
 
-        root = File.expand_path(pipeline.input_roots.first)
+        root = File.expand_path(pipeline.inputs.keys.first)
 
         deps[0].should == File.join(root, "javascripts/jquery.js")
         deps[1].should == File.join(root, "javascripts/sproutcore.js")
@@ -135,22 +129,6 @@ describe "Rake::Pipeline" do
     end
   end
 
-  describe "using a glob for input files" do
-    it_behaves_like "when working with input"
-
-    def setup_input(pipeline)
-      pipeline.input_glob = "javascripts/**/*.js"
-    end
-  end
-
-  describe "using a glob containing directories for input files" do
-    it_behaves_like "when working with input"
-
-    def setup_input(pipeline)
-      pipeline.input_glob = "**/*"
-    end
-  end
-
   describe "when using multiple input roots" do
     it_behaves_like "when working with input"
 
@@ -159,12 +137,11 @@ describe "Rake::Pipeline" do
     end
 
     def setup_roots
-      pipeline.input_roots.push File.join(tmp, 'tmp1', "app/assets")
-      pipeline.input_roots.push File.join(tmp, 'tmp2', "app/assets")
+      pipeline.add_input File.join(tmp, 'tmp1', "app/assets"), '**/*.js'
+      pipeline.add_input File.join(tmp, 'tmp2', "app/assets"), '**/*.css'
     end
 
     def setup_input(pipeline)
-      pipeline.input_glob = "**/*"
     end
 
     let(:files) do
