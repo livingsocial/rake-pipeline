@@ -155,6 +155,15 @@ describe "Rake::Pipeline::Filter" do
       filter_runs.should == 1
     end
 
+    it "with an output_name proc that takes two arguments" do
+      filter.output_name_generator = proc { |path, input|
+        input.path.upcase
+      }
+
+      filter.outputs.keys.map(&:path).should include('JAVASCRIPTS/JQUERY.JS')
+      filter.output_files.map(&:path).should include('JAVASCRIPTS/JQUERY.JS')
+    end
+
     it "with a 1:1 output_name proc" do
       filter_runs = 0
 
