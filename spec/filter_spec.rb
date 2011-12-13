@@ -155,6 +155,18 @@ describe "Rake::Pipeline::Filter" do
       filter_runs.should == 1
     end
 
+    it "with an output_name proc that takes two arguments" do
+      called_with_input = false
+
+      filter.output_name_generator = proc { |path, input|
+        called_with_input = input.path && input.root
+      }
+
+      filter.generate_rake_tasks
+
+      called_with_input.should be
+    end
+
     it "with a 1:1 output_name proc" do
       filter_runs = 0
 

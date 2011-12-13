@@ -148,7 +148,9 @@ module Rake
         hash = {}
 
         input_files.each do |file|
-          output = output_wrapper(output_name_generator.call(file.path))
+          args = [ file.path ]
+          args << file if output_name_generator.arity == 2
+          output = output_wrapper(output_name_generator.call(*args))
 
           hash[output] ||= []
           hash[output] << file
