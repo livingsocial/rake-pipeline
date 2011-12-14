@@ -46,7 +46,9 @@ module Rake
       attr_accessor :input_files
 
       # @return [Proc] a block that returns the relative output
-      #   filename for a particular input file.
+      #   filename for a particular input file. If the block accepts
+      #   just one argument, it will be passed the input's path. If
+      #   it accepts two, it will also be passed the input itself.
       attr_accessor :output_name_generator
 
       # @return [String] the root directory to write output files
@@ -148,7 +150,7 @@ module Rake
         hash = {}
 
         input_files.each do |file|
-          output = output_wrapper(output_name_generator.call(file.path))
+          output = output_wrapper(file)
 
           hash[output] ||= []
           hash[output] << file
@@ -164,7 +166,7 @@ module Rake
       # @return [Array<FileWrapper>]
       def output_files
         input_files.inject([]) do |array, file|
-          array |= [output_wrapper(output_name_generator.call(file.path))]
+          array |= [ output_wrapper(file) ]
         end
       end
 
@@ -201,8 +203,14 @@ module Rake
         rake_application.define_task(Rake::FileTask, output => deps, &block)
       end
 
-      def output_wrapper(file)
-        file_wrapper_class.new(output_root, file, encoding)
+      def output_wrapper(input)
+        file_wrapper_class.new(output_root, output_path(input), encoding)
+      end
+
+      def output_path(input)
+        args = [ input.path ]
+        args << input if output_name_generator.arity == 2
+        output_name_generator.call(*args)
       end
     end
   end
