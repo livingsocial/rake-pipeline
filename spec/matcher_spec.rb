@@ -25,6 +25,12 @@ describe "a matcher" do
     @matcher.glob.should == "*.js"
   end
 
+  it "knows about its containing pipeline" do
+    pipeline = Rake::Pipeline.new
+    pipeline.add_filter @matcher
+    @matcher.pipeline.should == pipeline
+  end
+
   it "only processes files matching the matcher" do
     @matcher.glob = "*.js"
     @matcher.output_root = "tmp1"

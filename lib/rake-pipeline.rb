@@ -249,7 +249,10 @@ module Rake
     # @param [Array<Filter>] filters a list of filters
     # @return [void]
     def add_filters(*filters)
-      filters.each { |filter| filter.rake_application = rake_application }
+      filters.each do |filter|
+        filter.rake_application = rake_application
+        filter.pipeline = self
+      end
       @filters.concat(filters)
     end
     alias add_filter add_filters
