@@ -128,7 +128,8 @@ module Rake
       @filters = []
       @inputs = {}
       @tmpdir = "tmp"
-      @mutex = Mutex.new
+      @invoke_mutex = Mutex.new
+      @clean_mutex = Mutex.new
     end
 
     # Build a new pipeline taking a block. The block will
@@ -259,7 +260,7 @@ module Rake
     #
     # @return [void]
     def invoke
-      @mutex.synchronize do
+      @invoke_mutex.synchronize do
         self.rake_application = Rake::Application.new unless @rake_application
 
         setup
@@ -274,8 +275,10 @@ module Rake
     #
     # @return [void]
     def invoke_clean
-      @rake_tasks = @rake_application = nil
-      invoke
+      @clean_mutex.synchronize do
+        @rake_tasks = @rake_application = nil
+        invoke
+      end
     end
 
     # Set up the filters and generate rake tasks. In general, this method
