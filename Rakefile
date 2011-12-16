@@ -10,3 +10,9 @@ end
 task :graph => ["doc", :docs] do
   sh "devbin/yard graph --dependencies | dot -Tpng -o doc/arch.png"
 end
+
+task :spec do
+  sh "rspec -cfs spec"
+end
+
+task :default => :spec
