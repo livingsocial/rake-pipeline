@@ -5,3 +5,6 @@ rvm:
   - ree
   - jruby
   - rbx
+
+notifications:
+  email: wycats@gmail.com
