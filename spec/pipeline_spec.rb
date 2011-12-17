@@ -33,9 +33,24 @@ describe "Rake::Pipeline" do
     pipeline.rake_application.should == Rake.application
   end
 
-  it "can have filters added to it" do
-    filter = ConcatFilter.new
-    pipeline.add_filter filter
+  describe "adding filters" do
+    let(:filter) { ConcatFilter.new }
+
+    it "can have filters added to it" do
+      pipeline.add_filter filter
+    end
+
+    it "sets an added filter's rake_application" do
+      app = Rake::Application.new
+      pipeline.rake_application = app
+      pipeline.add_filter filter
+      filter.rake_application.should == app
+    end
+
+    it "sets an added filter's pipeline" do
+      pipeline.add_filter filter
+      filter.pipeline.should == pipeline
+    end
   end
 
   shared_examples_for "when working with input" do

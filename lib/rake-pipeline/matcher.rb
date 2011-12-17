@@ -17,6 +17,10 @@ module Rake
     class Matcher < Pipeline
       attr_reader :glob
 
+      # @return [Rake::Pipeline] the Rake::Pipeline that contains
+      #   this matcher.
+      attr_accessor :pipeline
+
       # A glob matcher that a filter's input files must match
       # in order to be processed by the filter.
       #
