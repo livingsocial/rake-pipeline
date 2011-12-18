@@ -156,6 +156,20 @@ module Rake
       pipeline
     end
 
+    # Build a new pipeline from the configuration contained in
+    # the file at the path given in +assetfile+. The file will
+    # be read and evaluated with Rake::Pipeline.build.
+    #
+    # @param [String] assetfile the file path to a an Assetfile.
+    #
+    # @see Rake::Pipeline.build
+    #
+    # @return [Rake::Pipeline] the newly configured pipeline
+    def self.from_assetfile(assetfile)
+      assetfile_source = File.read(assetfile)
+      Rake::Pipeline.class_eval "build do\n#{assetfile_source}\nend", assetfile, 1
+    end
+
     @@tmp_id = 0
 
     # Copy the current pipeline's attributes over.
