@@ -68,6 +68,10 @@ module Rake
       #   filter should define new rake tasks on.
       attr_writer :rake_application
 
+      # @return [Rake::Pipeline] the Rake::Pipeline that contains
+      #   this filter.
+      attr_accessor :pipeline
+
       attr_writer :file_wrapper_class
 
       # @param [Proc] block a block to use as the Filter's

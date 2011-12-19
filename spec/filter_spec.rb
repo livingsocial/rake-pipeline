@@ -47,6 +47,13 @@ describe "Rake::Pipeline::Filter" do
     new_filter.output_name_generator.should == conversion
   end
 
+  it "knows about its containing pipeline" do
+    pipeline = Rake::Pipeline.new
+    filter = Rake::Pipeline::Filter.new
+    pipeline.add_filter(filter)
+    filter.pipeline.should == pipeline
+  end
+
   describe "using the output_name proc to converting the input names into a hash" do
     before do
       filter.output_root = output_root
