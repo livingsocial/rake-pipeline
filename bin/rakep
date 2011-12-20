@@ -5,6 +5,9 @@ require "rake-pipeline"
 if ARGV[0] == "build"
   pipeline = Rake::Pipeline.from_assetfile("Assetfile")
   pipeline.invoke
+elsif ARGV[0] == "clean"
+  pipeline = Rake::Pipeline.from_assetfile("Assetfile")
+  pipeline.clobber
 else
   require "rake-pipeline/middleware"
   require "rack/server"
