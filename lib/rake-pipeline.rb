@@ -316,6 +316,15 @@ module Rake
       @filters.last.output_files unless @filters.empty?
     end
 
+    # Delete this pipeline's {#tmpdir} and all of its {#output_files}.
+    #
+    # @return [void]
+    def clobber
+      setup_filters
+      output_files.each { |file| FileUtils.rm_rf file.fullpath }
+      FileUtils.rm_rf tmpdir
+    end
+
   protected
     # Generate a new temporary directory name.
     #
