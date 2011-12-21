@@ -214,19 +214,20 @@ describe "Rake::Pipeline" do
       pipeline.add_filter ConcatFilter.new
       # Add two filters so we know we need a tmp dir
       pipeline.add_filter ConcatFilter.new
-      pipeline.invoke
     end
 
     it "removes the pipeline's output files" do
+      pipeline.invoke
       output_files.each { |f| f.exists?.should be_true }
       pipeline.clobber
       output_files.each { |f| f.exists?.should be_false }
     end
 
-    it "removes the pipeline's tmp dir" do
-      File.exist?(pipeline.tmpdir).should be_true
+    it "cleans out the pipeline's tmp dir" do
+      pipeline.invoke
+      Dir["./temporary/rake-pipeline-tmp*"].should_not be_empty
       pipeline.clobber
-      File.exist?(pipeline.tmpdir).should be_false
+      Dir["./temporary/rake-pipeline-tmp*"].should be_empty
     end
-  end
+   end
 end

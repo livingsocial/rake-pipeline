@@ -321,8 +321,14 @@ module Rake
     # @return [void]
     def clobber
       setup_filters
-      output_files.each { |file| FileUtils.rm_rf file.fullpath }
-      FileUtils.rm_rf tmpdir
+
+      filters.map(&:output_files).flatten.each do |file|
+        FileUtils.rm_rf file.fullpath
+      end
+
+      Dir["#{tmpdir}/rake-pipeline-tmp*"].each do |dir|
+        FileUtils.rm_rf dir
+      end
     end
 
   protected
