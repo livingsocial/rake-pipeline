@@ -22,8 +22,7 @@ module Rake
         @app = app
 
         if pipeline.is_a?(String)
-          pipeline_source = File.read(pipeline)
-          pipeline = Pipeline.class_eval "build do\n#{pipeline_source}\nend", pipeline, 1
+          pipeline = Rake::Pipeline.from_assetfile(pipeline)
         end
 
         @pipeline = pipeline
