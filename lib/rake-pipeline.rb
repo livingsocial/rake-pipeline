@@ -156,6 +156,20 @@ module Rake
       pipeline
     end
 
+    # Build a new pipeline from the configuration contained in
+    # the file at the path given in +assetfile+. The file will
+    # be read and evaluated with Rake::Pipeline.build.
+    #
+    # @param [String] assetfile the file path to a an Assetfile.
+    #
+    # @see Rake::Pipeline.build
+    #
+    # @return [Rake::Pipeline] the newly configured pipeline
+    def self.from_assetfile(assetfile)
+      assetfile_source = File.read(assetfile)
+      Rake::Pipeline.class_eval "build do\n#{assetfile_source}\nend", assetfile, 1
+    end
+
     @@tmp_id = 0
 
     # Copy the current pipeline's attributes over.
@@ -300,6 +314,21 @@ module Rake
     # @return [Array<FileWrapper>]
     def output_files
       @filters.last.output_files unless @filters.empty?
+    end
+
+    # Delete this pipeline's {#tmpdir} and all of its {#output_files}.
+    #
+    # @return [void]
+    def clobber
+      setup_filters
+
+      filters.map(&:output_files).flatten.each do |file|
+        FileUtils.rm_rf file.fullpath
+      end
+
+      Dir["#{tmpdir}/rake-pipeline-tmp*"].each do |dir|
+        FileUtils.rm_rf dir
+      end
     end
 
   protected
