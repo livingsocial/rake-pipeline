@@ -22,7 +22,7 @@ module Rake
         @app = app
 
         if pipeline.is_a?(String)
-          Rake::Pipeline.from_assetfile(pipeline)
+          pipeline = Rake::Pipeline.from_assetfile(pipeline)
         end
 
         @pipeline = pipeline
