@@ -95,6 +95,12 @@ module Rake
         end
       end
 
+    protected
+      # Let our containing pipeline generate temp directories for us
+      def generate_tmpdir
+        pipeline.generate_tmpdir
+      end
+
     private
       # Override the default {Pipeline#eligible_input_files}
       # to include only files that match the {#glob glob}.

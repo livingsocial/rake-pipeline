@@ -122,6 +122,15 @@ module Rake
     # @return [Array] this pipeline's filters.
     attr_reader   :filters
 
+    # @return [String|nil] the path to this pipeline's Assetfile
+    #   or nil if the pipeline was created without an Assetfile.
+    attr_reader   :assetfile_path
+
+    # @return [String|nil] the digest of the Assetfile this pipeline
+    #   was created with, or nil if the pipeline was created without
+    #   an Assetfile.
+    attr_reader   :assetfile_digest
+
     attr_writer :input_files
 
     def initialize
@@ -167,7 +176,10 @@ module Rake
     # @return [Rake::Pipeline] the newly configured pipeline
     def self.from_assetfile(assetfile)
       assetfile_source = File.read(assetfile)
-      Rake::Pipeline.class_eval "build do\n#{assetfile_source}\nend", assetfile, 1
+      pipeline = Rake::Pipeline.class_eval "build do\n#{assetfile_source}\nend", assetfile, 1
+      pipeline.instance_variable_set(:@assetfile_path, File.expand_path(assetfile))
+      pipeline.instance_variable_set(:@assetfile_digest, digest(assetfile_source))
+      pipeline
     end
 
     @@tmp_id = 0
@@ -322,13 +334,27 @@ module Rake
     def clobber
       setup_filters
 
-      filters.map(&:output_files).flatten.each do |file|
+      clobber_old_tmpdirs
+
+      output_files.each do |file|
         FileUtils.rm_rf file.fullpath
       end
+    end
 
-      Dir["#{tmpdir}/rake-pipeline-tmp*"].each do |dir|
-        FileUtils.rm_rf dir
+    def clobber_old_tmpdirs
+      if File.directory?(tmpdir) && assetfile_path
+        old_dirs = Dir["#{tmpdir}/rake-pipeline-*"].reject do |dir|
+          dir == "#{tmpdir}/rake-pipeline-#{assetfile_digest}"
+        end
+        old_dirs.each { |dir| FileUtils.rm_rf dir }
       end
+    end
+
+    # @return [Boolean] true if this pipeline's Assetfile has changed
+    #   since the pipeline's creation, false if the pipeline has no
+    #   Assetfile or has an unchanged assetfile.
+    def outdated?
+      assetfile_path && (self.class.digest(File.read(assetfile_path)) != assetfile_digest)
     end
 
   protected
@@ -337,6 +363,11 @@ module Rake
     # @return [String] a unique temporary directory name
     def self.generate_tmpname
       "rake-pipeline-tmp-#{@@tmp_id += 1}"
+    end
+
+    # @return [String] the SHA1 digest of the given string.
+    def self.digest(str)
+      (Digest::SHA1.new << str).to_s
     end
 
     # Set up the filters. This will loop through all of the filters for
@@ -374,7 +405,8 @@ module Rake
     #
     # @return [void]
     def generate_tmpdir
-      File.join(tmpdir, self.class.generate_tmpname)
+      digest_dir = assetfile_digest ? "rake-pipeline-#{assetfile_digest}" : ""
+      File.join(tmpdir, digest_dir, self.class.generate_tmpname)
     end
 
     # Generate all of the rake tasks for this pipeline.

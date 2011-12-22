@@ -34,6 +34,9 @@ module Rake
       # @param [Hash] env a Rack environment
       # @return [Array(Fixnum, Hash, #each)] A rack response
       def call(env)
+        if pipeline.outdated?
+          @pipeline = Rake::Pipeline.from_assetfile(pipeline.assetfile_path)
+        end
         pipeline.invoke_clean
         path = env["PATH_INFO"]
 
