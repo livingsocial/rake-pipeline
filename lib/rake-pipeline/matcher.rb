@@ -96,7 +96,7 @@ module Rake
       end
 
     protected
-      # Let our containing pipeline generate temp directories for us
+      # Let our containing pipeline generate temp directories for us.
       def generate_tmpdir
         pipeline.generate_tmpdir
       end

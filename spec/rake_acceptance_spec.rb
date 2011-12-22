@@ -213,23 +213,6 @@ HERE
       end
     end
 
-    describe "the raw pipeline DSL (read from an Assetfile)" do
-      it_behaves_like "the pipeline DSL"
-
-      before do
-        File.open(File.join(tmp, "Assetfile"), "w") { |file| file.write(<<-HERE) }
-          require "#{tmp}/../support/spec_helpers/filters"
-          tmpdir "temporary"
-          input "#{tmp}", "app/javascripts/*.js"
-          filter Rake::Pipeline::ConcatFilter, "javascripts/application.js"
-          filter Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
-          output "public"
-        HERE
-
-        @pipeline = Rake::Pipeline.from_assetfile("Assetfile")
-      end
-    end
-
     describe "using the matcher spec" do
       def output_should_exist(expected=EXPECTED_JS_OUTPUT)
         super

@@ -18,6 +18,11 @@ describe "Rake::Pipeline" do
     pipeline.tmpdir.should == File.expand_path("tmp")
   end
 
+  it "accepts a temporary subdirectory" do
+    pipeline.tmpsubdir = "rakep"
+    pipeline.tmpsubdir.should == "rakep"
+  end
+
   it "accepts an output directory" do
     pipeline.output_root = "public"
     pipeline.output_root.should == File.expand_path("public")
@@ -53,28 +58,8 @@ describe "Rake::Pipeline" do
     end
   end
 
-  module InputHelpers
-    def input_file(path, root=File.join(tmp, "app/assets"))
-      Rake::Pipeline::FileWrapper.new root, path
-    end
-
-    def output_file(path, root=File.join(tmp, "public"))
-      input_file(path, root)
-    end
-
-    def create_files(files)
-      Array(files).each do |file|
-        mkdir_p File.dirname(file.fullpath)
-
-        File.open(file.fullpath, "w") do |file|
-          file.write "// This is #{file.path}\n"
-        end
-      end
-    end
-  end
-
   shared_examples_for "when working with input" do
-    include InputHelpers
+    include Rake::Pipeline::SpecHelpers::InputHelpers
 
     let(:files) do
       %w(javascripts/jquery.js javascripts/sproutcore.js).map do |filename|
@@ -191,114 +176,6 @@ describe "Rake::Pipeline" do
         end
         pipeline.input_files = wrappers
       end
-    end
-  end
-
-  describe "clobbering a pipeline" do
-    include InputHelpers
-
-    let(:input_files) do
-      %w(jquery.js ember.js).map { |f| input_file(f) }
-    end
-
-    let(:output_files) do
-      input_files.map { |f| output_file(f.path) }
-    end
-
-    before do
-      Rake.application = Rake::Application.new
-      create_files(input_files)
-      pipeline.add_input "app/assets"
-      pipeline.output_root = "public"
-      pipeline.tmpdir = "temporary"
-      pipeline.add_filter ConcatFilter.new
-      # Add two filters so we know we need a tmp dir
-      pipeline.add_filter ConcatFilter.new
-    end
-
-    it "removes the pipeline's output files" do
-      pipeline.invoke
-      output_files.each { |f| f.exists?.should be_true }
-      pipeline.clobber
-      output_files.each { |f| f.exists?.should be_false }
-    end
-
-    it "cleans out the pipeline's tmp dir" do
-      pipeline.invoke
-      Dir["./temporary/rake-pipeline-tmp*"].should_not be_empty
-      pipeline.clobber
-      Dir["./temporary/rake-pipeline-tmp*"].should be_empty
-    end
-  end
-
-  describe "A pipeline with an Assetfile" do
-    include InputHelpers
-
-    let(:input_files) do
-      %w(jquery.js ember.js).map { |f| input_file(f) }
-    end
-
-    let(:output_files) do
-      input_files.map { |f| output_file(f.path) }
-    end
-
-    let(:assetfile_path) { File.join(tmp, "Assetfile") }
-
-    let(:pipeline) { Rake::Pipeline.from_assetfile("Assetfile") }
-
-    def assetfile_digest
-      (Digest::SHA1.new << File.read(assetfile_path)).to_s
-    end
-
-    before do
-      create_files input_files
-      File.open(File.join(tmp, "Assetfile"), "w") { |file| file.write(<<-HERE) }
-        require "#{tmp}/../support/spec_helpers/filters"
-        tmpdir "temporary"
-        input "app/assets"
-        filter Rake::Pipeline::ConcatFilter
-        filter Rake::Pipeline::ConcatFilter
-        output "public"
-      HERE
-    end
-
-    it "is created from the configuration in the Assetfile" do
-      pipeline.tmpdir.should == File.join(tmp, "temporary")
-      pipeline.output_root.should == File.join(tmp, "public")
-      pipeline.inputs.should include("app/assets" => "**/*")
-    end
-
-    it "has an assetfile_path" do
-      pipeline.assetfile_path.should == assetfile_path
-    end
-
-    it "has an assetfile_digest" do
-      pipeline.assetfile_digest.should == assetfile_digest
-    end
-
-    it "writes temp files to a subdirectory of the tmp dir named after the assetfile_digest" do
-      pipeline.invoke
-      digest_dir = File.join(tmp, "temporary", "rake-pipeline-#{assetfile_digest}")
-      File.directory?(digest_dir).should be_true
-    end
-
-    it "is outdated if the Assetfile contents change" do
-      pipeline.outdated?.should be_false
-
-      original_assetfile_digest = assetfile_digest
-      File.open(assetfile_path, 'a') do |file|
-        file.write("filter Rake::Pipeline::ConcatFilter\n")
-      end
-
-      original_assetfile_digest.should_not == assetfile_digest
-      pipeline.outdated?.should be_true
-    end
-
-    it "clears out old temp dirs when invoked" do
-      old_dir = File.join(tmp, "temporary", "rake-pipeline-2903i49839492384")
-      mkdir_p old_dir
-      pipeline.invoke
-      File.exist?(old_dir).should be_false
     end
   end
 end
