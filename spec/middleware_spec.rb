@@ -5,16 +5,6 @@ require "rack/test"
 describe "Rake::Pipeline Middleware" do
   include Rack::Test::Methods
 
-  ConcatFilter = Rake::Pipeline::SpecHelpers::Filters::ConcatFilter
-
-  class StripAssertsFilter < Rake::Pipeline::Filter
-    def generate_output(inputs, output)
-      inputs.each do |input|
-        output.write input.read.gsub(%r{^\s*assert\(.*\)\s*;?\s*$}m, '')
-      end
-    end
-  end
-
   inputs = {
     "app/javascripts/jquery.js" => "var jQuery = {};\n",
 
@@ -25,8 +15,8 @@ describe "Rake::Pipeline Middleware" do
     HERE
 
     "app/index.html" => "<html>HI</html>",
-    "app/javascripts/index.html" => "<html>JAVASCRIPT</html>",
-    "app/empty_dir" => nil
+      "app/javascripts/index.html" => "<html>JAVASCRIPT</html>",
+      "app/empty_dir" => nil
   }
 
   expected_output = <<-HERE.gsub(/^ {4}/, '')
@@ -36,26 +26,45 @@ describe "Rake::Pipeline Middleware" do
     SC.hi = function() { console.log("hi"); };
   HERE
 
+  assetfile_source = <<-HERE.gsub(/^ {4}/, '')
+    require "#{tmp}/../support/spec_helpers/filters"
+    input "#{tmp}", "app/**/*"
+
+    match "*.js" do
+      filter(Rake::Pipeline::ConcatFilter) { "javascripts/application.js" }
+      filter(Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter) { |input| input }
+    end
+
+    # copy the rest
+    filter(Rake::Pipeline::ConcatFilter) { |input| input.sub(%r|^app/|, '') }
+
+    output "public"
+  HERE
+
+  modified_assetfile_source = <<-HERE.gsub(/^ {4}/, '')
+    require "#{tmp}/../support/spec_helpers/filters"
+    input "#{tmp}", "app/**/*"
+
+    match "*.js" do
+      filter(Rake::Pipeline::ConcatFilter) { "javascripts/app.js" }
+      filter(Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter) { |input| input }
+    end
+
+    # copy the rest
+    filter(Rake::Pipeline::ConcatFilter) { |input| input.sub(%r|^app/|, '') }
+
+    output "public"
+  HERE
+
   app = middleware = pipeline = nil
 
   before do
+    assetfile_path = File.join(tmp, "Assetfile")
+    File.open(assetfile_path, "w") { |file| file.write(assetfile_source) }
+
     app = lambda { |env| [404, {}, ['not found']] }
 
-    pipeline = Rake::Pipeline.build do
-      input tmp, "app/**/*"
-
-      match "*.js" do
-        filter(ConcatFilter) { "javascripts/application.js" }
-        filter(StripAssertsFilter) { |input| input }
-      end
-
-      # copy the rest
-      filter(ConcatFilter) { |input| input.sub(/^app\//, '') }
-
-      output "public"
-    end
-
-    middleware = Rake::Pipeline::Middleware.new(app, pipeline)
+    middleware = Rake::Pipeline::Middleware.new(app, assetfile_path)
 
     inputs.each do |name, string|
       path = File.join(tmp, name)
@@ -146,4 +155,28 @@ describe "Rake::Pipeline Middleware" do
     last_response.body.should == "not found"
     last_response.status.should == 404
   end
+
+  it "recreates the pipeline when the Assetfile changes" do
+    get "/javascripts/app.js"
+    last_response.body.should == "not found"
+    last_response.status.should == 404
+
+    File.open(File.join(tmp, "Assetfile"), "w") do |file|
+      file.write(modified_assetfile_source)
+    end
+
+    expected = <<-HERE.gsub(/^ {6}/, '')
+      var jQuery = {};
+      var SC = {};
+
+      SC.hi = function() { console.log("hi"); };
+    HERE
+
+    get "/javascripts/app.js"
+
+    last_response.body.should == expected
+    last_response.headers["Content-Type"].should == "application/javascript"
+  end
+
+
 end

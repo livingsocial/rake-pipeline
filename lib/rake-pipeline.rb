@@ -4,6 +4,7 @@ require "rake-pipeline/filters"
 require "rake-pipeline/dsl"
 require "rake-pipeline/matcher"
 require "rake-pipeline/error"
+require "rake-pipeline/runner"
 
 if defined?(Rails::Railtie)
   require "rake-pipeline/railtie"
@@ -110,6 +111,11 @@ module Rake
     # @return [String] the directory path for temporary files.
     attr_reader   :tmpdir
 
+    # @return [String] a directory path relative to {#tmpdir}
+    #   where temporary files will be stored. Defaults to '',
+    #   meaning files are written directly under {#tmpdir}.
+    attr_accessor :tmpsubdir
+
     # @return [Array] an Array of Rake::Task objects. This
     #   property is populated by the #generate_rake_tasks
     #   method.
@@ -128,6 +134,7 @@ module Rake
       @filters = []
       @inputs = {}
       @tmpdir = "tmp"
+      @tmpsubdir = ""
       @invoke_mutex = Mutex.new
       @clean_mutex = Mutex.new
     end
@@ -154,20 +161,6 @@ module Rake
       pipeline = new
       DSL.evaluate(pipeline, &block) if block
       pipeline
-    end
-
-    # Build a new pipeline from the configuration contained in
-    # the file at the path given in +assetfile+. The file will
-    # be read and evaluated with Rake::Pipeline.build.
-    #
-    # @param [String] assetfile the file path to a an Assetfile.
-    #
-    # @see Rake::Pipeline.build
-    #
-    # @return [Rake::Pipeline] the newly configured pipeline
-    def self.from_assetfile(assetfile)
-      assetfile_source = File.read(assetfile)
-      Rake::Pipeline.class_eval "build do\n#{assetfile_source}\nend", assetfile, 1
     end
 
     @@tmp_id = 0
@@ -308,37 +301,6 @@ module Rake
       generate_rake_tasks
     end
 
-    # A list of the output files that invoking this pipeline will
-    # generate.
-    #
-    # @return [Array<FileWrapper>]
-    def output_files
-      @filters.last.output_files unless @filters.empty?
-    end
-
-    # Delete this pipeline's {#tmpdir} and all of its {#output_files}.
-    #
-    # @return [void]
-    def clobber
-      setup_filters
-
-      filters.map(&:output_files).flatten.each do |file|
-        FileUtils.rm_rf file.fullpath
-      end
-
-      Dir["#{tmpdir}/rake-pipeline-tmp*"].each do |dir|
-        FileUtils.rm_rf dir
-      end
-    end
-
-  protected
-    # Generate a new temporary directory name.
-    #
-    # @return [String] a unique temporary directory name
-    def self.generate_tmpname
-      "rake-pipeline-tmp-#{@@tmp_id += 1}"
-    end
-
     # Set up the filters. This will loop through all of the filters for
     # the current pipeline and wire up their input_files and output_files.
     #
@@ -346,6 +308,7 @@ module Rake
     # set up as part of this process.
     #
     # @return [void]
+    # @api private
     def setup_filters
       last = @filters.last
 
@@ -370,11 +333,27 @@ module Rake
       end
     end
 
+    # A list of the output files that invoking this pipeline will
+    # generate.
+    #
+    # @return [Array<FileWrapper>]
+    def output_files
+      @filters.last.output_files unless @filters.empty?
+    end
+
+  protected
+    # Generate a new temporary directory name.
+    #
+    # @return [String] a unique temporary directory name
+    def self.generate_tmpname
+      "rake-pipeline-tmp-#{@@tmp_id += 1}"
+    end
+
     # Generate a new temporary directory name under the main tmpdir.
     #
     # @return [void]
     def generate_tmpdir
-      File.join(tmpdir, self.class.generate_tmpname)
+      File.join(tmpdir, tmpsubdir, self.class.generate_tmpname)
     end
 
     # Generate all of the rake tasks for this pipeline.
@@ -404,5 +383,6 @@ module Rake
                                      "first providing input files and an input root"
       end
     end
+
   end
 end

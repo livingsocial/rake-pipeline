@@ -3,11 +3,11 @@
 require "rake-pipeline"
 
 if ARGV[0] == "build"
-  pipeline = Rake::Pipeline.from_assetfile("Assetfile")
-  pipeline.invoke
+  runner = Rake::Pipeline::Runner.new("Assetfile")
+  runner.cleanup_tmpdir
+  runner.invoke
 elsif ARGV[0] == "clean"
-  pipeline = Rake::Pipeline.from_assetfile("Assetfile")
-  pipeline.clobber
+  Rake::Pipeline::Runner.new("Assetfile").clobber
 else
   require "rake-pipeline/middleware"
   require "rack/server"
