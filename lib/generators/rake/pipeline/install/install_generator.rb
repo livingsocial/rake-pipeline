@@ -30,6 +30,10 @@ module Rake
         gsub_file "Gemfile", regex, ''
       end
 
+      def enable_assets_in_development
+        gsub_file "config/environments/development.rb", /^end/, "\n  config.rake_pipeline_enabled = true\nend"
+      end
+
       # TODO: Support asset-pipeline like API
       def add_assetfile
         create_file "Assetfile", <<-RUBY.strip_heredoc
