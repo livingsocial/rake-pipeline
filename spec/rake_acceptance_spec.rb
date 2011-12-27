@@ -100,6 +100,37 @@ HERE
       output_should_exist
     end
 
+    it "supports filters with multiple outputs per input" do
+      concat = concat_filter.new
+      concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
+      concat.output_root = File.join(tmp, "temporary", "concat_filter")
+      concat.output_name_generator = proc { |input| [ "javascripts/application.js", input.sub(/^app\//, '') ] }
+
+      strip_asserts = strip_asserts_filter.new
+      strip_asserts.input_files = concat.output_files
+      strip_asserts.output_root = File.join(tmp, "public")
+      strip_asserts.output_name_generator = proc { |input| input }
+
+      concat.generate_rake_tasks
+      Rake::Task.define_task(:default => strip_asserts.generate_rake_tasks)
+      Rake.application[:default].invoke
+
+      output_should_exist
+
+      expected_files = {
+        "javascripts/jquery.js" => "var jQuery = {};\n",
+        "javascripts/sproutcore.js" => "var SC = {};\n\nSC.hi = function() { console.log(\"hi\"); };\n"
+      }
+
+      expected_files.each do |file, expected|
+        output_file = File.join(tmp, "public", file)
+        output = nil
+
+        lambda { output = File.read(output_file) }.should_not raise_error
+        output.should == expected
+      end
+    end
+
     it "can be configured using the pipeline" do
       pipeline = Rake::Pipeline.new
       pipeline.add_input tmp, 'app/javascripts/*.js'

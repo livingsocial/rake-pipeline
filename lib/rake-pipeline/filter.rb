@@ -154,10 +154,12 @@ module Rake
         hash = {}
 
         input_files.each do |file|
-          output = output_wrapper(file)
+          outputs = output_paths(file)
 
-          hash[output] ||= []
-          hash[output] << file
+          output_wrappers(file).each do |output|
+            hash[output] ||= []
+            hash[output] << file
+          end
         end
 
         hash
@@ -170,7 +172,7 @@ module Rake
       # @return [Array<FileWrapper>]
       def output_files
         input_files.inject([]) do |array, file|
-          array |= [ output_wrapper(file) ]
+          array |= output_wrappers(file)
         end
       end
 
@@ -207,14 +209,16 @@ module Rake
         rake_application.define_task(Rake::FileTask, output => deps, &block)
       end
 
-      def output_wrapper(input)
-        file_wrapper_class.new(output_root, output_path(input), encoding)
+      def output_wrappers(input)
+        output_paths(input).map do |path|
+          file_wrapper_class.new(output_root, path, encoding)
+        end
       end
 
-      def output_path(input)
+      def output_paths(input)
         args = [ input.path ]
         args << input if output_name_generator.arity == 2
-        output_name_generator.call(*args)
+        Array(output_name_generator.call(*args))
       end
     end
   end

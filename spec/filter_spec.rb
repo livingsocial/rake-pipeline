@@ -71,6 +71,20 @@ describe "Rake::Pipeline::Filter" do
       filter.output_files.should == [output_file("application.js")]
     end
 
+    it "with more than one output per input" do
+      output_name_generator = proc { |input| [ input, "application.js" ] }
+      filter.output_name_generator = output_name_generator
+      outputs = filter.outputs
+
+      outputs = input_files.inject({}) do |hash, input|
+        hash.merge output_file(input.path) => [ input ]
+      end
+
+      filter.outputs.should == { output_file("application.js") => input_files }.merge(outputs)
+      filter.output_files.sort.should ==
+        ([ output_file("application.js") ] + input_files.map { |f| output_file(f.path) }).sort
+    end
+
     it "with a 1:1 output_name proc" do
       output_name_generator = proc { |input| input }
       filter.output_name_generator = output_name_generator
