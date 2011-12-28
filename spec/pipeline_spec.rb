@@ -170,7 +170,7 @@ describe "Rake::Pipeline" do
 
     def setup_input(pipeline)
       Dir.chdir("app/assets") do
-        files = Dir["javascripts/**/*.js"]
+        files = Dir["javascripts/**/*.js"].sort
         wrappers = files.map do |file|
           Rake::Pipeline::FileWrapper.new(File.join(tmp, "app/assets"), file)
         end

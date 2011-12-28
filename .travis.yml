@@ -7,4 +7,6 @@ rvm:
   - rbx
 
 notifications:
-  email: wycats@gmail.com
+  email:
+    - wycats@gmail.com
+    - dudley@steambone.org

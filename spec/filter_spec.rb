@@ -101,8 +101,8 @@ describe "Rake::Pipeline::Filter" do
       filter.output_name_generator = output_name_generator
       outputs = filter.outputs
 
-      outputs.keys.should == [output_file("jquery.js"), output_file("sproutcore.js")]
-      outputs.values.should == [[input_file("jquery.js"), input_file("jquery-ui.js")], [input_file("sproutcore.js")]]
+      outputs.keys.sort.should == [output_file("jquery.js"), output_file("sproutcore.js")]
+      outputs.values.sort.should == [[input_file("jquery.js"), input_file("jquery-ui.js")], [input_file("sproutcore.js")]]
 
       filter.output_files.should == [output_file("jquery.js"), output_file("sproutcore.js")]
     end

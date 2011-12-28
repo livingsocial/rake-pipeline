@@ -229,7 +229,7 @@ module Rake
         end
       end
 
-      result
+      result.sort
     end
 
     # for Pipelines, this is every file, but it may be overridden
