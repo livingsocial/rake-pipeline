@@ -56,9 +56,9 @@ describe "Rake::Pipeline::Runner" do
     runner.assetfile_digest.should == assetfile_digest
   end
 
-  describe "creating a Runner" do
+  describe ".from_assetfile" do
     it "creates a pipeline from an Assetfile given an Assetfile path" do
-      runner = Rake::Pipeline::Runner.new(assetfile_path)
+      runner = Rake::Pipeline::Runner.from_assetfile(assetfile_path)
       pipeline = runner.pipeline
       pipeline.inputs.should == { "app/assets" => "**/*" }
       pipeline.output_root.should == File.join(tmp, "public")
@@ -66,7 +66,7 @@ describe "Rake::Pipeline::Runner" do
 
     it "wraps an existing pipeline" do
       pipeline = Rake::Pipeline.class_eval("build do\n#{File.read(assetfile_path)}\nend", assetfile_path, 1)
-      runner = Rake::Pipeline::Runner.new(pipeline)
+      runner = Rake::Pipeline::Runner.from_assetfile(pipeline)
       runner.pipeline.should == pipeline
     end
   end
@@ -113,14 +113,14 @@ describe "Rake::Pipeline::Runner" do
     let(:runner) { Rake::Pipeline::Runner.new(assetfile_path) }
 
     it "cleans all rake-pipeline-* dirs out of the pipeline's tmp dir" do
-      runner.invoke
+      runner.invoke_clean
       Dir["#{tmp}/tmp/rake-pipeline-*"].should_not be_empty
       runner.clobber
       Dir["#{tmp}/tmp/rake-pipeline-*"].should be_empty
     end
 
     it "removes the pipeline's output files" do
-      runner.invoke
+      runner.invoke_clean
       output_files.each { |f| f.exists?.should be_true }
       runner.clobber
       output_files.each { |f| f.exists?.should be_false }
@@ -143,7 +143,7 @@ describe "Rake::Pipeline::Runner" do
     end
 
     it "leaves the current assetfile-digest tmp dir alone" do
-      runner.invoke
+      runner.invoke_clean
       File.exist?(File.join(tmp, "tmp", runner.digested_tmpdir)).should be_true
       runner.cleanup_tmpdir
       File.exist?(File.join(tmp, "tmp", runner.digested_tmpdir)).should be_true

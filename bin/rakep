@@ -1,14 +1,4 @@
 #!/usr/bin/env ruby
 
 require "rake-pipeline"
-
-if ARGV[0] == "build"
-  runner = Rake::Pipeline::Runner.new("Assetfile")
-  runner.cleanup_tmpdir
-  runner.invoke
-elsif ARGV[0] == "clean"
-  Rake::Pipeline::Runner.new("Assetfile").clobber
-else
-  require "rake-pipeline/server"
-  Rake::Pipeline::Server.new.start
-end
+Rake::Pipeline::Runner.start
