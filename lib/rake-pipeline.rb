@@ -78,7 +78,7 @@ module Rake
   #       # first, wrap all JS files in a custom filter
   #       filter ClosureFilter
   #       # then, concatenate all JS files into a single file
-  #       filter Rake::Pipeline::ConcatFilter, "application.js"
+  #       concat "application.js"
   #     end
   #
   #     # specify filters for css and scss files
@@ -90,7 +90,7 @@ module Rake
   #         input.sub(/\.scss$/, 'css')
   #       end
   #       # then, concatenate all CSS files into a single file
-  #       filter Rake::Pipeline::ConcatFilter, "application.css"
+  #       concat "application.css"
   #     end
   #
   #     # the remaining files not specified by a matcher (the
@@ -149,7 +149,7 @@ module Rake
     #     input "app/assets"
     #     output "public"
     #
-    #     filter Rake::Pipeline::ConcatFilter, "app.js"
+    #     concat "app.js"
     #   end
     #
     # @see DSL the Rake::Pipeline::DSL documentation.
