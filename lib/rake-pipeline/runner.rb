@@ -69,14 +69,7 @@ module Rake
         # @return [void]
         def cleanup_tmpdir
           pipeline.setup_filters
-
-          if File.directory?(pipeline.tmpdir)
-            old_dirs = Dir["#{pipeline.tmpdir}/rake-pipeline-*"].reject do |dir|
-              dir == "#{pipeline.tmpdir}/#{digested_tmpdir}"
-            end
-
-            old_dirs.each { |dir| remove_dir dir }
-          end
+          obsolete_tmpdirs.each { |dir| remove_dir dir }
         end
 
         # Remove the contents of this pipeline's {#tmpdir} and all of
@@ -131,6 +124,18 @@ module Rake
       # @return [String] the SHA1 digest of the given string.
       def digest(str)
         (Digest::SHA1.new << str).to_s
+      end
+
+      # @return Array[String] a list of the paths to temporary directories
+      #   that don't match the pipline's Assetfile digest.
+      def obsolete_tmpdirs
+        if File.directory?(pipeline.tmpdir)
+          Dir["#{pipeline.tmpdir}/rake-pipeline-*"].sort.reject do |dir|
+            dir == "#{pipeline.tmpdir}/#{digested_tmpdir}"
+          end
+        else
+          []
+        end
       end
     end
   end
