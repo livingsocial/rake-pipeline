@@ -79,7 +79,6 @@ describe "Rake::Pipeline::Runner" do
     end
 
     context "if the Assetfile contents have changed" do
-
       def modify_assetfile
         File.open(assetfile_path, 'w') do |file|
           file.write(MODIFIED_ASSETFILE_SOURCE)
@@ -110,8 +109,6 @@ describe "Rake::Pipeline::Runner" do
   end
 
   describe "clobbering a pipeline" do
-    let(:runner) { Rake::Pipeline::Runner.new(assetfile_path) }
-
     it "cleans all rake-pipeline-* dirs out of the pipeline's tmp dir" do
       runner.invoke_clean
       Dir["#{tmp}/tmp/rake-pipeline-*"].should_not be_empty
@@ -127,9 +124,7 @@ describe "Rake::Pipeline::Runner" do
     end
   end
 
-  describe "cleaning a pipeline" do
-    let(:runner) { Rake::Pipeline::Runner.new(assetfile_path) }
-
+  describe "#cleanup_tmpdir" do
     let(:old_dir) { File.join(tmp, "tmp", "rake-pipeline-ad7a83894789") }
 
     before do
@@ -143,10 +138,26 @@ describe "Rake::Pipeline::Runner" do
     end
 
     it "leaves the current assetfile-digest tmp dir alone" do
-      runner.invoke_clean
+      runner.build
       File.exist?(File.join(tmp, "tmp", runner.digested_tmpdir)).should be_true
       runner.cleanup_tmpdir
       File.exist?(File.join(tmp, "tmp", runner.digested_tmpdir)).should be_true
+    end
+  end
+
+  describe "#build" do
+    it "creates output files from a pipeline" do
+      runner.pipeline.output_files.each { |file| file.should_not exist }
+      runner.invoke(:build, [])
+      runner.pipeline.output_files.each { |file| file.should exist }
+    end
+
+    context "if the :pretend option is set" do
+      it "doesn't create output files" do
+        runner.pipeline.output_files.each { |file| file.should_not exist }
+        runner.invoke(:build, [], :pretend => true)
+        runner.pipeline.output_files.each { |file| file.should_not exist }
+      end
     end
   end
 end

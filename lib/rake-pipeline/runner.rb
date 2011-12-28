@@ -24,9 +24,15 @@ module Rake
       class_option :assetfile, :default => "Assetfile", :aliases => "-c"
 
       desc "build", "Build the project."
+      method_option :pretend, :type => :boolean, :aliases => "-p"
       def build
-        cleanup_tmpdir
-        pipeline.invoke
+        if options["pretend"]
+          pipeline.setup_filters
+          pipeline.output_files.each { |dir| say_status(:create, dir.fullpath) }
+        else
+          cleanup_tmpdir
+          pipeline.invoke
+        end
       end
 
       desc "clean", "Remove the pipeline's temporary and output files."
