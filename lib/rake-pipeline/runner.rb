@@ -77,13 +77,8 @@ module Rake
         #
         # @return [void]
         def clobber
-          cleanup_tmpdir
-
-          remove_dir "#{pipeline.tmpdir}/#{digested_tmpdir}"
-
-          pipeline.output_files.each do |file|
-            remove_file file.fullpath
-          end
+          pipeline.setup_filters
+          files_to_clobber.each { |dir| remove_dir dir }
         end
 
         # Invoke the pipeline, detecting any changes to the Assetfile
@@ -136,6 +131,14 @@ module Rake
         else
           []
         end
+      end
+
+      # @return Array[String] a list of files to delete to completely clean
+      #   out a pipeline's temporary and output files.
+      def files_to_clobber
+        obsolete_tmpdirs +
+          ["#{pipeline.tmpdir}/#{digested_tmpdir}"] +
+          pipeline.output_files.map(&:fullpath)
       end
     end
   end
