@@ -146,18 +146,34 @@ describe "Rake::Pipeline::Runner" do
   end
 
   describe "the clean task" do
+    def rakep_tmpdirs
+      Dir["#{tmp}/tmp/rake-pipeline-*"]
+    end
+
     it "cleans all rake-pipeline-* dirs out of the pipeline's tmp dir" do
-      runner.invoke_clean
-      Dir["#{tmp}/tmp/rake-pipeline-*"].should_not be_empty
+      runner.invoke(:build, [])
+      rakep_tmpdirs.should_not be_empty
       runner.invoke(:clean, [])
-      Dir["#{tmp}/tmp/rake-pipeline-*"].should be_empty
+      rakep_tmpdirs.should be_empty
     end
 
     it "removes the pipeline's output files" do
-      runner.invoke_clean
-      output_files.each { |f| f.exists?.should be_true }
+      runner.invoke(:build, [])
+      output_files.each { |f| f.should exist }
       runner.invoke(:clean, [])
-      output_files.each { |f| f.exists?.should be_false }
+      output_files.each { |f| f.should_not exist }
+    end
+
+    context "if the :pretend option is set" do
+      it "doesn't remove any files" do
+        runner.invoke(:build, [])
+        output_files.each { |f| f.should exist }
+        rakep_tmpdirs.should_not be_empty
+
+        runner.invoke(:clean, [], :pretend => true)
+        output_files.each { |f| f.should exist }
+        rakep_tmpdirs.should_not be_empty
+      end
     end
   end
 end

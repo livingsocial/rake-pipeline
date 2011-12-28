@@ -36,6 +36,7 @@ module Rake
       end
 
       desc "clean", "Remove the pipeline's temporary and output files."
+      method_option :pretend, :type => :boolean, :aliases => "-p"
       def clean
         pipeline.setup_filters
         files_to_clobber.each { |dir| remove_dir dir }
