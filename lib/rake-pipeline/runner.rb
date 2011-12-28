@@ -37,7 +37,8 @@ module Rake
 
       desc "clean", "Remove the pipeline's temporary and output files."
       def clean
-        clobber
+        pipeline.setup_filters
+        files_to_clobber.each { |dir| remove_dir dir }
       end
 
       desc "server", "Run the Rake::Pipeline preview server."
@@ -76,15 +77,6 @@ module Rake
         def cleanup_tmpdir
           pipeline.setup_filters
           obsolete_tmpdirs.each { |dir| remove_dir dir }
-        end
-
-        # Remove the contents of this pipeline's {#tmpdir} and all of
-        # its {#output_files}.
-        #
-        # @return [void]
-        def clobber
-          pipeline.setup_filters
-          files_to_clobber.each { |dir| remove_dir dir }
         end
 
         # Invoke the pipeline, detecting any changes to the Assetfile

@@ -108,22 +108,6 @@ describe "Rake::Pipeline::Runner" do
     end
   end
 
-  describe "clobbering a pipeline" do
-    it "cleans all rake-pipeline-* dirs out of the pipeline's tmp dir" do
-      runner.invoke_clean
-      Dir["#{tmp}/tmp/rake-pipeline-*"].should_not be_empty
-      runner.clobber
-      Dir["#{tmp}/tmp/rake-pipeline-*"].should be_empty
-    end
-
-    it "removes the pipeline's output files" do
-      runner.invoke_clean
-      output_files.each { |f| f.exists?.should be_true }
-      runner.clobber
-      output_files.each { |f| f.exists?.should be_false }
-    end
-  end
-
   describe "#cleanup_tmpdir" do
     let(:old_dir) { File.join(tmp, "tmp", "rake-pipeline-ad7a83894789") }
 
@@ -145,7 +129,7 @@ describe "Rake::Pipeline::Runner" do
     end
   end
 
-  describe "#build" do
+  describe "the build task" do
     it "creates output files from a pipeline" do
       runner.pipeline.output_files.each { |file| file.should_not exist }
       runner.invoke(:build, [])
@@ -158,6 +142,22 @@ describe "Rake::Pipeline::Runner" do
         runner.invoke(:build, [], :pretend => true)
         runner.pipeline.output_files.each { |file| file.should_not exist }
       end
+    end
+  end
+
+  describe "the clean task" do
+    it "cleans all rake-pipeline-* dirs out of the pipeline's tmp dir" do
+      runner.invoke_clean
+      Dir["#{tmp}/tmp/rake-pipeline-*"].should_not be_empty
+      runner.invoke(:clean, [])
+      Dir["#{tmp}/tmp/rake-pipeline-*"].should be_empty
+    end
+
+    it "removes the pipeline's output files" do
+      runner.invoke_clean
+      output_files.each { |f| f.exists?.should be_true }
+      runner.invoke(:clean, [])
+      output_files.each { |f| f.exists?.should be_false }
     end
   end
 end
