@@ -23,6 +23,8 @@ module Rake
 
       class_option :assetfile, :default => "Assetfile", :aliases => "-c"
 
+      default_task :server
+
       desc "build", "Build the project."
       method_option :pretend, :type => :boolean, :aliases => "-p"
       def build
