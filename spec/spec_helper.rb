@@ -13,6 +13,7 @@ require "rake-pipeline/filters"
 require "support/spec_helpers/file_utils"
 require "support/spec_helpers/filters"
 require "support/spec_helpers/input_helpers"
+require "support/spec_helpers/memory_file_wrapper"
 
 RSpec.configure do |config|
   original = Dir.pwd

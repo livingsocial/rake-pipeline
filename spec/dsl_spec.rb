@@ -4,6 +4,10 @@ describe "Rake::Pipeline::DSL" do
   let(:pipeline) { Rake::Pipeline.new }
   let(:dsl) { Rake::Pipeline::DSL.new(pipeline) }
 
+  def filter
+    pipeline.filters.last
+  end
+
   it "accepts a pipeline in its constructor" do
     dsl.pipeline.should == pipeline
   end
@@ -31,13 +35,13 @@ describe "Rake::Pipeline::DSL" do
       pipeline.filters.should be_empty
       dsl.filter ConcatFilter
       pipeline.filters.should_not be_empty
-      pipeline.filters.last.should be_kind_of(ConcatFilter)
+      filter.should be_kind_of(ConcatFilter)
     end
 
     it "takes a block to configure the filter's output file names" do
       generator = proc { |input| "main.js" }
       dsl.filter(ConcatFilter, &generator)
-      pipeline.filters.last.output_name_generator.should == generator
+      filter.output_name_generator.should == generator
     end
 
     it "passes any extra arguments to the filter's constructor" do
@@ -49,7 +53,7 @@ describe "Rake::Pipeline::DSL" do
       end
 
       dsl.filter filter_class, "foo", "bar"
-      pipeline.filters.last.args.should == %w(foo bar)
+      filter.args.should == %w(foo bar)
     end
   end
 
@@ -62,7 +66,7 @@ describe "Rake::Pipeline::DSL" do
 
     it "adds the new matcher to the pipeline's filters" do
       matcher = dsl.match("*.glob") {}
-      pipeline.filters.last.should == matcher
+      filter.should == matcher
     end
   end
 
@@ -77,6 +81,20 @@ describe "Rake::Pipeline::DSL" do
     it "configures the pipeline's tmpdir" do
       dsl.tmpdir "/temporary"
       pipeline.tmpdir.should == "/temporary"
+    end
+  end
+
+  describe "#concat" do
+    it "creates a ConcatFilter" do
+      dsl.concat "octopus"
+      filter.should be_kind_of(Rake::Pipeline::ConcatFilter)
+    end
+
+    context "passed an Array first argument" do
+      it "creates an OrderingConcatFilter" do
+        dsl.concat ["octopus"]
+        filter.should be_kind_of(Rake::Pipeline::OrderingConcatFilter)
+      end
     end
   end
 end

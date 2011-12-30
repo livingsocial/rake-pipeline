@@ -21,30 +21,27 @@ A sample +Assetfile+ looks like this:
   match "*.js" do
     filter ClosureWrapper
     filter DataWrapper
-    filter Rake::Pipeline::ConcatFilter, "application.scripts.js"
+    concat "application.scripts.js"
   end
 
   # this block will take all HTML and CSS inputs, convert them
   # into JavaScript
   match "*/*.{html,css}" do
     filter DataWrapper
-    filter Rake::Pipeline::ConcatFilter, "application.assets.js"
+    concat "application.assets.js"
   end
 
   match "*.js" do
-    filter Rake::Pipeline::ConcatFilter, "application.js"
+    concat "application.js"
   end
-
-  # copy any unprocessed files over to the output directory
-  filter Rake::Pipeline::ConcatFilter
 
 The available options are:
 
 * {Rake::Pipeline::DSL#input input}: the directory containing your input files
 * {Rake::Pipeline::DSL#output output}: the directory to place your output files
   like to process
-  * if you do not specify a block, the files will be
-    copied over directly.
+* if you do not specify a block, the files will be
+  copied over directly.
 
 = Filters
 
