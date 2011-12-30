@@ -22,9 +22,6 @@ module Rake
       # @return [void]
       def self.evaluate(pipeline, &block)
         new(pipeline).instance_eval(&block)
-        copy_filter = Rake::Pipeline::ConcatFilter.new
-        copy_filter.output_name_generator = proc { |input| input }
-        pipeline.add_filter(copy_filter)
       end
 
       # Create a new {DSL} to configure a pipeline.

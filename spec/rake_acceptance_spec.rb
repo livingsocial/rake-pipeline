@@ -274,6 +274,8 @@ HERE
           match "**/*.css" do
             filter concat_filter, "stylesheets/application.css"
           end
+
+          filter concat_filter
         end
       end
     end
@@ -342,6 +344,8 @@ HERE
           match "**/*.css" do
             filter concat_filter, "stylesheets/application.css"
           end
+
+          filter concat_filter
         end
       end
     end

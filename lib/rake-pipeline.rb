@@ -93,8 +93,9 @@ module Rake
   #       concat "application.css"
   #     end
   #
-  #     # the remaining files not specified by a matcher (the
-  #     # HTML files) are simply copied over.
+  #     # copy over the remaining files not specified by a matcher
+  #     # (the HTML files)
+  #     filter Rake::Pipeline::ConcatFilter
   #
   #     # you can also specify filters here that will apply to
   #     # all processed files (application.js and application.css)
