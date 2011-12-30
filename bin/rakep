@@ -1,29 +1,4 @@
 #!/usr/bin/env ruby
 
 require "rake-pipeline"
-
-if ARGV[0] == "build"
-  runner = Rake::Pipeline::Runner.new("Assetfile")
-  runner.cleanup_tmpdir
-  runner.invoke
-elsif ARGV[0] == "clean"
-  Rake::Pipeline::Runner.new("Assetfile").clobber
-else
-  require "rake-pipeline/middleware"
-  require "rack/server"
-
-  module Rake
-    class Pipeline
-      class Server < Rack::Server
-        def app
-          not_found = proc { [404, { "Content-Type" => "text/plain" }, ["not found"]] }
-          config = "Assetfile"
-
-          Middleware.new(not_found, config)
-        end
-      end
-    end
-  end
-
-  Rake::Pipeline::Server.new.start
-end
+Rake::Pipeline::Runner.start

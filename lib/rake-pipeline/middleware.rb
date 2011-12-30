@@ -16,11 +16,12 @@ module Rake
     class Middleware
       attr_accessor :runner
 
-      # @param [#call] a Rack application
-      # @param [Pipeline] a Rake::Pipeline
+      # @param [#call] app a Rack application
+      # @param [String|Rake::Pipeline] pipeline either a path to an
+      #   Assetfile to use to build a pipeline, or an existing pipeline.
       def initialize(app, pipeline)
         @app = app
-        @runner = Rake::Pipeline::Runner.new(pipeline)
+        @runner = Rake::Pipeline::Runner.from_assetfile(pipeline)
       end
 
       # Automatically compiles your assets if required and
