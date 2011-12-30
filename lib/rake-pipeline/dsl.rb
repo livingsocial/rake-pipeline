@@ -138,6 +138,22 @@ module Rake
       def tmpdir(root)
         pipeline.tmpdir = root
       end
+
+      # A helper method for adding a concat filter to
+      # the pipeline.
+      # If the first argument is an Array, it adds a new
+      # {OrderingConcatFilter}, otherwise it adds a new
+      # {ConcatFilter}.
+      #
+      # @see OrderingConcatFilter#initialize
+      # @see ConcatFilter#initialize
+      def concat(*args, &block)
+        if args.first.kind_of?(Array)
+          filter(Rake::Pipeline::OrderingConcatFilter, *args, &block)
+        else
+          filter(Rake::Pipeline::ConcatFilter, *args, &block)
+        end
+      end
     end
   end
 end

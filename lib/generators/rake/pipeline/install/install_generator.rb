@@ -48,15 +48,15 @@ module Rake
           output "public"
 
           match "*.js" do
-            filter Rake::Pipeline::ConcatFilter, "application.js"
+            concat "application.js"
           end
 
           match "*.css" do
-            filter Rake::Pipeline::ConcatFilter, "application.css"
+            concat "application.css"
           end
 
           # copy any remaining files
-          filter Rake::Pipeline::ConcatFilter
+          concat
         RUBY
       end
 
