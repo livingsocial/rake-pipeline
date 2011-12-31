@@ -30,7 +30,7 @@ module Rake
       def build
         if options["pretend"]
           pipeline.setup_filters
-          pipeline.output_files.each { |dir| say_status(:create, dir.fullpath) }
+          generated_files.each { |dir| say_status(:create, dir.fullpath) }
         else
           cleanup_tmpdir
           pipeline.invoke
@@ -102,6 +102,12 @@ module Rake
         def digested_tmpdir
           "rake-pipeline-#{assetfile_digest}"
         end
+
+        # @return Array[FileWrapper] a list of files that will actually
+        # be created by the pipeline.
+        def generated_files
+          pipeline.output_files - pipeline.input_files
+        end
       end
 
     private
@@ -139,7 +145,7 @@ module Rake
       def files_to_clobber
         obsolete_tmpdirs +
           ["#{pipeline.tmpdir}/#{digested_tmpdir}"] +
-          pipeline.output_files.map(&:fullpath)
+          generated_files.map(&:fullpath)
       end
     end
   end
