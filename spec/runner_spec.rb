@@ -33,8 +33,10 @@ describe "Rake::Pipeline::Runner" do
     (Digest::SHA1.new << File.read(assetfile_path)).to_s
   end
 
+  let(:unmatched_file) { input_file("junk.txt") }
+
   let(:input_files) do
-    %w(jquery.js ember.js).map { |f| input_file(f) }
+    [input_file("jquery.js"), input_file("ember.js"), unmatched_file]
   end
 
   let(:output_files) do
@@ -54,6 +56,10 @@ describe "Rake::Pipeline::Runner" do
 
   it "has an assetfile_digest" do
     runner.assetfile_digest.should == assetfile_digest
+  end
+
+  it "knows what files will be generated from the pipeline" do
+    runner.generated_files.should == output_files
   end
 
   describe ".from_assetfile" do
@@ -131,16 +137,16 @@ describe "Rake::Pipeline::Runner" do
 
   describe "the build task" do
     it "creates output files from a pipeline" do
-      runner.pipeline.output_files.each { |file| file.should_not exist }
+      runner.generated_files.each { |file| file.should_not exist }
       runner.invoke(:build, [])
-      runner.pipeline.output_files.each { |file| file.should exist }
+      runner.generated_files.each { |file| file.should exist }
     end
 
     context "if the :pretend option is set" do
       it "doesn't create output files" do
-        runner.pipeline.output_files.each { |file| file.should_not exist }
+        runner.generated_files.each { |file| file.should_not exist }
         runner.invoke(:build, [], :pretend => true)
-        runner.pipeline.output_files.each { |file| file.should_not exist }
+        runner.generated_files.each { |file| file.should_not exist }
       end
     end
   end
@@ -150,26 +156,33 @@ describe "Rake::Pipeline::Runner" do
       Dir["#{tmp}/tmp/rake-pipeline-*"]
     end
 
-    it "cleans all rake-pipeline-* dirs out of the pipeline's tmp dir" do
+    def build
       runner.invoke(:build, [])
       rakep_tmpdirs.should_not be_empty
+      output_files.each { |f| f.should exist }
+    end
+
+    it "cleans all rake-pipeline-* dirs out of the pipeline's tmp dir" do
+      build
       runner.invoke(:clean, [])
       rakep_tmpdirs.should be_empty
     end
 
     it "removes the pipeline's output files" do
-      runner.invoke(:build, [])
-      output_files.each { |f| f.should exist }
+      build
       runner.invoke(:clean, [])
       output_files.each { |f| f.should_not exist }
     end
 
+    it "leaves the pipeline's unmatched input files alone" do
+      build
+      runner.invoke(:clean, [])
+      unmatched_file.should exist
+    end
+
     context "if the :pretend option is set" do
       it "doesn't remove any files" do
-        runner.invoke(:build, [])
-        output_files.each { |f| f.should exist }
-        rakep_tmpdirs.should_not be_empty
-
+        build
         runner.invoke(:clean, [], :pretend => true)
         output_files.each { |f| f.should exist }
         rakep_tmpdirs.should_not be_empty

@@ -39,9 +39,6 @@ The available options are:
 
 * {Rake::Pipeline::DSL#input input}: the directory containing your input files
 * {Rake::Pipeline::DSL#output output}: the directory to place your output files
-  like to process
-* if you do not specify a block, the files will be
-  copied over directly.
 
 = Filters
 
