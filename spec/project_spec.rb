@@ -33,8 +33,10 @@ describe "Rake::Pipeline::Project" do
     (Digest::SHA1.new << File.read(assetfile_path)).to_s
   end
 
+  let(:unmatched_file) { input_file("junk.txt") }
+
   let(:input_files) do
-    %w(jquery.js ember.js).map { |f| input_file(f) }
+    [input_file("jquery.js"), input_file("ember.js"), unmatched_file]
   end
 
   let(:output_files) do
@@ -83,6 +85,7 @@ describe "Rake::Pipeline::Project" do
       digest_dir = File.join(tmp, "tmp", "rake-pipeline-#{assetfile_digest}")
       File.exist?(digest_dir).should be_true
     end
+
   end
 
   describe "#invoke_clean" do
@@ -144,6 +147,12 @@ describe "Rake::Pipeline::Project" do
       output_files.each { |f| f.should exist }
       project.clean
       output_files.each { |f| f.should_not exist }
+    end
+
+    it "leaves the pipeline's unmatched input files alone" do
+      project.invoke
+      project.clean
+      unmatched_file.should exist
     end
   end
 
