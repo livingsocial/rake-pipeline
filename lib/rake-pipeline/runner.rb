@@ -27,12 +27,13 @@ module Rake
 
       desc "build", "Build the project."
       method_option :pretend, :type => :boolean, :aliases => "-p"
+      method_option :clean, :type => :boolean, :aliases => "-C"
       def build
         if options["pretend"]
           pipeline.setup_filters
           pipeline.output_files.each { |dir| say_status(:create, dir.fullpath) }
         else
-          cleanup_tmpdir
+          options["clean"] ? invoke(:clean) : cleanup_tmpdir
           pipeline.invoke
         end
       end
