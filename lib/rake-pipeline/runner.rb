@@ -30,7 +30,9 @@ module Rake
       method_option :clean, :type => :boolean, :aliases => "-C"
       def build
         pipeline.setup_filters
-        pipeline.output_files.each { |dir| say_status(:create, dir.fullpath) }
+        pipeline.output_files.each do |dir|
+          say_status :create, dir.fullpath.sub(%r|#{Dir.pwd}/|, '')
+        end
 
         unless options["pretend"]
           options["clean"] ? invoke(:clean) : cleanup_tmpdir
