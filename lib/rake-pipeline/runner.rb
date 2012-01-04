@@ -119,7 +119,7 @@ module Rake
 
       # @return [String] the SHA1 digest of the given string.
       def digest(str)
-        (Digest::SHA1.new << str).to_s
+        Digest::SHA1.hexdigest(str)
       end
 
       # @return Array[String] a list of the paths to temporary directories
