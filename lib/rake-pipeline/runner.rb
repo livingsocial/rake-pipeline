@@ -21,6 +21,7 @@ module Rake
       #   Assetfile at that path. If it's a Rake::Pipeline,
       #   just wrap that pipeline.
       def initialize(assetfile_or_pipeline)
+        @invoke_mutex = Mutex.new
         if assetfile_or_pipeline.is_a?(String)
           @assetfile_path = File.expand_path(assetfile_or_pipeline)
           build_pipeline
@@ -42,13 +43,15 @@ module Rake
       # @return [void]
       # @see Rake::Pipeline#invoke_clean
       def invoke_clean
-        if assetfile_path
-          assetfile_source = File.read(assetfile_path)
-          if digest(assetfile_source) != assetfile_digest
-            build_pipeline(assetfile_source)
+        @invoke_mutex.synchronize do
+          if assetfile_path
+            assetfile_source = File.read(assetfile_path)
+            if digest(assetfile_source) != assetfile_digest
+              build_pipeline(assetfile_source)
+            end
           end
+          pipeline.invoke_clean
         end
-        pipeline.invoke_clean
       end
 
       # Remove the pipeline's temporary and output files.
