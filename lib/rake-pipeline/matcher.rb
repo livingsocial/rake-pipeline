@@ -75,9 +75,15 @@ module Rake
           end
         end
 
-        # anchor the pattern either at the beginning of the
-        # path or at any "/" character
-        @pattern = Regexp.new("(^|/)#{output}$", "i")
+        if pattern.include?("/")
+          # if the pattern includes a /, it must match the
+          # entire input, not just the end.
+          @pattern = Regexp.new("^#{output}$", "i")
+        else
+          # anchor the pattern either at the beginning of the
+          # path or at any "/" character
+          @pattern = Regexp.new("(^|/)#{output}$", "i")
+        end
       end
 
       # A list of the output files that invoking this pipeline will

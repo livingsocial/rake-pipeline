@@ -67,19 +67,22 @@ describe "a matcher" do
 
   it "understands */* style globs" do
     @matcher.input_files << file_wrapper("javascripts/backbone.js")
+    @matcher.input_files << file_wrapper("something/javascripts/backbone.js")
 
     should_match_glob "*/*.js", [
       file_wrapper("javascripts/backbone.js", :encoding => "BINARY", :root => File.join(tmp, "tmp1")),
       file_wrapper("jquery.js"),
       file_wrapper("sproutcore.js"),
-      file_wrapper("sproutcore.css")
+      file_wrapper("sproutcore.css"),
+      file_wrapper("something/javascripts/backbone.js")
     ]
 
     should_match_glob "proutcore*.js", [
       file_wrapper("jquery.js"),
       file_wrapper("sproutcore.js"),
       file_wrapper("sproutcore.css"),
-      file_wrapper("javascripts/backbone.js")
+      file_wrapper("javascripts/backbone.js"),
+      file_wrapper("something/javascripts/backbone.js")
     ]
   end
 
