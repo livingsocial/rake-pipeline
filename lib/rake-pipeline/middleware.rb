@@ -21,7 +21,7 @@ module Rake
       #   Assetfile to use to build a pipeline, or an existing pipeline.
       def initialize(app, pipeline)
         @app = app
-        @runner = Rake::Pipeline::Runner.from_assetfile(pipeline)
+        @runner = Rake::Pipeline::Runner.new(pipeline)
       end
 
       # Automatically compiles your assets if required and
