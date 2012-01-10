@@ -109,7 +109,6 @@ module Rake
         @assetfile_digest = digest(assetfile_source)
         @pipeline = Rake::Pipeline.class_eval("build do\n#{assetfile_source}\nend", assetfile_path, 1)
         @pipeline.tmpsubdir = digested_tmpdir
-        @pipeline.setup_filters
       end
 
       # @return [String] the SHA1 digest of the given string.

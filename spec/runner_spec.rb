@@ -73,9 +73,9 @@ describe "Rake::Pipeline::Runner" do
 
   describe "#invoke" do
     it "creates output files from a pipeline" do
-      runner.pipeline.output_files.each { |file| file.should_not exist }
+      output_files.each { |file| file.should_not exist }
       runner.invoke
-      runner.pipeline.output_files.each { |file| file.should exist }
+      output_files.each { |file| file.should exist }
     end
 
     it "writes temp files to a subdirectory of the tmp dir named after the assetfile digest" do
