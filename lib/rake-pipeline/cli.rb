@@ -10,11 +10,12 @@ module Rake
       method_option :pretend, :type => :boolean, :aliases => "-p"
       method_option :clean, :type => :boolean, :aliases => "-C"
       def build
-        runner.output_files.each do |file|
-          say_status :create, relative_path(file.fullpath)
-        end
-
-        unless options[:pretend]
+        if options[:pretend]
+          runner.pipeline.setup_filters
+          runner.output_files.each do |file|
+            say_status :create, relative_path(file.fullpath)
+          end
+        else
           options[:clean] ? runner.clean : runner.cleanup_tmpdir
           runner.invoke
         end
@@ -23,11 +24,11 @@ module Rake
       desc "clean", "Remove the pipeline's temporary and output files."
       method_option :pretend, :type => :boolean, :aliases => "-p"
       def clean
-        runner.files_to_clean.each do |file|
-          say_status :remove, relative_path(file)
-        end
-
-        unless options[:pretend]
+        if options[:pretend]
+          runner.files_to_clean.each do |file|
+            say_status :remove, relative_path(file)
+          end
+        else
           runner.clean
         end
       end
