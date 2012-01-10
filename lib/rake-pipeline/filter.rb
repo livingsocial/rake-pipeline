@@ -171,9 +171,7 @@ module Rake
       # @see #outputs
       # @return [Array<FileWrapper>]
       def output_files
-        input_files.inject([]) do |array, file|
-          array |= output_wrappers(file)
-        end
+        input_files.map { |file| output_wrappers(file) }.flatten.uniq
       end
 
       # The Rake::Application that the filter should define new tasks on.
