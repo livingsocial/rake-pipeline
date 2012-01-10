@@ -79,6 +79,7 @@ module Rake
       def initialize(&block)
         block ||= proc { |input| input }
         @output_name_generator = block
+        @input_files = []
       end
 
       # Invoke this method in a subclass of Filter to declare that
