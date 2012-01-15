@@ -146,4 +146,23 @@ describe "Rake::Pipeline::Project" do
       output_files.each { |f| f.should_not exist }
     end
   end
+
+  describe ".add_to_digest" do
+    after do
+      Rake::Pipeline::Project.digest_additions = []
+    end
+
+    it "appends a string to the generated tmp dir name" do
+      Rake::Pipeline::Project.add_to_digest("octopus")
+
+      project.digested_tmpdir.should == "rake-pipeline-#{assetfile_digest}-octopus"
+    end
+
+    it "can be called multiple times" do
+      Rake::Pipeline::Project.add_to_digest("a")
+      Rake::Pipeline::Project.add_to_digest("b")
+
+      project.digested_tmpdir.should == "rake-pipeline-#{assetfile_digest}-a-b"
+    end
+  end
 end
