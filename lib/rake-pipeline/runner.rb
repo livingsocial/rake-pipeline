@@ -7,8 +7,6 @@ module Rake
     # changes.
     #
     class Runner < Thor
-      include Thor::Actions
-
       # @return [Pipeline] the pipeline this Runner is controlling.
       attr_reader :pipeline
 
@@ -42,7 +40,11 @@ module Rake
       method_option :pretend, :type => :boolean, :aliases => "-p"
       def clean
         pipeline.setup_filters
-        files_to_clobber.each { |dir| remove_dir dir }
+        if options["pretend"]
+          files_to_clobber.each { |dir| say_status(:remove, relative_path(dir)) }
+        else
+          files_to_clobber.each { |dir| FileUtils.rm_rf(dir) }
+        end
       end
 
       desc "server", "Run the Rake::Pipeline preview server."
@@ -80,7 +82,7 @@ module Rake
         # @return [void]
         def cleanup_tmpdir
           pipeline.setup_filters
-          obsolete_tmpdirs.each { |dir| remove_dir dir }
+          obsolete_tmpdirs.each { |dir| FileUtils.rm_rf(dir) }
         end
 
         # Invoke the pipeline, detecting any changes to the Assetfile
