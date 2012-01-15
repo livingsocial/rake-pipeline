@@ -31,7 +31,7 @@ module Rake
       def build
         if options["pretend"]
           pipeline.setup_filters
-          pipeline.output_files.each { |dir| say_status(:create, dir.fullpath) }
+          pipeline.output_files.each { |dir| say_status(:create, relative_path(dir)) }
         else
           options["clean"] ? invoke(:clean) : cleanup_tmpdir
           pipeline.invoke
@@ -141,6 +141,14 @@ module Rake
         obsolete_tmpdirs +
           ["#{pipeline.tmpdir}/#{digested_tmpdir}"] +
           pipeline.output_files.map(&:fullpath)
+      end
+
+      # @param [FileWrapper] path
+      # @return [String] The path to the file with the current
+      #   directory stripped out.
+      def relative_path(path)
+        pathstr = path.respond_to?(:fullpath) ? path.fullpath : path
+        pathstr.sub(%r|#{Dir.pwd}/|, '')
       end
     end
   end
