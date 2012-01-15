@@ -67,6 +67,7 @@ module Rake
 
       def initialize(*)
         super
+        @invoke_mutex = Mutex.new
         if options["pipeline"]
           @pipeline = options["pipeline"]
         else
@@ -91,13 +92,15 @@ module Rake
         # @return [void]
         # @see Rake::Pipeline#invoke_clean
         def invoke_clean
-          if assetfile_path
-            assetfile_source = File.read(assetfile_path)
-            if digest(assetfile_source) != assetfile_digest
-              build_pipeline(assetfile_source)
+          @invoke_mutex.synchronize do
+            if assetfile_path
+              assetfile_source = File.read(assetfile_path)
+              if digest(assetfile_source) != assetfile_digest
+                build_pipeline(assetfile_source)
+              end
             end
+            pipeline.invoke_clean
           end
-          pipeline.invoke_clean
         end
 
         # @return [String] the directory name to use as the pipeline's
