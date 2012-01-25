@@ -2,12 +2,12 @@ require "thor"
 
 module Rake
   class Pipeline
-    # A Runner controls the lifecycle of a Pipeline, creating
+    # A Project controls the lifecycle of a Pipeline, creating
     # it from an Assetfile and recreating it if the Assetfile
     # changes.
     #
-    class Runner
-      # @return [Pipeline] the pipeline this Runner is controlling.
+    class Project
+      # @return [Pipeline] the pipeline this Project is controlling.
       attr_reader :pipeline
 
       # @return [String|nil] the path to the {#pipeline}'s Assetfile
@@ -97,7 +97,7 @@ module Rake
       end
 
       # @return [Array[FileWrapper]] a list of the files that
-      #   will be generated when this Runner is invoked.
+      #   will be generated when this Project is invoked.
       def output_files
         pipeline.output_files
       end

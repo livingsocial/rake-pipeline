@@ -1,4 +1,4 @@
-describe "Rake::Pipeline::Runner" do
+describe "Rake::Pipeline::Project" do
   include Rake::Pipeline::SpecHelpers::InputHelpers
 
   ASSETFILE_SOURCE = <<-HERE.gsub(/^ {4}/, '')
@@ -41,7 +41,7 @@ describe "Rake::Pipeline::Runner" do
     [output_file("javascripts/application.js")]
   end
 
-  let(:runner) { Rake::Pipeline::Runner.new(assetfile_path) }
+  let(:project) { Rake::Pipeline::Project.new(assetfile_path) }
 
   before do
     File.open(assetfile_path, 'w') { |file| file.write(ASSETFILE_SOURCE) }
@@ -49,37 +49,37 @@ describe "Rake::Pipeline::Runner" do
   end
 
   it "has an assetfile_path" do
-    runner.assetfile_path.should == assetfile_path
+    project.assetfile_path.should == assetfile_path
   end
 
   it "has an assetfile_digest" do
-    runner.assetfile_digest.should == assetfile_digest
+    project.assetfile_digest.should == assetfile_digest
   end
 
   describe "constructor" do
     it "creates a pipeline from an Assetfile given an Assetfile path" do
-      runner = Rake::Pipeline::Runner.new(assetfile_path)
-      pipeline = runner.pipeline
+      project = Rake::Pipeline::Project.new(assetfile_path)
+      pipeline = project.pipeline
       pipeline.inputs.should == { "app/assets" => "**/*" }
       pipeline.output_root.should == File.join(tmp, "public")
     end
 
     it "wraps an existing pipeline" do
       pipeline = Rake::Pipeline.class_eval("build do\n#{File.read(assetfile_path)}\nend", assetfile_path, 1)
-      runner = Rake::Pipeline::Runner.new(pipeline)
-      runner.pipeline.should == pipeline
+      project = Rake::Pipeline::Project.new(pipeline)
+      project.pipeline.should == pipeline
     end
   end
 
   describe "#invoke" do
     it "creates output files from a pipeline" do
       output_files.each { |file| file.should_not exist }
-      runner.invoke
+      project.invoke
       output_files.each { |file| file.should exist }
     end
 
     it "writes temp files to a subdirectory of the tmp dir named after the assetfile digest" do
-      runner.invoke
+      project.invoke
       digest_dir = File.join(tmp, "tmp", "rake-pipeline-#{assetfile_digest}")
       File.exist?(digest_dir).should be_true
     end
@@ -94,14 +94,14 @@ describe "Rake::Pipeline::Runner" do
       end
 
       it "rebuilds its pipeline" do
-        runner.invoke_clean
-        original_pipeline = runner.pipeline
+        project.invoke_clean
+        original_pipeline = project.pipeline
         original_assetfile_digest = assetfile_digest
 
         modify_assetfile
-        runner.invoke_clean
+        project.invoke_clean
         assetfile_digest.should_not == original_assetfile_digest
-        runner.pipeline.should_not == original_pipeline
+        project.pipeline.should_not == original_pipeline
       end
     end
   end
@@ -115,15 +115,15 @@ describe "Rake::Pipeline::Runner" do
 
     it "cleans old rake-pipeline-* dirs out of the pipeline's tmp dir" do
       File.exist?(old_dir).should be_true
-      runner.cleanup_tmpdir
+      project.cleanup_tmpdir
       File.exist?(old_dir).should be_false
     end
 
     it "leaves the current assetfile-digest tmp dir alone" do
-      runner.invoke
-      File.exist?(File.join(tmp, "tmp", runner.digested_tmpdir)).should be_true
-      runner.cleanup_tmpdir
-      File.exist?(File.join(tmp, "tmp", runner.digested_tmpdir)).should be_true
+      project.invoke
+      File.exist?(File.join(tmp, "tmp", project.digested_tmpdir)).should be_true
+      project.cleanup_tmpdir
+      File.exist?(File.join(tmp, "tmp", project.digested_tmpdir)).should be_true
     end
   end
 
@@ -133,16 +133,16 @@ describe "Rake::Pipeline::Runner" do
     end
 
     it "cleans all rake-pipeline-* dirs out of the pipeline's tmp dir" do
-      runner.invoke
+      project.invoke
       rakep_tmpdirs.should_not be_empty
-      runner.clean
+      project.clean
       rakep_tmpdirs.should be_empty
     end
 
     it "removes the pipeline's output files" do
-      runner.invoke
+      project.invoke
       output_files.each { |f| f.should exist }
-      runner.clean
+      project.clean
       output_files.each { |f| f.should_not exist }
     end
   end
