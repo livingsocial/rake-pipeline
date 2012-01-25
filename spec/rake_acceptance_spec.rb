@@ -26,8 +26,12 @@ HERE
 }
 HERE
 
-"app/index.html" => <<-HERE
+"app/index.html" => <<-HERE,
 <html></html>
+HERE
+
+"app/junk.txt" => <<-HERE
+junk
 HERE
 
 }
@@ -256,6 +260,9 @@ HERE
         html = File.join(tmp, "public/index.html")
         File.exists?(html).should be_true
         File.read(html).should == EXPECTED_HTML_OUTPUT
+
+        junk = File.join(tmp, "public/junk.txt")
+        File.exists?(junk).should be_false
       end
 
       it_behaves_like "the pipeline DSL"
@@ -263,7 +270,7 @@ HERE
       before do
         @pipeline = Rake::Pipeline.build do
           tmpdir "temporary"
-          input File.join(tmp, "app"), "**/*.{js,css,html}"
+          input File.join(tmp, "app")
           output "public"
 
           match "**/*.js" do
@@ -273,6 +280,10 @@ HERE
 
           match "**/*.css" do
             filter concat_filter, "stylesheets/application.css"
+          end
+
+          match "**/*.html" do
+            filter concat_filter
           end
         end
       end
@@ -321,6 +332,9 @@ HERE
         html = File.join(tmp, "public/index.html")
         File.exists?(html).should be_true
         File.read(html).should == EXPECTED_HTML_OUTPUT
+
+        junk = File.join(tmp, "public/junk.txt")
+        File.exists?(junk).should be_false
       end
 
       before do
@@ -329,8 +343,8 @@ HERE
 
         @pipeline = Rake::Pipeline.build do
           tmpdir "temporary"
-          input File.join(tmp1, "app"), "**/*.{js,css,html}"
-          input File.join(tmp2, "app"), "**/*.{js,css,html}"
+          input File.join(tmp1, "app")
+          input File.join(tmp2, "app")
 
           output "public"
 
@@ -341,6 +355,10 @@ HERE
 
           match "**/*.css" do
             filter concat_filter, "stylesheets/application.css"
+          end
+
+          match "**/*.html" do
+            filter concat_filter
           end
         end
       end

@@ -1,5 +1,6 @@
 module Rake
   class Pipeline
+
     # This class exists purely to provide a convenient DSL for
     # configuring a pipeline.
     #
@@ -22,9 +23,7 @@ module Rake
       # @return [void]
       def self.evaluate(pipeline, &block)
         new(pipeline).instance_eval(&block)
-        copy_filter = Rake::Pipeline::ConcatFilter.new
-        copy_filter.output_name_generator = proc { |input| input }
-        pipeline.add_filter(copy_filter)
+        pipeline.add_filter(Rake::Pipeline::PipelineFinalizingFilter.new)
       end
 
       # Create a new {DSL} to configure a pipeline.
@@ -158,5 +157,4 @@ module Rake
     end
   end
 end
-
 
