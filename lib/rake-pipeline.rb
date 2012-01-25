@@ -4,7 +4,7 @@ require "rake-pipeline/filters"
 require "rake-pipeline/dsl"
 require "rake-pipeline/matcher"
 require "rake-pipeline/error"
-require "rake-pipeline/runner"
+require "rake-pipeline/project"
 require "rake-pipeline/cli"
 
 if defined?(Rails::Railtie)

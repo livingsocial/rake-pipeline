@@ -11,13 +11,13 @@ module Rake
       method_option :clean, :type => :boolean, :aliases => "-C"
       def build
         if options[:pretend]
-          runner.pipeline.setup_filters
-          runner.output_files.each do |file|
+          project.pipeline.setup_filters
+          project.output_files.each do |file|
             say_status :create, relative_path(file)
           end
         else
-          options[:clean] ? runner.clean : runner.cleanup_tmpdir
-          runner.invoke
+          options[:clean] ? project.clean : project.cleanup_tmpdir
+          project.invoke
         end
       end
 
@@ -25,12 +25,12 @@ module Rake
       method_option :pretend, :type => :boolean, :aliases => "-p"
       def clean
         if options[:pretend]
-          runner.pipeline.setup_filters
-          runner.files_to_clean.each do |file|
+          project.pipeline.setup_filters
+          project.files_to_clean.each do |file|
             say_status :remove, relative_path(file)
           end
         else
-          runner.clean
+          project.clean
         end
       end
 
@@ -41,8 +41,8 @@ module Rake
       end
 
     private
-      def runner
-        @runner ||= Rake::Pipeline::Runner.new(options[:assetfile])
+      def project
+        @project ||= Rake::Pipeline::Project.new(options[:assetfile])
       end
 
       # @param [FileWrapper|String] path
