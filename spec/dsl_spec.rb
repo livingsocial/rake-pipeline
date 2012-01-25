@@ -97,4 +97,11 @@ describe "Rake::Pipeline::DSL" do
       end
     end
   end
+
+  describe "#copy" do
+    it "creates a ConcatFilter" do
+      dsl.copy
+      filter.should be_kind_of(Rake::Pipeline::ConcatFilter)
+    end
+  end
 end

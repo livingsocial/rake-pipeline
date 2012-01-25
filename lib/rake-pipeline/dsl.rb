@@ -154,6 +154,7 @@ module Rake
           filter(Rake::Pipeline::ConcatFilter, *args, &block)
         end
       end
+      alias_method :copy, :concat
     end
   end
 end
