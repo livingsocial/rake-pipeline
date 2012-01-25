@@ -19,6 +19,33 @@ module Rake
       #   was created without an Assetfile.
       attr_reader :assetfile_digest
 
+      class << self
+        # @return [Array[String]] an array of strings that will be
+        #   appended to {#digested_tmpdir}.
+        def digest_additions
+          @digest_additions ||= []
+        end
+
+        # Set {.digest_additions} to a sorted copy of the given array.
+        def digest_additions=(additions)
+          @digest_additions = additions.sort
+        end
+
+        # Add a value to the list of strings to append to the digest
+        # temp directory. Libraries can use this to add (for example)
+        # their version numbers so that the pipeline will be rebuilt
+        # if the library version changes.
+        #
+        # @example
+        #   Rake::Pipeline::Project.add_to_digest(Rake::Pipeline::Web::Filters::VERSION)
+        #
+        # @param [#to_s] str a value to append to {#digested_tmpdir}.
+        def add_to_digest(str)
+          self.digest_additions << str.to_s
+          self.digest_additions.sort!
+        end
+      end
+
       # @param [String|Rake::Pipeline] assetfile_or_pipeline
       #   if this a String, create a Rake::Pipeline from the
       #   Assetfile at that path. If it's a Rake::Pipeline,
@@ -73,7 +100,11 @@ module Rake
       # @return [String] the directory name to use as the pipeline's
       #   {Rake::Pipeline#tmpsubdir}.
       def digested_tmpdir
-        "rake-pipeline-#{assetfile_digest}"
+        suffix = assetfile_digest
+        unless self.class.digest_additions.empty?
+          suffix += "-#{self.class.digest_additions.join('-')}"
+        end
+        "rake-pipeline-#{suffix}"
       end
 
       # @return Array[String] a list of the paths to temporary directories
