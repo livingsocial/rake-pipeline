@@ -2,7 +2,7 @@ describe "Rake::Pipeline::DSL" do
   ConcatFilter = Rake::Pipeline::SpecHelpers::Filters::ConcatFilter
 
   let(:pipeline) { Rake::Pipeline.new }
-  let(:dsl) { Rake::Pipeline::DSL.new(pipeline) }
+  let(:dsl) { Rake::Pipeline::DSL::PipelineDSL.new(pipeline) }
 
   def filter
     pipeline.filters.last

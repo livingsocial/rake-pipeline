@@ -160,7 +160,7 @@ module Rake
     # @return [Rake::Pipeline] the newly configured pipeline
     def self.build(&block)
       pipeline = new
-      DSL.evaluate(pipeline, &block) if block
+      DSL::PipelineBuilder.evaluate(pipeline, &block) if block
       pipeline
     end
 
