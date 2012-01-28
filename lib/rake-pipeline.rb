@@ -131,13 +131,32 @@ module Rake
 
     attr_writer :input_files
 
-    def initialize
-      @filters = []
-      @inputs = {}
-      @tmpdir = "tmp"
-      @tmpsubdir = ""
-      @invoke_mutex = Mutex.new
-      @clean_mutex = Mutex.new
+    # @param [Hash] options
+    # @option options [Hash] :inputs
+    #   set the pipeline's {#inputs}.
+    # @option options [String] :tmpdir
+    #   set the pipeline's {#tmpdir}.
+    # @option options [String] :tmpsubdir
+    #   set the pipeline's {#tmpsubdir}.
+    # @option options [String] :output_root
+    #   set the pipeline's {#output_root}.
+    # @option options [Rake::Application] :rake_application
+    #   set the pipeline's {#rake_application}.
+    def initialize(options={})
+      @filters         = []
+      @invoke_mutex    = Mutex.new
+      @clean_mutex     = Mutex.new
+      @inputs          = options[:inputs] || {}
+      @tmpdir          = options[:tmpdir] || "tmp"
+      @tmpsubdir       = options[:tmpsubdir] || ""
+
+      if options[:output_root]
+        self.output_root = options[:output_root]
+      end
+
+      if options[:rake_application]
+        self.rake_application = options[:rake_application]
+      end
     end
 
     # Build a new pipeline taking a block. The block will

@@ -140,14 +140,14 @@ module Rake
 
     private
       # Build a new pipeline based on the Assetfile at
-      # {#assetfile_path}
+      # {#assetfile_path}.
       #
       # @return [void]
       def build_pipeline(assetfile_source=nil)
         assetfile_source ||= File.read(assetfile_path)
         @assetfile_digest = digest(assetfile_source)
-        @pipeline = Rake::Pipeline.class_eval("build do\n#{assetfile_source}\nend", assetfile_path, 1)
-        @pipeline.tmpsubdir = digested_tmpdir
+        @pipeline = Rake::Pipeline.new(:tmpsubdir => digested_tmpdir)
+        pipeline.instance_eval("build do\n#{assetfile_source}\nend", assetfile_path, 1)
         cleanup_tmpdir
       end
 

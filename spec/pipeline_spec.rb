@@ -60,6 +60,34 @@ describe "Rake::Pipeline" do
     end
   end
 
+  describe "the constructor" do
+    it "accepts an :inputs option" do
+      pipeline = Rake::Pipeline.new(:inputs => {"app/assets" => "**/*"})
+      pipeline.inputs.should == {"app/assets" => "**/*"}
+    end
+
+    it "accepts a :tmpdir option" do
+      pipeline = Rake::Pipeline.new(:tmpdir => "tmp")
+      pipeline.tmpdir.should == "tmp"
+    end
+
+    it "accepts a :tmpsubdir option" do
+      pipeline = Rake::Pipeline.new(:tmpsubdir => "rakep")
+      pipeline.tmpsubdir.should == "rakep"
+    end
+
+    it "accepts an :output_root option" do
+      pipeline = Rake::Pipeline.new(:output_root => "public")
+      pipeline.output_root.should == File.expand_path("public")
+    end
+
+    it "accepts a :rake_application option" do
+      app = Rake::Application.new
+      pipeline = Rake::Pipeline.new(:rake_application => app)
+      pipeline.rake_application.should == app
+    end
+  end
+
   describe "adding filters" do
     let(:filter) { ConcatFilter.new }
 
