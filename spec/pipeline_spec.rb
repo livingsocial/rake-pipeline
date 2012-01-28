@@ -38,6 +38,28 @@ describe "Rake::Pipeline" do
     pipeline.rake_application.should == Rake.application
   end
 
+  describe ".build" do
+    it "evaluates a block against a new Pipeline" do
+      pipeline = Rake::Pipeline.build do
+        tmpdir "octopus"
+      end
+      pipeline.should be_kind_of(Rake::Pipeline)
+      pipeline.tmpdir.should == File.expand_path("octopus")
+    end
+  end
+
+  describe "#build" do
+    it "evaluates a block against an existing Pipeline" do
+      pipeline = Rake::Pipeline.new
+      pipeline.tmpdir = "octopus"
+
+      pipeline.build do
+        tmpdir "squid"
+      end
+      pipeline.tmpdir.should == File.expand_path("squid")
+    end
+  end
+
   describe "adding filters" do
     let(:filter) { ConcatFilter.new }
 

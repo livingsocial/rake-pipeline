@@ -160,8 +160,19 @@ module Rake
     # @return [Rake::Pipeline] the newly configured pipeline
     def self.build(&block)
       pipeline = new
-      DSL::PipelineBuilder.evaluate(pipeline, &block) if block
-      pipeline
+      pipeline.build(&block)
+    end
+
+    # Evaluate a block using the Rake::Pipeline DSL against an
+    # existing pipeline.
+    #
+    # @see Rake::Pipeline.build
+    #
+    # @return [Rake::Pipeline] this pipeline with any modifications
+    #   made by the given block.
+    def build(&block)
+      DSL::PipelineBuilder.evaluate(self, &block) if block
+      self
     end
 
     @@tmp_id = 0
