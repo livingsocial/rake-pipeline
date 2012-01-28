@@ -71,6 +71,12 @@ describe "Rake::Pipeline::Project" do
       project = Rake::Pipeline::Project.new(pipeline)
       project.pipeline.should == pipeline
     end
+
+    it "with no arguments, creates a new pipeline" do
+      project = Rake::Pipeline::Project.new
+      project.pipeline.should_not be_nil
+      project.pipeline.should be_kind_of(Rake::Pipeline)
+    end
   end
 
   describe "#invoke" do

@@ -51,11 +51,13 @@ module Rake
       #   if this a String, create a Rake::Pipeline from the
       #   Assetfile at that path. If it's a Rake::Pipeline,
       #   just wrap that pipeline.
-      def initialize(assetfile_or_pipeline)
+      def initialize(assetfile_or_pipeline=nil)
         @invoke_mutex = Mutex.new
-        if assetfile_or_pipeline.is_a?(String)
+        if assetfile_or_pipeline.kind_of?(String)
           @assetfile_path = File.expand_path(assetfile_or_pipeline)
           build_pipeline
+        elsif assetfile_or_pipeline.nil?
+          @pipeline = Rake::Pipeline.new
         else
           @pipeline = assetfile_or_pipeline
         end
