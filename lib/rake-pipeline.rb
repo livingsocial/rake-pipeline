@@ -177,8 +177,8 @@ module Rake
     #   the build block.
     #
     # @return [Rake::Pipeline] the newly configured pipeline
-    def self.build(&block)
-      pipeline = new
+    def self.build(options={}, &block)
+      pipeline = new(options)
       pipeline.build(&block)
     end
 
