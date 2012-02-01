@@ -1,4 +1,5 @@
 require "thor"
+require "digest"
 
 module Rake
   class Pipeline
