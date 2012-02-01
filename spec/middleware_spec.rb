@@ -28,35 +28,33 @@ describe "Rake::Pipeline Middleware" do
 
   assetfile_source = <<-HERE.gsub(/^ {4}/, '')
     require "#{tmp}/../support/spec_helpers/filters"
-    input "#{tmp}", "app/**/*"
-
-    match "*.js" do
-      filter(Rake::Pipeline::ConcatFilter) { "javascripts/application.js" }
-      filter(Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter) { |input| input }
-    end
-
-    # copy the rest
-    filter(Rake::Pipeline::ConcatFilter) { |input| input.sub(%r|^app/|, '') }
-
     output "public"
+    input "#{tmp}", "app/**/*" do
+      match "*.js" do
+        concat "javascripts/application.js"
+        filter(Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter) { |input| input }
+      end
+
+      # copy the rest
+      concat { |input| input.sub(%r|^app/|, '') }
+    end
   HERE
 
   modified_assetfile_source = <<-HERE.gsub(/^ {4}/, '')
     require "#{tmp}/../support/spec_helpers/filters"
-    input "#{tmp}", "app/**/*"
-
-    match "*.js" do
-      filter(Rake::Pipeline::ConcatFilter) { "javascripts/app.js" }
-      filter(Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter) { |input| input }
-    end
-
-    # copy the rest
-    filter(Rake::Pipeline::ConcatFilter) { |input| input.sub(%r|^app/|, '') }
-
     output "public"
+    input "#{tmp}", "app/**/*" do
+      match "*.js" do
+        concat { "javascripts/app.js" }
+        filter(Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter) { |input| input }
+      end
+
+      # copy the rest
+      concat { |input| input.sub(%r|^app/|, '') }
+    end
   HERE
 
-  app = middleware = pipeline = nil
+  app = middleware = nil
 
   before do
     assetfile_path = File.join(tmp, "Assetfile")

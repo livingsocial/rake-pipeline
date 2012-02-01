@@ -3,28 +3,28 @@ describe "Rake::Pipeline::Project" do
 
   ASSETFILE_SOURCE = <<-HERE.gsub(/^ {4}/, '')
     require "#{tmp}/../support/spec_helpers/filters"
-    input "app/assets"
     tmpdir "tmp"
-
-    match "*.js" do
-      filter(Rake::Pipeline::ConcatFilter) { "javascripts/application.js" }
-      filter(Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter)
-    end
-
     output "public"
+
+    input "app/assets" do
+      match "*.js" do
+        concat "javascripts/application.js"
+        filter Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
+      end
+    end
   HERE
 
   MODIFIED_ASSETFILE_SOURCE = <<-HERE.gsub(/^ {4}/, '')
     require "#{tmp}/../support/spec_helpers/filters"
-    input "app/assets"
     tmpdir "tmp"
-
-    match "*.js" do
-      filter(Rake::Pipeline::ConcatFilter) { "javascripts/app.js" }
-      filter(Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter)
-    end
-
     output "public"
+
+    input "app/assets" do
+      match "*.js" do
+        concat "javascripts/app.js"
+        filter Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
+      end
+    end
   HERE
 
   let(:assetfile_path) { File.join(tmp, "Assetfile") }
@@ -68,29 +68,27 @@ describe "Rake::Pipeline::Project" do
     project.assetfile_digest.should == assetfile_digest
   end
 
+  it "has a pipeline" do
+    project.should have(1).pipelines
+  end
+
   describe "constructor" do
-    it "creates a pipeline from an Assetfile given an Assetfile path" do
+    it "creates pipelines from an Assetfile given an Assetfile path" do
       project = Rake::Pipeline::Project.new(assetfile_path)
-      pipeline = project.pipeline
+      pipeline = project.pipelines.last
       pipeline.inputs.should == { "app/assets" => "**/*" }
       pipeline.output_root.should == File.join(tmp, "public")
     end
 
     it "wraps an existing pipeline" do
-      pipeline = Rake::Pipeline.class_eval("build do\n#{File.read(assetfile_path)}\nend", assetfile_path, 1)
+      pipeline = Rake::Pipeline::Project.class_eval("build do\n#{File.read(assetfile_path)}\nend", assetfile_path, 1)
       project = Rake::Pipeline::Project.new(pipeline)
-      project.pipeline.should == pipeline
-    end
-
-    it "with no arguments, creates a new pipeline" do
-      project = Rake::Pipeline::Project.new
-      project.pipeline.should_not be_nil
-      project.pipeline.should be_kind_of(Rake::Pipeline)
+      project.pipelines.last.should == pipeline
     end
   end
 
   describe "#invoke" do
-    it "creates output files from a pipeline" do
+    it "creates output files" do
       output_files.each { |file| file.should_not exist }
       project.invoke
       output_files.each { |file| file.should exist }
@@ -112,13 +110,13 @@ describe "Rake::Pipeline::Project" do
 
       it "rebuilds its pipeline" do
         project.invoke_clean
-        original_pipeline = project.pipeline
+        original_pipeline = project.pipelines.last
         original_assetfile_digest = assetfile_digest
 
         modify_assetfile
         project.invoke_clean
         assetfile_digest.should_not == original_assetfile_digest
-        project.pipeline.should_not == original_pipeline
+        project.pipelines.last.should_not == original_pipeline
       end
     end
   end
@@ -172,14 +170,74 @@ describe "Rake::Pipeline::Project" do
     it "appends a string to the generated tmp dir name" do
       Rake::Pipeline::Project.add_to_digest("octopus")
 
-      project.digested_tmpdir.should == "rake-pipeline-#{assetfile_digest}-octopus"
+      File.basename(project.digested_tmpdir).should ==
+        "rake-pipeline-#{assetfile_digest}-octopus"
     end
 
     it "can be called multiple times" do
       Rake::Pipeline::Project.add_to_digest("a")
       Rake::Pipeline::Project.add_to_digest("b")
 
-      project.digested_tmpdir.should == "rake-pipeline-#{assetfile_digest}-a-b"
+      File.basename(project.digested_tmpdir).should ==
+        "rake-pipeline-#{assetfile_digest}-a-b"
+    end
+  end
+
+  describe "#build_pipeline" do
+    let(:inputs) { {"foo" => "**/*"} }
+
+    it "returns a pipeline" do
+      pipeline = project.build_pipeline(inputs) {}
+      pipeline.should be_kind_of(Rake::Pipeline)
+    end
+
+    it "adds the pipeline to the list of pipelines" do
+      pipeline = project.build_pipeline(inputs) {}
+      project.pipelines.last.should == pipeline
+    end
+
+    it "configures the pipeline with the pipeline DSL" do
+      pipeline = project.build_pipeline(inputs) do
+        output "bar"
+      end
+
+      pipeline.output_root.should == File.expand_path("bar")
+    end
+
+    it "sets the pipeline's tmpdir to a digest tmpdir" do
+      pipeline = project.build_pipeline(inputs) {}
+      pipeline.tmpdir.should == project.digested_tmpdir
+    end
+
+    it "sets the pipeline's output_root to the default_output_root" do
+      pipeline = project.build_pipeline(inputs) {}
+      pipeline.output_root.should == project.default_output_root
+    end
+
+    it "creates a pipeline with a given set of inputs" do
+      pipeline = project.build_pipeline(inputs) {}
+      pipeline.inputs.should == inputs
+    end
+
+    it "can be called with a single path input" do
+      pipeline = project.build_pipeline("/path") {}
+      pipeline.inputs.should == {"/path" => "**/*"}
+    end
+
+    it "can be called with a path and a glob" do
+      pipeline = project.build_pipeline("/path", "*.js") {}
+      pipeline.inputs.should == {"/path" => "*.js"}
+    end
+
+    it "can be called with an array of paths" do
+      pipeline = project.build_pipeline(["path1", "path2"]) {}
+      pipeline.inputs.should have_key("path1")
+      pipeline.inputs.should have_key("path2")
+    end
+
+    it "can be called with a hash of path => glob pairs" do
+      pipeline = project.build_pipeline({"/path" => "*.css"}) {}
+      pipeline.inputs.should == {"/path" => "*.css"}
     end
   end
 

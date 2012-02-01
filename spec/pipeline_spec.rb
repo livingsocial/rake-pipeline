@@ -18,11 +18,6 @@ describe "Rake::Pipeline" do
     pipeline.tmpdir.should == File.expand_path("tmp")
   end
 
-  it "accepts a temporary subdirectory" do
-    pipeline.tmpsubdir = "rakep"
-    pipeline.tmpsubdir.should == "rakep"
-  end
-
   it "accepts an output directory" do
     pipeline.output_root = "public"
     pipeline.output_root.should == File.expand_path("public")
@@ -41,22 +36,22 @@ describe "Rake::Pipeline" do
   describe ".build" do
     it "evaluates a block against a new Pipeline" do
       pipeline = Rake::Pipeline.build do
-        tmpdir "octopus"
+        output "octopus"
       end
       pipeline.should be_kind_of(Rake::Pipeline)
-      pipeline.tmpdir.should == File.expand_path("octopus")
+      pipeline.output_root.should == File.expand_path("octopus")
     end
   end
 
   describe "#build" do
     it "evaluates a block against an existing Pipeline" do
       pipeline = Rake::Pipeline.new
-      pipeline.tmpdir = "octopus"
+      pipeline.output_root = "octopus"
 
       pipeline.build do
-        tmpdir "squid"
+        output "squid"
       end
-      pipeline.tmpdir.should == File.expand_path("squid")
+      pipeline.output_root.should == File.expand_path("squid")
     end
   end
 
@@ -69,11 +64,6 @@ describe "Rake::Pipeline" do
     it "accepts a :tmpdir option" do
       pipeline = Rake::Pipeline.new(:tmpdir => "tmp")
       pipeline.tmpdir.should == "tmp"
-    end
-
-    it "accepts a :tmpsubdir option" do
-      pipeline = Rake::Pipeline.new(:tmpsubdir => "rakep")
-      pipeline.tmpsubdir.should == "rakep"
     end
 
     it "accepts an :output_root option" do

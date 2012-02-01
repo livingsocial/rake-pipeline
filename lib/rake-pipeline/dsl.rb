@@ -6,3 +6,4 @@ module Rake
 end
 
 require 'rake-pipeline/dsl/pipeline_dsl'
+require 'rake-pipeline/dsl/project_dsl'

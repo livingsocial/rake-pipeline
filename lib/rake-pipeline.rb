@@ -109,13 +109,8 @@ module Rake
     # @return [String] the directory path for the output files.
     attr_reader   :output_root
 
-    # @return [String] the directory path for temporary files.
-    attr_reader   :tmpdir
-
-    # @return [String] a directory path relative to {#tmpdir}
-    #   where temporary files will be stored. Defaults to '',
-    #   meaning files are written directly under {#tmpdir}.
-    attr_accessor :tmpsubdir
+    # @return [String] the directory path for temporary files
+    attr_accessor :tmpdir
 
     # @return [Array] an Array of Rake::Task objects. This
     #   property is populated by the #generate_rake_tasks
@@ -136,8 +131,6 @@ module Rake
     #   set the pipeline's {#inputs}.
     # @option options [String] :tmpdir
     #   set the pipeline's {#tmpdir}.
-    # @option options [String] :tmpsubdir
-    #   set the pipeline's {#tmpsubdir}.
     # @option options [String] :output_root
     #   set the pipeline's {#output_root}.
     # @option options [Rake::Application] :rake_application
@@ -148,7 +141,6 @@ module Rake
       @clean_mutex     = Mutex.new
       @inputs          = options[:inputs] || {}
       @tmpdir          = options[:tmpdir] || "tmp"
-      @tmpsubdir       = options[:tmpsubdir] || ""
 
       if options[:output_root]
         self.output_root = options[:output_root]
@@ -190,7 +182,7 @@ module Rake
     # @return [Rake::Pipeline] this pipeline with any modifications
     #   made by the given block.
     def build(&block)
-      DSL::PipelineBuilder.evaluate(self, &block) if block
+      DSL::PipelineDSL.evaluate(self, &block) if block
       self
     end
 
@@ -232,7 +224,8 @@ module Rake
     # @param [String] root the input root directory; required
     # @param [String] pattern a pattern to match within +root+;
     #   optional; defaults to "**/*"
-    def add_input(root, pattern = '**/*')
+    def add_input(root, pattern = nil)
+      pattern ||= "**/*"
       @inputs[root] = pattern
     end
 
@@ -384,7 +377,7 @@ module Rake
     #
     # @return [void]
     def generate_tmpdir
-      File.join(tmpdir, tmpsubdir, self.class.generate_tmpname)
+      File.join(tmpdir, self.class.generate_tmpname)
     end
 
     # Generate all of the rake tasks for this pipeline.

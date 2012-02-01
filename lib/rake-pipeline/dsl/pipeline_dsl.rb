@@ -126,18 +126,6 @@ module Rake
           pipeline.output_root = root
         end
 
-        # Specify the location of the temporary directory.
-        # Filters will store intermediate build artifacts
-        # here.
-        #
-        # This defaults "tmp" in the current working directory.
-        #
-        # @param [String] root the temporary directory
-        # @return [void]
-        def tmpdir(root)
-          pipeline.tmpdir = root
-        end
-
         # A helper method for adding a concat filter to
         # the pipeline.
         # If the first argument is an Array, it adds a new
