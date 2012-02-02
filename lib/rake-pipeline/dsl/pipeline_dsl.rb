@@ -1,14 +1,11 @@
 module Rake
   class Pipeline
     module DSL
-      # This class exists purely to provide a convenient DSL for
+      # This class is used by {ProjectDSL} to provide a convenient DSL for
       # configuring a pipeline.
       #
       # All instance methods of {PipelineDSL} are available in the context
       # the block passed to +Rake::Pipeline.+{Pipeline.build}.
-      #
-      # When configuring a pipeline, you *must* provide both a
-      # root, and a series of files using {#input}.
       class PipelineDSL
         # @return [Pipeline] the pipeline the DSL should configure
         attr_reader :pipeline
@@ -35,19 +32,21 @@ module Rake
           @pipeline = pipeline
         end
 
-        # Define the input location and files for the pipeline.
+        # Add an input location and files to a pipeline.
         #
         # @example
         #   !!!ruby
-        #   Rake::Pipeline.build do
-        #     input "app/assets", "**/*.js"
-        #     # ...
+        #   Rake::Pipeline::Project.build do
+        #     input "app" do
+        #       input "assets", "**/*.js"
+        #       # ...
+        #     end
         #   end
         #
         # @param [String] root the root path where the pipeline
         #   should find its input files.
         # @param [String] glob a file pattern that represents
-        #   the list of all files that the pipeline should
+        #   the list of files that the pipeline should
         #   process within +root+. The default is +"**/*"+.
         # @return [void]
         def input(root, glob="**/*")
@@ -93,22 +92,21 @@ module Rake
         #
         # @example
         #   !!!ruby
-        #   Pipeline.build do
-        #     input "app/assets"
+        #   Rake::Pipeline::Project.build do
         #     output "public"
         #
-        #     # compile coffee files into JS files
-        #     match "*.coffee" do
-        #       filter CompileCoffee do |input|
-        #         input.sub(/coffee$/, "js")
+        #     input "app/assets" do
+        #       # compile coffee files into JS files
+        #       match "*.coffee" do
+        #         coffee_script
         #       end
-        #     end
         #
-        #     # because the previous step converted coffeee
-        #     # into JS, the coffee files will be included here
-        #     match "*.js" do
-        #       filter MinifyFilter
-        #       filter Rake::Pipeline::ConcatFilter, "application.js"
+        #       # because the previous step converted coffeee
+        #       # into JS, the coffee files will be included here
+        #       match "*.js" do
+        #         uglify
+        #         concat "application.js"
+        #       end
         #     end
         #   end
         def match(pattern, &block)

@@ -9,7 +9,7 @@ module Rake
       # @return [Pipeline] the list of pipelines in the project
       attr_reader :pipelines
 
-      # @return [String|nil] the path to the {#project}'s Assetfile
+      # @return [String|nil] the path to the project's Assetfile
       #   or nil if it was created without an Assetfile.
       attr_reader :assetfile_path
 
@@ -73,10 +73,9 @@ module Rake
         end
       end
 
-      # @param [String|Rake::Pipeline] assetfile_or_pipeline
-      #   if this a String, create a Rake::Pipeline from the
-      #   Assetfile at that path. If it's a Rake::Pipeline,
-      #   just wrap that pipeline.
+      # @param [String|Pipeline] assetfile_or_pipeline
+      #   if this a String, create a Pipeline from the Assetfile at
+      #   that path. If it's a Pipeline, just wrap that pipeline.
       def initialize(assetfile_or_pipeline=nil)
         reset!
         if assetfile_or_pipeline.kind_of?(String)
@@ -94,15 +93,15 @@ module Rake
         self
       end
 
-      # Invoke the pipeline.
+      # Invoke all of the project's pipelines.
       #
       # @see Rake::Pipeline#invoke
       def invoke
         pipelines.each(&:invoke)
       end
 
-      # Invoke the pipeline, detecting any changes to the Assetfile
-      # and rebuilding the pipeline if necessary.
+      # Invoke all of the project's pipelines, detecting any changes
+      # to the Assetfile and rebuilding the pipelines if necessary.
       #
       # @return [void]
       # @see Rake::Pipeline#invoke_clean
@@ -118,7 +117,7 @@ module Rake
         end
       end
 
-      # Remove the pipeline's temporary and output files.
+      # Remove the project's temporary and output files.
       def clean
         files_to_clean.each { |file| FileUtils.rm_rf(file) }
       end

@@ -2,13 +2,13 @@ module Rake
   class Pipeline
     module DSL
       # This class exists purely to provide a convenient DSL for
-      # configuring a pipeline.
+      # configuring a project.
       #
-      # All instance methods of {PipelineDSL} are available in the context
-      # the block passed to +Rake::Pipeline.+{Pipeline.build}.
+      # All instance methods of {ProjectDSL} are available in the context
+      # the block passed to +Rake::Pipeline::Project.+{Project.build}.
       #
-      # When configuring a pipeline, you *must* provide both a
-      # root, and a series of files using {#input}.
+      # When configuring a project, you *must* provide an output root
+      # and a series of files using at least one {#input} block.
       class ProjectDSL
         # @return [Project] the project the DSL should configure
         attr_reader :project
@@ -35,8 +35,10 @@ module Rake
         end
 
         # Specify the default output directory for the project.
-        # Pipelines will place their outputs here unless they
-        # set a different output in their {#input} block.
+        #
+        # Pipelines created in this project will place their
+        # outputs here unless the value is overriden in their
+        # {#input} block.
         #
         # @param [String] root the output directory.
         # @return [void]
@@ -44,9 +46,10 @@ module Rake
           project.default_output_root = root
         end
 
-        # Specify the location of the temporary directory.
+        # Specify the location of the root temporary directory.
+        #
         # Pipelines will store intermediate build artifacts
-        # here.
+        # in a subdirectory of this directory.
         #
         # This defaults to "tmp" in the current working directory.
         #
@@ -57,6 +60,8 @@ module Rake
         end
 
         # Add a new pipeline with the given inputs to the project.
+        #
+        # @see Project.build_pipeline
         def input(*inputs, &block)
           project.build_pipeline(*inputs, &block)
         end
