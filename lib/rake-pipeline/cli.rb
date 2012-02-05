@@ -11,7 +11,6 @@ module Rake
       method_option :clean, :type => :boolean, :aliases => "-C"
       def build
         if options[:pretend]
-          project.pipeline.setup_filters
           project.output_files.each do |file|
             say_status :create, relative_path(file)
           end
@@ -25,7 +24,6 @@ module Rake
       method_option :pretend, :type => :boolean, :aliases => "-p"
       def clean
         if options[:pretend]
-          project.pipeline.setup_filters
           project.files_to_clean.each do |file|
             say_status :remove, relative_path(file)
           end
