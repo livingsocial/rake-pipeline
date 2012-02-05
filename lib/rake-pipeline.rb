@@ -109,13 +109,8 @@ module Rake
     # @return [String] the directory path for the output files.
     attr_reader   :output_root
 
-    # @return [String] the directory path for temporary files.
-    attr_reader   :tmpdir
-
-    # @return [String] a directory path relative to {#tmpdir}
-    #   where temporary files will be stored. Defaults to '',
-    #   meaning files are written directly under {#tmpdir}.
-    attr_accessor :tmpsubdir
+    # @return [String] the directory path for temporary files
+    attr_accessor :tmpdir
 
     # @return [Array] an Array of Rake::Task objects. This
     #   property is populated by the #generate_rake_tasks
@@ -131,13 +126,29 @@ module Rake
 
     attr_writer :input_files
 
-    def initialize
-      @filters = []
-      @inputs = {}
-      @tmpdir = "tmp"
-      @tmpsubdir = ""
-      @invoke_mutex = Mutex.new
-      @clean_mutex = Mutex.new
+    # @param [Hash] options
+    # @option options [Hash] :inputs
+    #   set the pipeline's {#inputs}.
+    # @option options [String] :tmpdir
+    #   set the pipeline's {#tmpdir}.
+    # @option options [String] :output_root
+    #   set the pipeline's {#output_root}.
+    # @option options [Rake::Application] :rake_application
+    #   set the pipeline's {#rake_application}.
+    def initialize(options={})
+      @filters         = []
+      @invoke_mutex    = Mutex.new
+      @clean_mutex     = Mutex.new
+      @inputs          = options[:inputs] || {}
+      @tmpdir          = options[:tmpdir] || "tmp"
+
+      if options[:output_root]
+        self.output_root = options[:output_root]
+      end
+
+      if options[:rake_application]
+        self.rake_application = options[:rake_application]
+      end
     end
 
     # Build a new pipeline taking a block. The block will
@@ -158,10 +169,21 @@ module Rake
     #   the build block.
     #
     # @return [Rake::Pipeline] the newly configured pipeline
-    def self.build(&block)
-      pipeline = new
-      DSL.evaluate(pipeline, &block) if block
-      pipeline
+    def self.build(options={}, &block)
+      pipeline = new(options)
+      pipeline.build(&block)
+    end
+
+    # Evaluate a block using the Rake::Pipeline DSL against an
+    # existing pipeline.
+    #
+    # @see Rake::Pipeline.build
+    #
+    # @return [Rake::Pipeline] this pipeline with any modifications
+    #   made by the given block.
+    def build(&block)
+      DSL::PipelineDSL.evaluate(self, &block) if block
+      self
     end
 
     @@tmp_id = 0
@@ -202,7 +224,8 @@ module Rake
     # @param [String] root the input root directory; required
     # @param [String] pattern a pattern to match within +root+;
     #   optional; defaults to "**/*"
-    def add_input(root, pattern = '**/*')
+    def add_input(root, pattern = nil)
+      pattern ||= "**/*"
       @inputs[root] = pattern
     end
 
@@ -354,7 +377,7 @@ module Rake
     #
     # @return [void]
     def generate_tmpdir
-      File.join(tmpdir, tmpsubdir, self.class.generate_tmpname)
+      File.join(tmpdir, self.class.generate_tmpname)
     end
 
     # Generate all of the rake tasks for this pipeline.

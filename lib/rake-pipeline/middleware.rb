@@ -53,7 +53,11 @@ module Rake
       end
 
       def file_for(path)
-        Dir[File.join(project.pipeline.output_root, path)].first
+        project.pipelines.each do |pipeline|
+          file = Dir[File.join(pipeline.output_root, path)].first
+          return file unless file.nil?
+        end
+        nil
       end
 
       def headers_for(path)

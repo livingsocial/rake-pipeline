@@ -8,3 +8,4 @@ gem "flog"
 gem "simplecov", :require => false
 gem "yard"
 gem "rdiscount"
+gem "pry"
