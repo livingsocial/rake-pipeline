@@ -43,11 +43,21 @@ describe "Rake::Pipeline::Project" do
     [output_file("javascripts/application.js")]
   end
 
-  let(:project) { Rake::Pipeline::Project.new(assetfile_path) }
+  let(:old_tmpdir) do
+    File.join(tmp, "tmp", "rake-pipeline-ad7a83894789")
+  end
+
+  let(:digested_tmpdir) do
+    File.join(tmp, "tmp", "rake-pipeline-#{assetfile_digest}")
+  end
+
+  attr_reader :project
 
   before do
     File.open(assetfile_path, 'w') { |file| file.write(ASSETFILE_SOURCE) }
     create_files(input_files)
+    @project = Rake::Pipeline::Project.new(assetfile_path)
+    mkdir_p(old_tmpdir)
   end
 
   it "has an assetfile_path" do
@@ -71,6 +81,12 @@ describe "Rake::Pipeline::Project" do
       project = Rake::Pipeline::Project.new(pipeline)
       project.pipeline.should == pipeline
     end
+
+    it "with no arguments, creates a new pipeline" do
+      project = Rake::Pipeline::Project.new
+      project.pipeline.should_not be_nil
+      project.pipeline.should be_kind_of(Rake::Pipeline)
+    end
   end
 
   describe "#invoke" do
@@ -82,10 +98,8 @@ describe "Rake::Pipeline::Project" do
 
     it "writes temp files to a subdirectory of the tmp dir named after the assetfile digest" do
       project.invoke
-      digest_dir = File.join(tmp, "tmp", "rake-pipeline-#{assetfile_digest}")
-      File.exist?(digest_dir).should be_true
+      File.exist?(digested_tmpdir).should be_true
     end
-
   end
 
   describe "#invoke_clean" do
@@ -110,23 +124,17 @@ describe "Rake::Pipeline::Project" do
   end
 
   describe "#cleanup_tmpdir" do
-    let(:old_dir) { File.join(tmp, "tmp", "rake-pipeline-ad7a83894789") }
-
-    before do
-      mkdir_p old_dir
-    end
-
     it "cleans old rake-pipeline-* dirs out of the pipeline's tmp dir" do
-      File.exist?(old_dir).should be_true
+      File.exist?(old_tmpdir).should be_true
       project.cleanup_tmpdir
-      File.exist?(old_dir).should be_false
+      File.exist?(old_tmpdir).should be_false
     end
 
     it "leaves the current assetfile-digest tmp dir alone" do
       project.invoke
-      File.exist?(File.join(tmp, "tmp", project.digested_tmpdir)).should be_true
+      File.exist?(digested_tmpdir).should be_true
       project.cleanup_tmpdir
-      File.exist?(File.join(tmp, "tmp", project.digested_tmpdir)).should be_true
+      File.exist?(digested_tmpdir).should be_true
     end
   end
 
@@ -172,6 +180,28 @@ describe "Rake::Pipeline::Project" do
       Rake::Pipeline::Project.add_to_digest("b")
 
       project.digested_tmpdir.should == "rake-pipeline-#{assetfile_digest}-a-b"
+    end
+  end
+
+  describe "#obsolete_tmpdirs" do
+    it "includes tmp directories that don't match the current digest" do
+      project.obsolete_tmpdirs.should include(old_tmpdir)
+    end
+  end
+
+  describe "#files_to_clean" do
+    it "includes a project's output files" do
+      output_files.each do |file|
+        project.files_to_clean.should include(file.fullpath)
+      end
+    end
+
+    it "includes a project's temporary directory" do
+      project.files_to_clean.should include(digested_tmpdir)
+    end
+
+    it "includes any old digest tmp dirs" do
+      project.files_to_clean.should include(old_tmpdir)
     end
   end
 end

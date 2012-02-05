@@ -51,11 +51,13 @@ module Rake
       #   if this a String, create a Rake::Pipeline from the
       #   Assetfile at that path. If it's a Rake::Pipeline,
       #   just wrap that pipeline.
-      def initialize(assetfile_or_pipeline)
+      def initialize(assetfile_or_pipeline=nil)
         @invoke_mutex = Mutex.new
-        if assetfile_or_pipeline.is_a?(String)
+        if assetfile_or_pipeline.kind_of?(String)
           @assetfile_path = File.expand_path(assetfile_or_pipeline)
           build_pipeline
+        elsif assetfile_or_pipeline.nil?
+          @pipeline = Rake::Pipeline.new
         else
           @pipeline = assetfile_or_pipeline
         end
@@ -123,6 +125,7 @@ module Rake
       # @return Array[String] a list of files to delete to completely clean
       #   out a pipeline's temporary and output files.
       def files_to_clean
+        setup_pipeline
         obsolete_tmpdirs +
           ["#{pipeline.tmpdir}/#{digested_tmpdir}"] +
           pipeline.output_files.map(&:fullpath)
@@ -131,6 +134,7 @@ module Rake
       # @return [Array[FileWrapper]] a list of the files that
       #   will be generated when this Project is invoked.
       def output_files
+        setup_pipeline
         pipeline.output_files
       end
 
@@ -145,6 +149,11 @@ module Rake
         @pipeline = Rake::Pipeline.class_eval("build do\n#{assetfile_source}\nend", assetfile_path, 1)
         @pipeline.tmpsubdir = digested_tmpdir
         cleanup_tmpdir
+      end
+
+      # Setup the pipeline so its output files will be up to date.
+      def setup_pipeline
+        pipeline.setup_filters
       end
 
       # @return [String] the SHA1 digest of the given string.
