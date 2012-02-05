@@ -11,7 +11,8 @@ module Rake
       # inputs to the pipeline, meaning they weren't processed
       # by any filter and should not be copied to the output.
       def input_files
-        super.reject { |file| pipeline.input_files.include?(file) }
+        pipeline_input_files = pipeline.input_files
+        super.reject { |file| pipeline_input_files.include?(file) }
       end
     end
   end
