@@ -6,42 +6,72 @@ output files based on input changes.
 
 = Usage
 
-The easiest way to use Rake::Pipeline is via a +Assetfile+ file in the
+The easiest way to use Rake::Pipeline is via an +Assetfile+ file in the
 root of your project.
 
 A sample +Assetfile+ looks like this:
 
   !!!ruby
-  input "assets"
   output "public"
 
-  # this block will take all JS inputs, wrap them in a closure,
-  # add some additional metadata, and concatenate them all into
-  # application.scripts.js.
-  match "*.js" do
-    filter ClosureWrapper
-    filter DataWrapper
-    concat "application.scripts.js"
+  input "assets" do
+    # this block will take all JS inputs, wrap them in a closure,
+    # add some additional metadata, and concatenate them all into
+    # application.scripts.js.
+    match "*.js" do
+      filter ClosureWrapper
+      filter DataWrapper
+      concat "application.scripts.js"
+    end
+
+    # this block will take all HTML and CSS inputs, convert them
+    # into JavaScript
+    match "*/*.{html,css}" do
+      filter DataWrapper
+      concat "application.assets.js"
+    end
+
+    match "*.js" do
+      concat "application.js"
+    end
   end
 
-  # this block will take all HTML and CSS inputs, convert them
-  # into JavaScript
-  match "*/*.{html,css}" do
-    filter DataWrapper
-    concat "application.assets.js"
-  end
+Each +input+ block defines a collection of files, and a pipeline
+that transforms those files. Within each pipeline, you can specify
+a series of filters to describe the transformations you'd like to
+apply to the files.
 
-  match "*.js" do
-    concat "application.js"
-  end
+= Upgrading from Previous Versions
 
-The available options are:
+The +Assetfile+ syntax has changed in version 0.6.0. In previous
+versions, each +Assetfile+ defined a single pipeline, and +input+
+statements would add input files to that pipeline. After version
+0.6.0, multiple pipelines can be defined in an +Assetfile+. The
++input+ method now takes a block, and this block defines a pipeline.
+This means that any +match+ blocks or filters must be defined
+inside an +input+ block, and no longer at the top level. For example,
+this:
 
-* {Rake::Pipeline::DSL#input input}: the directory containing your input files
-* {Rake::Pipeline::DSL#output output}: the directory to place your output files
-  like to process
-* if you do not specify a block, the files will be
-  copied over directly.
+    !!!ruby
+    # Prior to 0.6.0
+    output "public"
+    input "assets"
+
+    match "**/*.js" do
+      concat
+    end
+
+would now be written as:
+
+    !!!ruby
+    # After 0.6.0
+    output "public"
+
+    input "assets" do
+      match "**/*.js" do
+        concat
+      end
+    end
 
 = Filters
 
@@ -75,7 +105,7 @@ If you had a series of input files like:
 * +app/javascripts/three.js+
 
 and you specified the +ConcatFilter+ in your
-+AssetFile+ like:
++Assetfile+ like:
 
   !!!ruby
   filter ConcatFilter, "application.js"
@@ -106,15 +136,17 @@ This will stop `Rake::Pipeline` from trying to interpret the
 input files as `UTF-8`, which obviously will not work on
 binary data.
 
-= Built-In Filters
+= Filters
 
-At the current time, +Rake::Pipeline+ comes with a single built-in
-filter: {Rake::Pipeline::ConcatFilter}. Its implementation is
-the same as the `ConcatFilter` shown above.
++Rake::Pipeline+ comes with a built-in filter,
+{Rake::Pipeline::ConcatFilter}. Its implementation is the same as the
++ConcatFilter+ above. Other filters that are useful for web development
+like a +CoffeeScriptFilter+ and +SassFilter+ are available in
+[rake-pipeline-web-filters](https://github.com/wycats/rake-pipeline-web-filters).
 
 = Preview Server
 
-To start up the preview server, run +rakep+. This will start up
+To start up the preview server, run +rakep server+. This will start up
 a server that automatically recompiles files for you on the fly
 and serves up the files you need.
 

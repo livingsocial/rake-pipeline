@@ -1,6 +1,6 @@
 module Rake
   class Pipeline
-    # @version 0.5.0
-    VERSION = "0.5.0"
+    # @version 0.6.0
+    VERSION = "0.6.0"
   end
 end

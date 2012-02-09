@@ -1,8 +1,8 @@
-describe "Rake::Pipeline::DSL" do
+describe "Rake::Pipeline::PipelineDSL" do
   ConcatFilter = Rake::Pipeline::SpecHelpers::Filters::ConcatFilter
 
   let(:pipeline) { Rake::Pipeline.new }
-  let(:dsl) { Rake::Pipeline::DSL.new(pipeline) }
+  let(:dsl) { Rake::Pipeline::DSL::PipelineDSL.new(pipeline) }
 
   def filter
     pipeline.filters.last
@@ -74,13 +74,6 @@ describe "Rake::Pipeline::DSL" do
     it "configures the pipeline's output_root" do
       dsl.output "/path/to/output"
       pipeline.output_root.should == "/path/to/output"
-    end
-  end
-
-  describe "#tmpdir" do
-    it "configures the pipeline's tmpdir" do
-      dsl.tmpdir "/temporary"
-      pipeline.tmpdir.should == "/temporary"
     end
   end
 

@@ -57,11 +57,10 @@ if "".respond_to?(:encode)
       create_files
 
       @pipeline = Rake::Pipeline.build do
-        tmpdir "temporary"
-        input tmp, "app/javascripts/*.js"
-        filter Filters::ConcatFilter, "javascripts/application.js"
-        filter Filters::StripAssertsFilter
         output "public"
+        input "#{tmp}/app/javascripts/", "*.js"
+        concat "javascripts/application.js"
+        filter Filters::StripAssertsFilter
       end
     end
 
@@ -86,11 +85,10 @@ if "".respond_to?(:encode)
       let(:encoding) { "EUC-JP" }
 
       it "does not raise an exception" do
-        pipeline = Rake::Pipeline.build do
-          tmpdir "temporary"
-          input tmp, "app/javascripts/*.js"
-          filter Filters::ConcatFilter, "javascripts/application.js"
+         pipeline = Rake::Pipeline.build do
           output "public"
+          input "#{tmp}/app/javascripts/", "*.js"
+          concat "javascripts/application.js"
         end
 
         pipeline.invoke

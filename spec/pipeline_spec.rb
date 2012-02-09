@@ -18,11 +18,6 @@ describe "Rake::Pipeline" do
     pipeline.tmpdir.should == File.expand_path("tmp")
   end
 
-  it "accepts a temporary subdirectory" do
-    pipeline.tmpsubdir = "rakep"
-    pipeline.tmpsubdir.should == "rakep"
-  end
-
   it "accepts an output directory" do
     pipeline.output_root = "public"
     pipeline.output_root.should == File.expand_path("public")
@@ -36,6 +31,51 @@ describe "Rake::Pipeline" do
 
   it "defaults the rake application to Rake.application" do
     pipeline.rake_application.should == Rake.application
+  end
+
+  describe ".build" do
+    it "evaluates a block against a new Pipeline" do
+      pipeline = Rake::Pipeline.build do
+        output "octopus"
+      end
+      pipeline.should be_kind_of(Rake::Pipeline)
+      pipeline.output_root.should == File.expand_path("octopus")
+    end
+  end
+
+  describe "#build" do
+    it "evaluates a block against an existing Pipeline" do
+      pipeline = Rake::Pipeline.new
+      pipeline.output_root = "octopus"
+
+      pipeline.build do
+        output "squid"
+      end
+      pipeline.output_root.should == File.expand_path("squid")
+    end
+  end
+
+  describe "the constructor" do
+    it "accepts an :inputs option" do
+      pipeline = Rake::Pipeline.new(:inputs => {"app/assets" => "**/*"})
+      pipeline.inputs.should == {"app/assets" => "**/*"}
+    end
+
+    it "accepts a :tmpdir option" do
+      pipeline = Rake::Pipeline.new(:tmpdir => "tmp")
+      pipeline.tmpdir.should == "tmp"
+    end
+
+    it "accepts an :output_root option" do
+      pipeline = Rake::Pipeline.new(:output_root => "public")
+      pipeline.output_root.should == File.expand_path("public")
+    end
+
+    it "accepts a :rake_application option" do
+      app = Rake::Application.new
+      pipeline = Rake::Pipeline.new(:rake_application => app)
+      pipeline.rake_application.should == app
+    end
   end
 
   describe "adding filters" do
