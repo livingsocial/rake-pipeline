@@ -365,6 +365,15 @@ module Rake
       @filters.last.output_files unless @filters.empty?
     end
 
+    # Add a final filter to the pipeline that will copy the
+    # pipeline's generated files to the output.
+    #
+    # @return [void]
+    # @api private
+    def finalize
+      add_filter(Rake::Pipeline::PipelineFinalizingFilter.new)
+    end
+
   protected
     # Generate a new temporary directory name.
     #

@@ -101,6 +101,14 @@ module Rake
         end
       end
 
+      # Override {Pipeline#finalize} to do nothing. We want to pass
+      # on our unmatched inputs to the next part of the pipeline.
+      #
+      # @return [void]
+      # @api private
+      def finalize
+      end
+
     protected
       # Let our containing pipeline generate temp directories for us.
       def generate_tmpdir
