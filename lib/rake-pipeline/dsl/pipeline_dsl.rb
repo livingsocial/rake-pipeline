@@ -20,7 +20,7 @@ module Rake
         # @return [void]
         def self.evaluate(pipeline, &block)
           new(pipeline).instance_eval(&block)
-          pipeline.add_filter(Rake::Pipeline::PipelineFinalizingFilter.new)
+          pipeline.finalize
         end
 
         # Create a new {PipelineDSL} to configure a pipeline.
