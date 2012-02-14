@@ -4,7 +4,7 @@ module Rake
   class Pipeline
     class CLI < Thor
       class_option :assetfile, :default => "Assetfile", :aliases => "-c"
-      default_task :server
+      default_task :build
 
       desc "build", "Build the project."
       method_option :pretend, :type => :boolean, :aliases => "-p"
