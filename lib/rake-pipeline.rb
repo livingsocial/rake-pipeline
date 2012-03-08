@@ -1,3 +1,4 @@
+# encoding: utf-8
 require "rake-pipeline/file_wrapper"
 require "rake-pipeline/filter"
 require "rake-pipeline/filters"

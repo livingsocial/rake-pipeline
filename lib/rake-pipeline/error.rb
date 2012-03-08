@@ -1,3 +1,4 @@
+# encoding: utf-8
 module Rake
   class Pipeline
     # The general Rake::Pipeline error class
