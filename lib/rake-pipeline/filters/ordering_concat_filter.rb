@@ -1,3 +1,4 @@
+# encoding: utf-8
 class Rake::Pipeline
   # A filter that concats files in a specified order.
   #

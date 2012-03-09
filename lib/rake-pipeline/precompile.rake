@@ -1,3 +1,4 @@
+# encoding: utf-8
 namespace :assets do
   desc "Precompile assets using Rake::Pipeline"
   task :precompile do

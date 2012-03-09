@@ -1,3 +1,4 @@
+# encoding: utf-8
 module Rake
   class Pipeline
     # A built-in filter that simply accepts a series
