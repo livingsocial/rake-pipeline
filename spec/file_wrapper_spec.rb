@@ -33,8 +33,25 @@ describe "Rake::Pipeline::FileWrapper" do
     file.should_not == other
   end
 
-  it "has a fullpath" do
-    file.fullpath.should == jquery
+  describe "#fullpath" do
+    it "returns the complete path to the file" do
+      file.fullpath.should == jquery
+    end
+
+    it "raises an error if its root is not a root path" do
+      file.root = 'root'
+      lambda { file.fullpath }.should raise_error
+    end
+
+    it "doesn't raise an error with a unix root path" do
+      file.root = '/root'
+      lambda { file.fullpath }.should_not raise_error
+    end
+
+    it "doesn't raise an error with a windows root path" do
+      file.root = 'c:\root'
+      lambda { file.fullpath }.should_not raise_error
+    end
   end
 
   it "it knows it doesn't exist when the file doesn't exist" do
