@@ -27,7 +27,58 @@ module Rake
       # @return [String]
       def glob=(pattern)
         @glob = pattern
-        scanner = StringScanner.new(pattern)
+        if pattern.kind_of?(Regexp)
+          @pattern = pattern
+        else
+          @pattern = scan_string
+        end
+      end
+
+      # A list of the output files that invoking this pipeline will
+      # generate. This will include the outputs of files matching
+      # the {#glob glob} and any inputs that did not match the
+      # glob.
+      #
+      # This will make those inputs available to any additional
+      # filters or matchers.
+      #
+      # @return [Array<FileWrapper>]
+      def output_files
+        super + input_files.reject do |file|
+          file.path =~ @pattern
+        end
+      end
+
+      # Override {Pipeline#finalize} to do nothing. We want to pass
+      # on our unmatched inputs to the next part of the pipeline.
+      #
+      # @return [void]
+      # @api private
+      def finalize
+      end
+
+    protected
+      # Let our containing pipeline generate temp directories for us.
+      def generate_tmpdir
+        pipeline.generate_tmpdir
+      end
+
+    private
+      # Override the default {Pipeline#eligible_input_files}
+      # to include only files that match the {#glob glob}.
+      #
+      # @return [Array<FileWrapper>]
+      def eligible_input_files
+        input_files.select do |file|
+          file.path =~ @pattern
+        end
+      end
+
+      # Convert string to regexp using StringScanner
+      #
+      # @return [Regexp]
+      def scan_string
+        scanner = StringScanner.new(glob)
 
         output, pos = "", 0
 
@@ -75,54 +126,14 @@ module Rake
           end
         end
 
-        if pattern.include?("/")
+        if glob.include?("/")
           # if the pattern includes a /, it must match the
           # entire input, not just the end.
-          @pattern = Regexp.new("^#{output}$", "i")
+          Regexp.new("^#{output}$", "i")
         else
           # anchor the pattern either at the beginning of the
           # path or at any "/" character
-          @pattern = Regexp.new("(^|/)#{output}$", "i")
-        end
-      end
-
-      # A list of the output files that invoking this pipeline will
-      # generate. This will include the outputs of files matching
-      # the {#glob glob} and any inputs that did not match the
-      # glob.
-      #
-      # This will make those inputs available to any additional
-      # filters or matchers.
-      #
-      # @return [Array<FileWrapper>]
-      def output_files
-        super + input_files.reject do |file|
-          file.path =~ @pattern
-        end
-      end
-
-      # Override {Pipeline#finalize} to do nothing. We want to pass
-      # on our unmatched inputs to the next part of the pipeline.
-      #
-      # @return [void]
-      # @api private
-      def finalize
-      end
-
-    protected
-      # Let our containing pipeline generate temp directories for us.
-      def generate_tmpdir
-        pipeline.generate_tmpdir
-      end
-
-    private
-      # Override the default {Pipeline#eligible_input_files}
-      # to include only files that match the {#glob glob}.
-      #
-      # @return [Array<FileWrapper>]
-      def eligible_input_files
-        input_files.select do |file|
-          file.path =~ @pattern
+          Regexp.new("(^|/)#{output}$", "i")
         end
       end
     end

@@ -111,4 +111,28 @@ describe "a matcher" do
       file_wrapper("javascripts/backbone.js")
     ]
   end
+
+  it "accepts Regexp as glob" do
+    regexp = /application\.erb/
+    @matcher.glob = regexp
+
+    @matcher.glob.should == regexp
+  end
+
+  it "underestands regexp globs" do
+    regexp = /^*(?<!\.coffee)\.js$/i
+
+    @matcher.input_files << file_wrapper("application.coffee.js")
+    @matcher.input_files << file_wrapper("application.engine.js")
+
+    output_root = File.join(tmp, "tmp1")
+
+    should_match_glob regexp, [
+      file_wrapper("jquery.js", :encoding => "BINARY", :root => output_root),
+      file_wrapper("sproutcore.js", :encoding => "BINARY", :root => output_root),
+      file_wrapper("application.engine.js", :encoding => "BINARY", :root => output_root),
+      file_wrapper("sproutcore.css"),
+      file_wrapper("application.coffee.js")
+    ]
+  end
 end
