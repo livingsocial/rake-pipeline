@@ -155,8 +155,6 @@ module Rake
         hash = {}
 
         input_files.each do |file|
-          outputs = output_paths(file)
-
           output_wrappers(file).each do |output|
             hash[output] ||= []
             hash[output] << file
