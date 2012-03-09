@@ -1,4 +1,3 @@
-# encoding: utf-8
 module Rake
   class Pipeline
     class InstallGenerator < Rails::Generators::Base

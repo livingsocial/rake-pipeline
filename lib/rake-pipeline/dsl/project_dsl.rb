@@ -1,4 +1,3 @@
-# encoding: utf-8
 module Rake
   class Pipeline
     module DSL

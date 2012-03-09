@@ -1,4 +1,3 @@
-# encoding: utf-8
 module Rake
   class Pipeline
     # This class wraps a file for consumption inside of filters. It is

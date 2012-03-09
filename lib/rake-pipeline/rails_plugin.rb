@@ -1,4 +1,3 @@
-# encoding: utf-8
 require 'rake-pipeline/middleware'
 
 Rails.configuration.after_initialize do
