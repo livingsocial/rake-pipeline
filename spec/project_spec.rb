@@ -27,6 +27,16 @@ describe "Rake::Pipeline::Project" do
     end
   HERE
 
+  BAD_ASSETFILE_SOURCE = <<-HERE.gsub(/^ {4}/, '')
+    require "#{tmp}/../support/spec_helpers/filters"
+    tmpdir "tmp"
+    output "public"
+
+    input "app/assets" do
+      method_not_in_dsl_on_line_6
+    end
+  HERE
+
   let(:assetfile_path) { File.join(tmp, "Assetfile") }
 
   def assetfile_digest
@@ -97,6 +107,18 @@ describe "Rake::Pipeline::Project" do
     it "writes temp files to a subdirectory of the tmp dir named after the assetfile digest" do
       project.invoke
       File.exist?(digested_tmpdir).should be_true
+    end
+  end
+
+  describe "invalid Assetfile" do
+    before do
+      File.open(assetfile_path, 'w') { |file| file.write(BAD_ASSETFILE_SOURCE) }
+    end
+
+    it "should raise error with assetfile path on correct line number" do
+      lambda {
+        Rake::Pipeline::Project.new(assetfile_path)
+      }.should raise_error {|error| error.backtrace[0].should match(/Assetfile:6/) }
     end
   end
 
