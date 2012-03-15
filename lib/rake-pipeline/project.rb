@@ -224,7 +224,7 @@ module Rake
         source ||= File.read(path)
         @assetfile_digest = digest(source)
         @assetfile_path = path
-        instance_eval("build do\n#{source}\nend", path, 1)
+        build { instance_eval(source, path, 1) }
       end
 
       # Setup the pipeline so its output files will be up to date.
