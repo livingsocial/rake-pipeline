@@ -66,7 +66,7 @@ module Rake
       #
       # @return [String] the {FileWrapper}'s full path
       def fullpath
-        raise "#{root}, #{path}" unless root =~ /^(\/|[a-zA-Z]:\/)/
+        raise "#{root}, #{path}" unless root =~ /^(\/|[a-zA-Z]:[\\\/])/
         File.join(root, path)
       end
 
