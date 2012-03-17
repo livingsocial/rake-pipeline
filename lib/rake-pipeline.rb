@@ -171,7 +171,7 @@ module Rake
     # @return [Rake::Pipeline] the newly configured pipeline
     def self.build(options={}, &block)
       pipeline = new(options)
-      pipeline.build(&block)
+      pipeline.build(options, &block)
     end
 
     # Evaluate a block using the Rake::Pipeline DSL against an
@@ -181,8 +181,8 @@ module Rake
     #
     # @return [Rake::Pipeline] this pipeline with any modifications
     #   made by the given block.
-    def build(&block)
-      DSL::PipelineDSL.evaluate(self, &block) if block
+    def build(options={}, &block)
+      DSL::PipelineDSL.evaluate(self, options, &block) if block
       self
     end
 

@@ -32,6 +32,34 @@ module Rake
         # @return [void]
         def initialize(project)
           @project = project
+          @before_filters = []
+          @after_filters = []
+          @project.before_filters = @before_filters
+          @project.after_filters = @after_filters
+        end
+
+        # Add a filter to every input block. The parameters
+        # to +before_filter+ are the same as the parameters
+        # to {PipelineDSL#filter}.
+        #
+        # Filters will be executed before the specified
+        # filters in reverse of insertion order.
+        #
+        # @see {PipelineDSL#filter}
+        def before_filter(klass, *args, &block)
+          @before_filters.unshift [klass, args, block]
+        end
+
+        # Add a filter to every input block. The parameters
+        # to +after_filter+ are the same as the parameters
+        # to {PipelineDSL#filter}.
+        #
+        # Filters will be executed after the specified
+        # filters in insertion order.
+        #
+        # @see {PipelineDSL#filter}
+        def after_filter(klass, *args, &block)
+          @after_filters.push [klass, args, block]
         end
 
         # Specify the default output directory for the project.
@@ -63,6 +91,10 @@ module Rake
         #
         # @see Project.build_pipeline
         def input(*inputs, &block)
+          # Allow pipelines without a specified block. This is possible
+          # if before and after filters are all that are needed for a
+          # given input.
+          block = proc {} unless block_given?
           project.build_pipeline(*inputs, &block)
         end
         alias inputs input

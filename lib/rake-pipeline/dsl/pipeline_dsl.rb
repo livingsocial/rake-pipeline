@@ -18,8 +18,30 @@ module Rake
         #   configuration. This block will be evaluated in
         #   the context of a new instance of {PipelineDSL}
         # @return [void]
-        def self.evaluate(pipeline, &block)
-          new(pipeline).instance_eval(&block)
+        def self.evaluate(pipeline, options, &block)
+          dsl = new(pipeline)
+
+          # If any before filters, apply them to the pipeline.
+          # They will be run in reverse of insertion order.
+          if before_filters = options[:before_filters]
+            before_filters.each do |klass, args, block|
+              dsl.filter klass, *args, &block
+            end
+          end
+
+          # Evaluate the block in the context of the DSL.
+          dsl.instance_eval(&block)
+
+          # If any after filters, apply them to the pipeline.
+          # They will be run in insertion order.
+          if after_filters = options[:after_filters]
+            after_filters.each do |klass, args, block|
+              dsl.filter klass, *args, &block
+            end
+          end
+
+          # the FinalizingFilter should always come after all
+          # user specified after filters
           pipeline.finalize
         end
 

@@ -236,6 +236,23 @@ HERE
       end
     end
 
+    describe "the raw pipeline DSL (with before_filter)" do
+      it_behaves_like "the pipeline DSL"
+
+      before do
+        @project = Rake::Pipeline::Project.build do
+          tmpdir "temporary"
+          output "public"
+
+          before_filter Rake::Pipeline::ConcatFilter, "javascripts/application.js"
+
+          input tmp, "app/javascripts/*.js" do
+            filter strip_asserts_filter
+          end
+        end
+      end
+    end
+
     describe "the raw pipeline DSL (with simple strip_asserts_filter)" do
       it_behaves_like "the pipeline DSL"
 
@@ -290,6 +307,56 @@ HERE
               concat
             end
           end
+        end
+      end
+    end
+
+    describe "using multiple pipelines (with after_filters)" do
+      def output_should_exist(expected=EXPECTED_JS_OUTPUT)
+        super
+
+        css = File.join(tmp, "public/stylesheets/application.css")
+
+        File.exists?(css).should be_true
+        File.read(css).should == EXPECTED_CSS_OUTPUT
+
+        html = File.join(tmp, "public/index.html")
+        File.exists?(html).should be_true
+        File.read(html).should == EXPECTED_HTML_OUTPUT
+
+        junk = File.join(tmp, "public/junk.txt")
+        File.exists?(junk).should be_false
+      end
+
+      it_behaves_like "the pipeline DSL"
+
+      before do
+        @project = Rake::Pipeline::Project.build do
+          tmpdir "temporary"
+          output "public"
+
+          app_dir = File.join(tmp, "app")
+
+          after_filter Rake::Pipeline::ConcatFilter do |input|
+            ext = File.extname(input)
+
+            case ext
+            when ".js"
+              "javascripts/application.js"
+            when ".css"
+              "stylesheets/application.css"
+            when ".html"
+              input
+            end
+          end
+
+          input app_dir, "**/*.js" do
+            filter strip_asserts_filter
+          end
+
+          input app_dir, "**/*.css"
+
+          input app_dir, "**/*.html"
         end
       end
     end

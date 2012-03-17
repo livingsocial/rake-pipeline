@@ -25,6 +25,14 @@ module Rake
       #   write their outputs by default
       attr_reader :default_output_root
 
+      # @return [Array] a list of filters to be applied before
+      #   the specified filters in every pipeline
+      attr_writer :before_filters
+
+      # @return [Array] a list of filters to be applied after
+      #   the specified filters in every pipeline
+      attr_writer :after_filters
+
       class << self
         # Configure a new project by evaluating a block with the
         # Rake::Pipeline::DSL::ProjectDSL class.
@@ -184,6 +192,8 @@ module Rake
       # Build a new pipeline and add it to our list of pipelines.
       def build_pipeline(input, glob=nil, &block)
         pipeline = Rake::Pipeline.build({
+          :before_filters => @before_filters,
+          :after_filters => @after_filters,
           :output_root => default_output_root,
           :tmpdir => digested_tmpdir
         }, &block)
