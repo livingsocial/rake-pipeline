@@ -115,6 +115,10 @@ describe "Rake::Pipeline::Filter" do
       def generate_output(inputs, output)
         generate_output_block.call(inputs, output)
       end
+
+      def additional_dependencies(input)
+        return [File.join(input.root, "extras", input.path)]
+      end
     end
 
     let(:filter)      { TestFilter.new }
@@ -169,7 +173,7 @@ describe "Rake::Pipeline::Filter" do
       filter.generate_rake_tasks
       tasks = filter.rake_tasks
       tasks.should == [output_task("javascripts/application.js")]
-      tasks[0].prerequisites.should == input_files.map { |i| i.fullpath }
+      tasks[0].prerequisites.should == input_files.map { |i| [i.fullpath, File.join(i.root, "extras", i.path)] }.flatten
 
       tasks.each(&:invoke)
 
@@ -201,7 +205,8 @@ describe "Rake::Pipeline::Filter" do
       tasks.each do |task|
         name = task.name.sub(/^#{Regexp.escape(output_root)}/, '')
         prereq = File.join(input_root, name)
-        task.prerequisites.should == [prereq]
+        extra_prereq = File.join(input_root, "extras", name)
+        task.prerequisites.should == [prereq, extra_prereq]
       end
 
       tasks.each(&:invoke)
@@ -232,12 +237,15 @@ describe "Rake::Pipeline::Filter" do
       tasks.sort.should == [output_task("javascripts/jquery.js"), output_task("javascripts/ember.js")].sort
 
       tasks.sort[0].prerequisites.should == [
-        File.join(input_root, "javascripts/ember.js")
+        File.join(input_root, "javascripts/ember.js"),
+        File.join(input_root, "extras/javascripts/ember.js")
       ]
 
       tasks.sort[1].prerequisites.should == [
         File.join(input_root, "javascripts/jquery.js"),
-        File.join(input_root, "javascripts/jquery-ui.js")
+        File.join(input_root, "extras/javascripts/jquery.js"),
+        File.join(input_root, "javascripts/jquery-ui.js"),
+        File.join(input_root, "extras/javascripts/jquery-ui.js")
       ]
 
       tasks.each(&:invoke)
