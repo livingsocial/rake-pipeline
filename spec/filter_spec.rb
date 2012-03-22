@@ -11,7 +11,7 @@ describe "Rake::Pipeline::Filter" do
   let(:input_root)  { File.join(tmp, "app/assets") }
   let(:output_root) { File.join(tmp, "filter1/app/assets") }
   let(:input_files) do
-    %w(jquery.js jquery-ui.js sproutcore.js).map { |f| input_file(f) }
+    %w(jquery.js jquery-ui.js ember.js).map { |f| input_file(f) }
   end
 
   it "accepts a series of FileWrapper objects for the input" do
@@ -101,10 +101,10 @@ describe "Rake::Pipeline::Filter" do
       filter.output_name_generator = output_name_generator
       outputs = filter.outputs
 
-      outputs.keys.sort.should == [output_file("jquery.js"), output_file("sproutcore.js")]
-      outputs.values.sort.should == [[input_file("jquery.js"), input_file("jquery-ui.js")], [input_file("sproutcore.js")]]
+      outputs.keys.sort.should == [output_file("ember.js"), output_file("jquery.js")]
+      outputs.values.sort.should == [[input_file("ember.js")], [input_file("jquery.js"), input_file("jquery-ui.js")]]
 
-      filter.output_files.should == [output_file("jquery.js"), output_file("sproutcore.js")]
+      filter.output_files.should == [output_file("jquery.js"), output_file("ember.js")]
     end
   end
 
@@ -115,13 +115,17 @@ describe "Rake::Pipeline::Filter" do
       def generate_output(inputs, output)
         generate_output_block.call(inputs, output)
       end
+
+      def additional_dependencies(input)
+        return [File.join(input.root, "extras", input.path)]
+      end
     end
 
     let(:filter)      { TestFilter.new }
     let(:input_root)  { File.join(tmp, "app/assets") }
     let(:output_root) { File.join(tmp, "filter1/app/assets") }
     let(:input_files) do
-      %w(jquery.js jquery-ui.js sproutcore.js).map do |file|
+      %w(jquery.js jquery-ui.js ember.js).map do |file|
         input_file("javascripts/#{file}")
       end
     end
@@ -169,7 +173,7 @@ describe "Rake::Pipeline::Filter" do
       filter.generate_rake_tasks
       tasks = filter.rake_tasks
       tasks.should == [output_task("javascripts/application.js")]
-      tasks[0].prerequisites.should == input_files.map { |i| i.fullpath }
+      tasks[0].prerequisites.should == input_files.map { |i| [i.fullpath, File.join(i.root, "extras", i.path)] }.flatten
 
       tasks.each(&:invoke)
 
@@ -201,7 +205,8 @@ describe "Rake::Pipeline::Filter" do
       tasks.each do |task|
         name = task.name.sub(/^#{Regexp.escape(output_root)}/, '')
         prereq = File.join(input_root, name)
-        task.prerequisites.should == [prereq]
+        extra_prereq = File.join(input_root, "extras", name)
+        task.prerequisites.should == [prereq, extra_prereq]
       end
 
       tasks.each(&:invoke)
@@ -217,9 +222,9 @@ describe "Rake::Pipeline::Filter" do
         if output.path == "javascripts/jquery.js"
           inputs.should == [input_file("javascripts/jquery.js"), input_file("javascripts/jquery-ui.js")]
           output.should == output_file("javascripts/jquery.js")
-        elsif output.path == "javascripts/sproutcore.js"
-          inputs.should == [input_file("javascripts/sproutcore.js")]
-          output.should == output_file("javascripts/sproutcore.js")
+        elsif output.path == "javascripts/ember.js"
+          inputs.should == [input_file("javascripts/ember.js")]
+          output.should == output_file("javascripts/ember.js")
         else
           flunk
         end
@@ -229,14 +234,19 @@ describe "Rake::Pipeline::Filter" do
 
       filter.generate_rake_tasks
       tasks = filter.rake_tasks
-      tasks.sort.should == [output_task("javascripts/jquery.js"), output_task("javascripts/sproutcore.js")].sort
+      tasks.sort.should == [output_task("javascripts/jquery.js"), output_task("javascripts/ember.js")].sort
 
       tasks.sort[0].prerequisites.should == [
-        File.join(input_root, "javascripts/jquery.js"),
-        File.join(input_root, "javascripts/jquery-ui.js")
+        File.join(input_root, "javascripts/ember.js"),
+        File.join(input_root, "extras/javascripts/ember.js")
       ]
 
-      tasks.sort[1].prerequisites.should == [File.join(input_root, "javascripts/sproutcore.js")]
+      tasks.sort[1].prerequisites.should == [
+        File.join(input_root, "javascripts/jquery.js"),
+        File.join(input_root, "extras/javascripts/jquery.js"),
+        File.join(input_root, "javascripts/jquery-ui.js"),
+        File.join(input_root, "extras/javascripts/jquery-ui.js")
+      ]
 
       tasks.each(&:invoke)
 
