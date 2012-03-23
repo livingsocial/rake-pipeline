@@ -1,0 +1,99 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.expand_path('../../lib', __FILE__)
+require 'rake-pipeline'
+require 'rake-pipeline/middleware'
+
+require 'fileutils'
+require 'benchmark'
+require 'ruby-prof'
+require 'thor'
+require 'rack/test'
+
+class FakeServer
+  include Rack::Test::Methods
+
+  def app
+    Rake::Pipeline::Middleware.new(Rack::Directory.new('.'), 'Assetfile')
+  end
+end
+
+class Perfs < Thor
+  include FileUtils
+
+  class_option :clean, :type => :boolean, :default => true
+
+  desc "bench PROJECT_DIR", "Benchmark building, rebuilding, and cleaning the given project"
+  def bench(project_dir)
+    setup(project_dir)
+
+    invoke_time = Benchmark.realtime do
+      project.invoke
+    end
+
+    reinvoke_time = Benchmark.realtime do
+      project.invoke_clean
+    end
+
+    clean_time = Benchmark.realtime do
+      project.clean
+    end
+
+    puts "build: #{invoke_time}"
+    puts "rebuild: #{reinvoke_time}"
+    puts "clean: #{clean_time}"
+  end
+
+  desc "profile PROJECT_DIR", "Profile a clean build of the given project"
+  def profile(project_dir)
+    setup(project_dir)
+
+    result = RubyProf.profile do
+      project.invoke
+    end
+
+    printer = RubyProf::GraphHtmlPrinter.new(result)
+    printer.print
+  end
+
+  desc "bench_server PROJECT_DIR URL",
+    "Benchmark a GET request against a rakep server for the given PROJECT_DIR"
+  def bench_server(project_dir, url)
+    setup(project_dir)
+
+    server = FakeServer.new
+    result = Benchmark.realtime do
+      server.get url
+    end
+
+    puts result
+  end
+
+  desc "profile_server PROJECT_DIR URL",
+    "Profile a GET request against a rakep server for the given PROJECT_DIR"
+  def profile_server(project_dir, url)
+    setup(project_dir)
+
+    server = FakeServer.new
+    result = RubyProf.profile do
+      server.get url
+    end
+
+    printer = RubyProf::GraphHtmlPrinter.new(result)
+    printer.print
+  end
+
+  private
+
+  def setup(project_dir)
+    cd project_dir
+    project.clean
+    project.invoke unless options[:clean]
+  end
+
+  def project
+    @project ||= Rake::Pipeline::Project.new('Assetfile')
+  end
+end
+
+Perfs.start
