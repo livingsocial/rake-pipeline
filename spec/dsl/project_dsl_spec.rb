@@ -27,7 +27,15 @@ describe "Rake::Pipeline::ProjectDSL" do
       project.should_receive(:build_pipeline)
       dsl.input("app") {}
     end
+  end
 
+  describe "#map" do
+    it "saves the block in a hash on the project" do
+      project.maps.keys.size.should == 0
+      run_me = lambda { }
+      dsl.map("foo", &run_me)
+      dsl.project.maps["foo"].should == run_me
+    end
   end
 end
 
