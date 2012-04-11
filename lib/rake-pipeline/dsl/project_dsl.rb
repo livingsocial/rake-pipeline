@@ -98,6 +98,10 @@ module Rake
           project.build_pipeline(*inputs, &block)
         end
         alias inputs input
+
+        def map(path, &block)
+          project.maps[path] = block
+        end
       end
     end
   end
