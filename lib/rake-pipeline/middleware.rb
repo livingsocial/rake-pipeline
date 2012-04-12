@@ -33,6 +33,10 @@ module Rake
         project.invoke_clean
         path = env["PATH_INFO"]
 
+        if project.maps.has_key?(path)
+          return project.maps[path].call(env)
+        end
+
         if filename = file_for(path)
           if File.directory?(filename)
             index = File.join(filename, "index.html")

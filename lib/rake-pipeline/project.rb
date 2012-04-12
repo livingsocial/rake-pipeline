@@ -9,6 +9,8 @@ module Rake
       # @return [Pipeline] the list of pipelines in the project
       attr_reader :pipelines
 
+      attr_reader :maps
+
       # @return [String|nil] the path to the project's Assetfile
       #   or nil if it was created without an Assetfile.
       attr_reader :assetfile_path
@@ -216,6 +218,7 @@ module Rake
       # @return [void]
       def reset!
         @pipelines = []
+        @maps = {}
         @tmpdir = "tmp"
         @invoke_mutex = Mutex.new
         @default_output_root = @assetfile_digest = @assetfile_path = nil

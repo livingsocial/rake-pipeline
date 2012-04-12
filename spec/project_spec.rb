@@ -85,6 +85,7 @@ describe "Rake::Pipeline::Project" do
   describe "constructor" do
     it "creates pipelines from an Assetfile given an Assetfile path" do
       project = Rake::Pipeline::Project.new(assetfile_path)
+      project.maps.should == {}
       pipeline = project.pipelines.last
       pipeline.inputs.should == { "app/assets" => "**/*" }
       pipeline.output_root.should == File.join(tmp, "public")
