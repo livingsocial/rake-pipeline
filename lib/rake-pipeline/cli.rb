@@ -38,6 +38,12 @@ module Rake
         Rake::Pipeline::Server.new.start
       end
 
+      desc "watch", "Build the project when inputs change."
+      def watch
+        require "rake-pipeline/watcher"
+        Rake::Pipeline::Watcher.new(project).start
+      end
+
     private
       def project
         @project ||= Rake::Pipeline::Project.new(options[:assetfile])
