@@ -6,6 +6,7 @@ require "rake-pipeline/matcher"
 require "rake-pipeline/error"
 require "rake-pipeline/project"
 require "rake-pipeline/cli"
+require "rake-pipeline/graph"
 
 if defined?(Rails::Railtie)
   require "rake-pipeline/railtie"
