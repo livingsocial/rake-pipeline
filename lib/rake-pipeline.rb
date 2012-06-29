@@ -1,5 +1,8 @@
 require "rake-pipeline/file_wrapper"
 require "rake-pipeline/filter"
+require "rake-pipeline/manifest_entry"
+require "rake-pipeline/manifest"
+require "rake-pipeline/dynamic_file_task"
 require "rake-pipeline/filters"
 require "rake-pipeline/dsl"
 require "rake-pipeline/matcher"
@@ -7,9 +10,6 @@ require "rake-pipeline/error"
 require "rake-pipeline/project"
 require "rake-pipeline/cli"
 require "rake-pipeline/graph"
-require "rake-pipeline/manifest_entry"
-require "rake-pipeline/manifest"
-require "rake-pipeline/dynamic_file_task"
 
 if defined?(Rails::Railtie)
   require "rake-pipeline/railtie"

@@ -13,6 +13,10 @@ module Rake
     # by the file itself.
     class DynamicFileTask < Rake::FileTask
 
+      def has_dynamic_block?
+        !!@dynamic
+      end
+
       def last_manifest_entry
         application.last_manifest[name]
       end
@@ -83,6 +87,9 @@ module Rake
       def invoke_prerequisites(task_args, invocation_chain)
         super
 
+        # If we don't have a dynamic block, just act like a regular FileTask.
+        return unless has_dynamic_block?
+
         # Retrieve the dynamic prerequisites. If all goes well,
         # we will not have to invoke the dynamic block to do this.
         dynamics = dynamic_prerequisites
@@ -111,6 +118,7 @@ module Rake
       # to its current manifest entry.
       def invoke_with_call_chain(*)
         super
+        return unless has_dynamic_block?
 
         manifest_entry.mtime = File.mtime(name)
       end
