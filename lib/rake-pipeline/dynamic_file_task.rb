@@ -48,8 +48,11 @@ module Rake
       # Add a block that will return dynamic dependencies. This
       # block can assume that all static dependencies are up
       # to date.
+      #
+      # @return [DynamicFileTask] self
       def dynamic(&block)
         @dynamic = block
+        self
       end
 
       # Invoke the task's dynamic block.
@@ -108,7 +111,7 @@ module Rake
         entry = Rake::Pipeline::ManifestEntry.new()
 
         dynamics.each do |dynamic|
-          entry.deps.merge!(dynamic => File.file?(dynamic) ? File.mtime(dynamic) : Time.now)
+          entry.deps.merge!(dynamic => mtime_or_now(dynamic))
         end
 
         self.manifest_entry = entry
@@ -120,7 +123,14 @@ module Rake
         super
         return unless has_dynamic_block?
 
-        manifest_entry.mtime = File.mtime(name)
+        manifest_entry.mtime = mtime_or_now(name)
+      end
+
+    private
+      # @return the mtime of the given file if it exists, and
+      # the current time otherwise.
+      def mtime_or_now(filename)
+        File.file?(filename) ? File.mtime(filename) : Time.now
       end
     end
   end
