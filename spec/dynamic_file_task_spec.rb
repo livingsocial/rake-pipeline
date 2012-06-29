@@ -1,21 +1,25 @@
 require 'spec_helper'
 
 describe Rake::Pipeline::DynamicFileTask do
-  subject { Rake::Pipeline::DynamicFileTask.define_task('inky') }
+  let!(:dynamic_task) { Rake::Pipeline::DynamicFileTask.define_task('inky') }
 
   describe "#dynamic" do
     it "saves a block that can be called later with #invoke_dynamic_block" do
       block = proc {}
-      subject.dynamic(&block)
-      block.should_receive(:call).with(subject)
-      subject.invoke_dynamic_block
+      dynamic_task.dynamic(&block)
+      block.should_receive(:call).with(dynamic_task)
+      dynamic_task.invoke_dynamic_block
+    end
+
+    it "returns the task" do
+      (dynamic_task.dynamic {}).should eq(dynamic_task)
     end
   end
 
   describe "#dynamic_prerequisites" do
     it "returns the result of invoking the dynamic block" do
-      subject.dynamic { ['blinky'] }
-      subject.dynamic_prerequisites.should == ['blinky']
+      dynamic_task.dynamic { ['blinky'] }
+      dynamic_task.dynamic_prerequisites.should == ['blinky']
     end
   end
 
@@ -33,12 +37,12 @@ describe Rake::Pipeline::DynamicFileTask do
 
     let!(:dynamic) { Rake::FileTask.define_task('dynamic', &task_proc) }
 
-    subject do
+    let!(:dynamic_task) do
       Rake::Pipeline::DynamicFileTask.define_task('output' => static, &task_proc)
     end
 
     before do
-      subject.dynamic { ['dynamic'] }
+      dynamic_task.dynamic { ['dynamic'] }
     end
 
     after do
@@ -47,30 +51,30 @@ describe Rake::Pipeline::DynamicFileTask do
     end
 
     it "invokes the task's static and dynamic prerequisites" do
-      subject.invoke
+      dynamic_task.invoke
       invoked_tasks.should include(static)
       invoked_tasks.should include(dynamic)
     end
 
     it "adds dynamic dependencies to its manifest entry" do
-      subject.manifest_entry.should be_nil
-      subject.invoke
-      subject.manifest_entry.deps.should == {
+      dynamic_task.manifest_entry.should be_nil
+      dynamic_task.invoke
+      dynamic_task.manifest_entry.deps.should == {
         'dynamic' => File.mtime('dynamic')
       }
     end
 
     it "adds the current task's mtime to its manifest entry" do
-      subject.manifest_entry.should be_nil
-      subject.invoke
-      subject.manifest_entry.mtime.should == File.mtime('output')
+      dynamic_task.manifest_entry.should be_nil
+      dynamic_task.invoke
+      dynamic_task.manifest_entry.mtime.should == File.mtime('output')
     end
   end
 
   describe "#needed?" do
     it "is true if the task has no previous manifest entry" do
-      subject.last_manifest_entry.should be_nil
-      subject.should be_needed
+      dynamic_task.last_manifest_entry.should be_nil
+      dynamic_task.should be_needed
     end
   end
 end

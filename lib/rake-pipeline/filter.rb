@@ -192,13 +192,11 @@ module Rake
       # @return [void]
       def generate_rake_tasks
         @rake_tasks = outputs.map do |output, inputs|
-          dependencies = inputs.map do |input|
-            [input.fullpath] + additional_dependencies(input)
-          end.flatten.uniq
+          inputs.each do |input|
+            create_file_task(input.fullpath).dynamic { additional_dependencies(input) }
+          end
 
-          dependencies.each { |path| create_file_task(path) }
-
-          create_file_task(output.fullpath, dependencies) do
+          create_file_task(output.fullpath, inputs.map(&:fullpath)) do
             output.create { generate_output(inputs, output) }
           end
         end
@@ -211,7 +209,7 @@ module Rake
       end
 
       def create_file_task(output, deps=[], &block)
-        rake_application.define_task(Rake::FileTask, output => deps, &block)
+        rake_application.define_task(Rake::Pipeline::DynamicFileTask, output => deps, &block)
       end
 
       def output_wrappers(input)
