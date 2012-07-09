@@ -27,7 +27,8 @@ module Rake
         self
       end
 
-      # Write the manifest out to disk if we have entries to save.
+      # Write a JSON representation of this manifest out to disk if we
+      # have entries to save.
       def write_manifest
         unless @entries.empty?
           File.open(manifest_file, "w") do |file|
@@ -36,6 +37,8 @@ module Rake
         end
       end
 
+      # Convert this Manifest into a hash suitable for converting to
+      # JSON.
       def as_json
         hash = {}
 
@@ -46,10 +49,12 @@ module Rake
         hash
       end
 
+      # Look up an entry by filename.
       def [](key)
         @entries[key]
       end
 
+      # Set an entry
       def []=(key, value)
         @entries[key] = value
       end

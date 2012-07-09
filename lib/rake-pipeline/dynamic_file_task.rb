@@ -1,7 +1,15 @@
 module Rake
   class Pipeline
-    # This class is for files that, when processing their inputs, may
-    # find additional dependencies.
+    # This class extends Rake's {Rake::FileTask} class to add support
+    # for dynamic dependencies. Typically, Rake handles static dependencies,
+    # where a file's dependencies are known before the task is invoked.
+    # A {DynamicFileTask} also supports dynamic dependencies, meaning the
+    # file's dependencies can be determined just before invoking the task.
+    # Because calculating a file's dependencies at runtime may be an expensive
+    # operation (it could involve reading the file from disk and parsing it
+    # to extract dependency information, for example), the results of this
+    # calculation are stored on disk in a manifest file, and reused on
+    # subsequent runs if possible.
     #
     # For example, consider this file app.c:
     #
@@ -13,22 +21,38 @@ module Rake
     # by the file itself.
     class DynamicFileTask < Rake::FileTask
 
+      # @return [Boolean] true if the task has a block to invoke
+      #   for dynamic dependencies, false otherwise.
       def has_dynamic_block?
         !!@dynamic
       end
 
+      # @return [ManifestEntry] the manifest entry from the last time
+      #   this task was run, usually read off the filesystem.
       def last_manifest_entry
         application.last_manifest[name]
       end
 
+      # @return [ManifestEntry] the manifest entry from the current
+      #   manifest. This is the entry that will be written to disk after
+      #   the task runs.
       def manifest_entry
         application.manifest[name]
       end
 
+      # Set the current manifest entry,
+      #
+      # @param [ManifestEntry] new_entry
+      # @return [ManifestEntry]
       def manifest_entry=(new_entry)
         application.manifest[name] = new_entry
       end
 
+      # In addition to the regular FileTask check, A DynamicFileTask is
+      # needed if it has no manifest entry from a previous run, or if
+      # one of its dynamic dependencies has been modified.
+      #
+      # @return [Boolean]
       def needed?
         return true if super
 
@@ -60,7 +84,10 @@ module Rake
         @dynamic.call(self)
       end
 
-      # At runtime, we will call this to get dynamic prerequisites
+      # At runtime, we will call this to get dynamic prerequisites.
+      #
+      # @return [Array[String]] an array of paths to the task's
+      #   dynamic dependencies.
       def dynamic_prerequisites
         @dynamic_prerequisites ||= begin
           # Try to avoid invoking the dynamic block if this file
@@ -108,7 +135,7 @@ module Rake
         # Create a new manifest entry for each dynamic dependency.
         # When the pipeline finishes, these manifest entries will be written
         # to the file system.
-        entry = Rake::Pipeline::ManifestEntry.new()
+        entry = Rake::Pipeline::ManifestEntry.new
 
         dynamics.each do |dynamic|
           entry.deps.merge!(dynamic => mtime_or_now(dynamic))
@@ -128,7 +155,7 @@ module Rake
 
     private
       # @return the mtime of the given file if it exists, and
-      # the current time otherwise.
+      #   the current time otherwise.
       def mtime_or_now(filename)
         File.file?(filename) ? File.mtime(filename) : Time.now
       end

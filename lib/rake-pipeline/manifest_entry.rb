@@ -1,6 +1,8 @@
 module Rake
   class Pipeline
+    # Represents a single entry in a dynamic dependency {Manifest}.
     class ManifestEntry
+      # Create a new entry from the given hash.
       def self.from_hash(hash)
         entry = new
 
