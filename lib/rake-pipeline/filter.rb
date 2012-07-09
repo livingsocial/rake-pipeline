@@ -192,9 +192,13 @@ module Rake
       # @return [void]
       def generate_rake_tasks
         @rake_tasks = outputs.map do |output, inputs|
+          additional_paths = []
           inputs.each do |input|
-            create_file_task(input.fullpath).dynamic { additional_dependencies(input) }
+            create_file_task(input.fullpath).dynamic do
+              additional_paths += additional_dependencies(input)
+            end
           end
+          additional_paths.each { |path| create_file_task(path) }
 
           create_file_task(output.fullpath, inputs.map(&:fullpath)) do
             output.create { generate_output(inputs, output) }
