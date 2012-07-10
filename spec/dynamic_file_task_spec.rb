@@ -1,54 +1,41 @@
 require 'spec_helper'
 
 describe Rake::Pipeline::DynamicFileTask do
-  let!(:dynamic_task) { Rake::Pipeline::DynamicFileTask.define_task('inky') }
+  let(:invoked_tasks) { [] }
+
+  def define_task(deps, klass=Rake::Pipeline::DynamicFileTask, &task_proc)
+    task_proc ||= proc do |task|
+      touch(task.name)
+      invoked_tasks << task
+    end
+
+    klass.define_task(deps, &task_proc)
+  end
+
+  let(:task) { define_task('output') }
+
+  after do
+    # Clean out all defined tasks after each test runs
+    Rake.application = Rake::Application.new
+  end
 
   describe "#dynamic" do
     it "saves a block that can be called later with #invoke_dynamic_block" do
       block = proc {}
-      dynamic_task.dynamic(&block)
-      block.should_receive(:call).with(dynamic_task)
-      dynamic_task.invoke_dynamic_block
+      task.dynamic(&block)
+      block.should_receive(:call).with(task)
+      task.invoke_dynamic_block
     end
 
     it "returns the task" do
-      (dynamic_task.dynamic {}).should eq(dynamic_task)
-    end
-  end
-
-  describe "#dynamic_prerequisites" do
-    it "returns the result of invoking the dynamic block" do
-      dynamic_task.dynamic { ['blinky'] }
-      dynamic_task.dynamic_prerequisites.should == ['blinky']
+      (task.dynamic {}).should eq(task)
     end
   end
 
   describe "#invoke" do
-    let(:invoked_tasks) { [] }
-
-    let(:task_proc) {
-      proc do |task|
-        touch(task.name)
-        invoked_tasks << task
-      end
-    }
-
-    let(:static) { Rake::FileTask.define_task('static', &task_proc) }
-
-    let!(:dynamic) { Rake::FileTask.define_task('dynamic', &task_proc) }
-
-    let!(:dynamic_task) do
-      Rake::Pipeline::DynamicFileTask.define_task('output' => static, &task_proc)
-    end
-
-    before do
-      dynamic_task.dynamic { ['dynamic'] }
-    end
-
-    after do
-      # Clean out all defined tasks after each test runs
-      Rake.application = Rake::Application.new
-    end
+    let(:static) { define_task('static', Rake::FileTask) }
+    let!(:dynamic) { define_task('dynamic', Rake::FileTask) }
+    let!(:dynamic_task) { define_task('output' => static).dynamic { ['dynamic'] } }
 
     it "invokes the task's static and dynamic prerequisites" do
       dynamic_task.invoke
@@ -73,18 +60,19 @@ describe Rake::Pipeline::DynamicFileTask do
 
   describe "#needed?" do
     it "is true if the task has no previous manifest entry" do
-      dynamic_task.last_manifest_entry.should be_nil
-      dynamic_task.should be_needed
+      task.last_manifest_entry.should be_nil
+      task.should be_needed
     end
   end
 
   describe "#dynamic_prerequisites" do
     it "returns an empty array if the task has no dynamic block" do
-      task = Rake::Pipeline::DynamicFileTask.define_task('output') do |task|
-        touch(task.name)
-      end
-
       task.dynamic_prerequisites.should == []
+    end
+
+    it "returns the result of invoking the dynamic block" do
+      task.dynamic { %w[blinky] }
+      task.dynamic_prerequisites.should == %w[blinky]
     end
   end
 end
