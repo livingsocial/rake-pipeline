@@ -91,25 +91,7 @@ module Rake
       def dynamic_prerequisites
         @dynamic_prerequisites ||= begin
           if has_dynamic_block?
-            # Try to avoid invoking the dynamic block if this file
-            # is not needed. If so, we may have all the information
-            # we need in the manifest file.
-            if !needed? && last_manifest_entry
-              mtime = last_manifest_entry.mtime
-            end
-
-            # If the output file of this task still exists and
-            # it hasn't been updated, we can simply return the
-            # list of dependencies in the manifest, which
-            # come from the return value of the dynamic block
-            # in a previous run.
-            if File.exist?(name) && mtime == File.mtime(name)
-              return last_manifest_entry.deps.map { |k,v| k }
-            end
-
-            # If we couldn't get the dynamic dependencies from
-            # a previous run, invoke the dynamic block.
-            invoke_dynamic_block
+            dynamic_prerequisites_from_manifest || invoke_dynamic_block
           else
             []
           end
@@ -162,6 +144,28 @@ module Rake
       #   the current time otherwise.
       def mtime_or_now(filename)
         File.file?(filename) ? File.mtime(filename) : Time.now
+      end
+
+      # @return [Array<String>] a list of file paths that this
+      #   task depends on.
+      # @return [nil] if the dependencies couldn't be read
+      #   from the manifest.
+      def dynamic_prerequisites_from_manifest
+        # Try to avoid invoking the dynamic block if this file
+        # is not needed. If so, we may have all the information
+        # we need in the manifest file.
+        if !needed? && last_manifest_entry
+          mtime = last_manifest_entry.mtime
+        end
+
+        # If the output file of this task still exists and
+        # it hasn't been updated, we can simply return the
+        # list of dependencies in the manifest, which
+        # come from the return value of the dynamic block
+        # in a previous run.
+        if File.exist?(name) && mtime == File.mtime(name)
+          return last_manifest_entry.deps.map { |k,v| k }
+        end
       end
     end
   end
