@@ -14,6 +14,11 @@ describe Rake::Pipeline::DynamicFileTask do
 
   let(:task) { define_task('output') }
 
+  before do
+    # Make sure date conversions happen in UTC, not local time
+    ENV['TZ'] = 'UTC'
+  end
+
   after do
     # Clean out all defined tasks after each test runs
     Rake.application = Rake::Application.new
@@ -66,6 +71,13 @@ describe Rake::Pipeline::DynamicFileTask do
   end
 
   describe "#dynamic_prerequisites" do
+    def make_file(name, mtime=nil)
+      touch(name)
+      if mtime
+        File.utime(mtime, mtime, name)
+      end
+    end
+
     it "returns an empty array if the task has no dynamic block" do
       task.dynamic_prerequisites.should == []
     end
@@ -79,5 +91,23 @@ describe Rake::Pipeline::DynamicFileTask do
       task.dynamic { %w[output blinky] }
       task.dynamic_prerequisites.should == %w[blinky]
     end
+
+    it "loads dependency information from the manifest first" do
+      time = Time.utc(3000)
+      %w[blinky output].each { |f| make_file f, time }
+
+      manifest_entry = Rake::Pipeline::ManifestEntry.from_hash({
+        "deps" => {
+          "blinky" => "3000-01-01 00:00:00 +0000"
+        },
+        "mtime" => "3000-01-01 00:00:00 +0000"
+      })
+
+      task.dynamic { %w[] }
+      task.stub(:last_manifest_entry) { manifest_entry }
+      task.should_not_receive(:invoke_dynamic_block)
+      task.dynamic_prerequisites.should == %w[blinky]
+    end
   end
+
 end
