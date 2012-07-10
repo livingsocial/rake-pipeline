@@ -87,11 +87,11 @@ module Rake
       #   if this a String, create a Pipeline from the Assetfile at
       #   that path. If it's a Pipeline, just wrap that pipeline.
       def initialize(assetfile_or_pipeline=nil)
+        reset!
         if assetfile_or_pipeline.kind_of?(String)
           @assetfile_path = File.expand_path(assetfile_or_pipeline)
           rebuild_from_assetfile(@assetfile_path)
         elsif assetfile_or_pipeline
-          reset!
           @pipelines << assetfile_or_pipeline
         end
       end
