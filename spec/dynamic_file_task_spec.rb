@@ -77,4 +77,14 @@ describe Rake::Pipeline::DynamicFileTask do
       dynamic_task.should be_needed
     end
   end
+
+  describe "#dynamic_prerequisites" do
+    it "returns an empty array if the task has no dynamic block" do
+      task = Rake::Pipeline::DynamicFileTask.define_task('output') do |task|
+        touch(task.name)
+      end
+
+      task.dynamic_prerequisites.should == []
+    end
+  end
 end

@@ -90,25 +90,29 @@ module Rake
       #   dynamic dependencies.
       def dynamic_prerequisites
         @dynamic_prerequisites ||= begin
-          # Try to avoid invoking the dynamic block if this file
-          # is not needed. If so, we may have all the information
-          # we need in the manifest file.
-          if !needed? && last_manifest_entry
-            mtime = last_manifest_entry.mtime
-          end
+          if has_dynamic_block?
+            # Try to avoid invoking the dynamic block if this file
+            # is not needed. If so, we may have all the information
+            # we need in the manifest file.
+            if !needed? && last_manifest_entry
+              mtime = last_manifest_entry.mtime
+            end
 
-          # If the output file of this task still exists and
-          # it hasn't been updated, we can simply return the
-          # list of dependencies in the manifest, which
-          # come from the return value of the dynamic block
-          # in a previous run.
-          if File.exist?(name) && mtime == File.mtime(name)
-            return last_manifest_entry.deps.map { |k,v| k }
-          end
+            # If the output file of this task still exists and
+            # it hasn't been updated, we can simply return the
+            # list of dependencies in the manifest, which
+            # come from the return value of the dynamic block
+            # in a previous run.
+            if File.exist?(name) && mtime == File.mtime(name)
+              return last_manifest_entry.deps.map { |k,v| k }
+            end
 
-          # If we couldn't get the dynamic dependencies from
-          # a previous run, invoke the dynamic block.
-          invoke_dynamic_block
+            # If we couldn't get the dynamic dependencies from
+            # a previous run, invoke the dynamic block.
+            invoke_dynamic_block
+          else
+            []
+          end
         end
       end
 
