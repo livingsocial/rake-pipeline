@@ -90,11 +90,16 @@ module Rake
       #   dynamic dependencies.
       def dynamic_prerequisites
         @dynamic_prerequisites ||= begin
-          if has_dynamic_block?
+          dynamics = if has_dynamic_block?
             dynamic_prerequisites_from_manifest || invoke_dynamic_block
           else
             []
           end
+
+          # Make sure we don't dynamically depend on ourselves, as
+          # that will create a circular reference, and that makes
+          # everybody sad.
+          dynamics.reject { |x| x == name }
         end
       end
 

@@ -74,5 +74,10 @@ describe Rake::Pipeline::DynamicFileTask do
       task.dynamic { %w[blinky] }
       task.dynamic_prerequisites.should == %w[blinky]
     end
+
+    it "filters the task itself from the list" do
+      task.dynamic { %w[output blinky] }
+      task.dynamic_prerequisites.should == %w[blinky]
+    end
   end
 end
