@@ -81,6 +81,23 @@ module Rake
           self.digest_additions << str.to_s
           self.digest_additions.sort!
         end
+
+        #TODO: Move the manifest stuff to Project instances instead of
+        #  on the class.
+        def last_manifest
+          @last_manifest ||= begin
+            m = Rake::Pipeline::Manifest.new(manifest_file)
+            m.read_manifest
+          end
+        end
+
+        def manifest
+          @manifest ||= Rake::Pipeline::Manifest.new(manifest_file)
+        end
+
+        def manifest_file
+          "manifest.json"
+        end
       end
 
       # @param [String|Pipeline] assetfile_or_pipeline
@@ -108,6 +125,7 @@ module Rake
       # @see Rake::Pipeline#invoke
       def invoke
         pipelines.each(&:invoke)
+        self.class.manifest.write_manifest
       end
 
       # Invoke all of the project's pipelines, detecting any changes
@@ -124,6 +142,7 @@ module Rake
             end
           end
           pipelines.each(&:invoke_clean)
+          self.class.manifest.write_manifest
         end
       end
 

@@ -49,7 +49,6 @@ describe Rake::Pipeline::DynamicFileTask do
     end
 
     it "adds dynamic dependencies to its manifest entry" do
-      dynamic_task.manifest_entry.should be_nil
       dynamic_task.invoke
       dynamic_task.manifest_entry.deps.should == {
         'dynamic' => File.mtime('dynamic')
@@ -57,7 +56,6 @@ describe Rake::Pipeline::DynamicFileTask do
     end
 
     it "adds the current task's mtime to its manifest entry" do
-      dynamic_task.manifest_entry.should be_nil
       dynamic_task.invoke
       dynamic_task.manifest_entry.mtime.should == File.mtime('output')
     end

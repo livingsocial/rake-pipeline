@@ -46,20 +46,6 @@ module Rake
     end
   end
 
-  # Add support for a dynamic dependency manifest file
-  class Application
-    def last_manifest
-      @last_manifest ||= begin
-        m = Rake::Pipeline::Manifest.new
-        m.read_manifest
-      end
-    end
-
-    def manifest
-      @manifest ||= Rake::Pipeline::Manifest.new
-    end
-  end
-
   # A Pipeline is responsible for taking a directory of input
   # files, applying a number of filters to the inputs, and
   # outputting them into an output directory.
@@ -291,7 +277,6 @@ module Rake
       @rake_application = rake_application
       @filters.each { |filter| filter.rake_application = rake_application }
       @rake_tasks = nil
-      @rake_application.manifest.manifest_file = File.join(tmpdir, "manifest.json")
     end
 
     # Add one or more filters to the current pipeline.
@@ -320,8 +305,6 @@ module Rake
 
         @rake_tasks.each { |task| task.recursively_reenable(rake_application) }
         @rake_tasks.each { |task| task.invoke }
-
-        rake_application.manifest.write_manifest
       end
     end
 
