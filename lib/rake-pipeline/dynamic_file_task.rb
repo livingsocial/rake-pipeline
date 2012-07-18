@@ -20,6 +20,8 @@ module Rake
     # process app.c to look for additional dependencies specified
     # by the file itself.
     class DynamicFileTask < Rake::FileTask
+      attr_writer :last_manifest
+      attr_writer :manifest
 
       # @return [Boolean] true if the task has a block to invoke
       #   for dynamic dependencies, false otherwise.
@@ -27,17 +29,25 @@ module Rake
         !!@dynamic
       end
 
+      def last_manifest
+        @last_manifest ||= Rake::Pipeline::Manifest.new
+      end
+
+      def manifest
+        @manifest ||= Rake::Pipeline::Manifest.new
+      end
+
       # @return [ManifestEntry] the manifest entry from the last time
       #   this task was run, usually read off the filesystem.
       def last_manifest_entry
-        Rake::Pipeline::Project.last_manifest[name]
+        last_manifest[name]
       end
 
       # @return [ManifestEntry] the manifest entry from the current
       #   manifest. This is the entry that will be written to disk after
       #   the task runs.
       def manifest_entry
-        Rake::Pipeline::Project.manifest[name]
+        manifest[name]
       end
 
       # Set the current manifest entry,
@@ -45,7 +55,7 @@ module Rake
       # @param [ManifestEntry] new_entry
       # @return [ManifestEntry]
       def manifest_entry=(new_entry)
-        Rake::Pipeline::Project.manifest[name] = new_entry
+        manifest[name] = new_entry
       end
 
       # In addition to the regular FileTask check, A DynamicFileTask is
