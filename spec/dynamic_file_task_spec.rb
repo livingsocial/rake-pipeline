@@ -91,14 +91,14 @@ describe Rake::Pipeline::DynamicFileTask do
     end
 
     it "loads dependency information from the manifest first" do
-      time = Time.utc(3000)
+      time = Time.utc(2000)
       %w[blinky output].each { |f| make_file f, time }
 
       manifest_entry = Rake::Pipeline::ManifestEntry.from_hash({
         "deps" => {
-          "blinky" => "3000-01-01 00:00:00 +0000"
+          "blinky" => "2000-01-01 00:00:00 +0000"
         },
-        "mtime" => "3000-01-01 00:00:00 +0000"
+        "mtime" => "2000-01-01 00:00:00 +0000"
       })
 
       task.dynamic { %w[] }
