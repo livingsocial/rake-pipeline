@@ -130,6 +130,9 @@ module Rake
 
     attr_writer :input_files
 
+    # @return [Project] the Project that created this pipeline
+    attr_reader :project
+
     # @param [Hash] options
     # @option options [Hash] :inputs
     #   set the pipeline's {#inputs}.
@@ -145,6 +148,7 @@ module Rake
       @clean_mutex     = Mutex.new
       @inputs          = options[:inputs] || {}
       @tmpdir          = options[:tmpdir] || "tmp"
+      @project         = options[:project]
 
       if options[:output_root]
         self.output_root = options[:output_root]

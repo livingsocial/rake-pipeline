@@ -216,7 +216,8 @@ module Rake
           :before_filters => @before_filters,
           :after_filters => @after_filters,
           :output_root => default_output_root,
-          :tmpdir => digested_tmpdir
+          :tmpdir => digested_tmpdir,
+          :project => self
         }, &block)
 
         if input.kind_of?(Array)
