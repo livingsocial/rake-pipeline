@@ -30,7 +30,6 @@ module Rake
       # @param [Hash] env a Rack environment
       # @return [Array(Fixnum, Hash, #each)] A rack response
       def call(env)
-        project.invoke_clean
         path = env["PATH_INFO"]
 
         if project.maps.has_key?(path)

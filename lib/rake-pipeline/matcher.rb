@@ -15,7 +15,7 @@ module Rake
     # In general, you should not use Matcher directly. Instead use
     # {DSL#match} in the block passed to {Pipeline.build}.
     class Matcher < Pipeline
-      attr_reader :glob
+      attr_reader :glob, :pattern
 
       # @return [Rake::Pipeline] the Rake::Pipeline that contains
       #   this matcher.

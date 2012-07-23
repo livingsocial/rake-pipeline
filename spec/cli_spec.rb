@@ -57,15 +57,21 @@ describe "Rake::Pipeline::CLI" do
 
   describe "server" do
     let(:server) { double "server" }
+    let(:watcher) { double "watcher" }
 
     before do
       require 'rake-pipeline/server'
       Rake::Pipeline::Server.stub(:new).and_return(server)
+      require 'rake-pipeline/watcher'
+      Rake::Pipeline::Watcher.stub(:new).and_return(watcher)
     end
 
     it "starts a Rake::Pipeline::Server" do
       server.should_receive :start
+      watcher.should_receive :start
+      watcher.should_receive :stop
       rakep "server"
     end
   end
+
 end
