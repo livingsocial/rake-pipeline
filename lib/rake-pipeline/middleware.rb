@@ -58,7 +58,7 @@ module Rake
 
       def file_for(path)
         project.pipelines.each do |pipeline|
-          file = Dir[File.join(pipeline.output_root, path)].first
+          file = Dir[File.join(pipeline.output_root, path)].sort.first
           return file unless file.nil?
         end
         nil
