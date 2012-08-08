@@ -246,7 +246,7 @@ module Rake
 
       @inputs.each do |root, glob|
         expanded_root = File.expand_path(root)
-        files = Dir[File.join(expanded_root, glob)].select { |f| File.file?(f) }
+        files = Dir[File.join(expanded_root, glob)].sort.select { |f| File.file?(f) }
 
         files.each do |file|
           relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
