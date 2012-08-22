@@ -87,6 +87,14 @@ module Rake
           project.tmpdir = root
         end
 
+        # Specify the file path to render on 404. Must be static HTML.
+        #
+        # @param [String] path the path to the file to render on 404
+        # @return [void]
+        def not_found(path)
+          project.not_found_error_page = path
+        end
+
         # Add a new pipeline with the given inputs to the project.
         #
         # @see Project.build_pipeline

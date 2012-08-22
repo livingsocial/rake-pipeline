@@ -27,6 +27,9 @@ module Rake
       #   write their outputs by default
       attr_reader :default_output_root
 
+      # @return [String] the path to render on 404
+      attr_accessor :not_found_error_page
+
       # @return [Array] a list of filters to be applied before
       #   the specified filters in every pipeline
       attr_writer :before_filters
@@ -221,6 +224,7 @@ module Rake
         @maps = {}
         @tmpdir = "tmp"
         @invoke_mutex = Mutex.new
+        @not_found_error_page = "404.html"
         @default_output_root = @assetfile_digest = @assetfile_path = nil
       end
 

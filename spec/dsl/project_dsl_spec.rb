@@ -37,5 +37,12 @@ describe "Rake::Pipeline::ProjectDSL" do
       dsl.project.maps["foo"].should == run_me
     end
   end
+
+  describe "#not_found" do
+    it "saves the 404 file name" do
+      dsl.not_found "404.html"
+      project.not_found_error_page.should == "404.html"
+    end
+  end
 end
 

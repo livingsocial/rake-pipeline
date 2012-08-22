@@ -48,12 +48,17 @@ module Rake
           end
         end
 
-        @app.call(env)
+        return not_found(project.not_found_error_page)
       end
 
     private
-      def response_for(file)
-        [ 200, headers_for(file), File.open(file, "r") ]
+      def response_for(file, status=200, fallback_response=nil)
+        [ status, headers_for(file), fallback_response || File.open(file, "r") ]
+      end
+
+      def not_found(not_found_file)
+        fallback = ["not found"] unless File.exist?(not_found_file)
+        response_for(not_found_file, 404, fallback)
       end
 
       def file_for(path)
