@@ -107,7 +107,10 @@ module Rake
       #
       # @see Rake::Pipeline#invoke
       def invoke
-        pipelines.each(&:invoke)
+        @invoke_mutex.synchronize do
+          pipelines.each(&:invoke)
+          manifest.write_manifest
+        end
       end
 
       # Invoke all of the project's pipelines, detecting any changes
@@ -124,6 +127,7 @@ module Rake
             end
           end
           pipelines.each(&:invoke_clean)
+          manifest.write_manifest
         end
       end
 
@@ -197,7 +201,8 @@ module Rake
           :before_filters => @before_filters,
           :after_filters => @after_filters,
           :output_root => default_output_root,
-          :tmpdir => digested_tmpdir
+          :tmpdir => digested_tmpdir,
+          :project => self
         }, &block)
 
         if input.kind_of?(Array)
@@ -212,6 +217,26 @@ module Rake
         pipeline
       end
 
+      # @return [Manifest] the manifest to read dependency information
+      #   from
+      def last_manifest
+        @last_manifest ||= begin
+          m = Rake::Pipeline::Manifest.new(manifest_path)
+          m.read_manifest
+        end
+      end
+
+      # @return [Manifest] the manifest to write dependency information
+      #   to
+      def manifest
+        @manifest ||= Rake::Pipeline::Manifest.new(manifest_path)
+      end
+
+      # @return [String] the path to the dynamic dependency manifest
+      def manifest_path
+        File.join(digested_tmpdir, "manifest.json")
+      end
+
     private
       # Reset this project's internal state to the default values.
       #
@@ -222,6 +247,7 @@ module Rake
         @tmpdir = "tmp"
         @invoke_mutex = Mutex.new
         @default_output_root = @assetfile_digest = @assetfile_path = nil
+        @manifest = @last_manifest = nil
       end
 
       # Reconfigure this project based on the Assetfile at path.

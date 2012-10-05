@@ -1,5 +1,8 @@
 require "rake-pipeline/file_wrapper"
 require "rake-pipeline/filter"
+require "rake-pipeline/manifest_entry"
+require "rake-pipeline/manifest"
+require "rake-pipeline/dynamic_file_task"
 require "rake-pipeline/filters"
 require "rake-pipeline/dsl"
 require "rake-pipeline/matcher"
@@ -127,6 +130,9 @@ module Rake
 
     attr_writer :input_files
 
+    # @return [Project] the Project that created this pipeline
+    attr_reader :project
+
     # @param [Hash] options
     # @option options [Hash] :inputs
     #   set the pipeline's {#inputs}.
@@ -142,6 +148,7 @@ module Rake
       @clean_mutex     = Mutex.new
       @inputs          = options[:inputs] || {}
       @tmpdir          = options[:tmpdir] || "tmp"
+      @project         = options[:project]
 
       if options[:output_root]
         self.output_root = options[:output_root]

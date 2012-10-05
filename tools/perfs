@@ -45,11 +45,19 @@ class Perfs < Thor
   end
 
   desc "profile PROJECT_DIR", "Profile a clean build of the given project"
+  method_option :rebuild, :type => :boolean, :aliases => "-r", :default => false
   def profile(project_dir)
     setup(project_dir)
 
-    result = RubyProf.profile do
+    if options[:rebuild]
       project.invoke
+      result = RubyProf.profile do
+        project.invoke_clean
+      end
+    else
+      result = RubyProf.profile do
+        project.invoke
+      end
     end
 
     printer = RubyProf::GraphHtmlPrinter.new(result)

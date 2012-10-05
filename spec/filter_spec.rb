@@ -1,4 +1,9 @@
 describe "Rake::Pipeline::Filter" do
+  after do
+    # Clean out all defined tasks after each test runs
+    Rake.application = Rake::Application.new
+  end
+
   def input_file(path, file_root=input_root)
     Rake::Pipeline::FileWrapper.new(file_root, path)
   end
@@ -109,19 +114,16 @@ describe "Rake::Pipeline::Filter" do
   end
 
   describe "generates rake tasks" do
-    class TestFilter < Rake::Pipeline::Filter
-      attr_accessor :generate_output_block
+    let(:filter_class) {
+      Class.new(Rake::Pipeline::Filter) do
+        attr_accessor :generate_output_block
 
-      def generate_output(inputs, output)
-        generate_output_block.call(inputs, output)
+        def generate_output(inputs, output)
+          generate_output_block.call(inputs, output)
+        end
       end
-
-      def additional_dependencies(input)
-        return [File.join(input.root, "extras", input.path)]
-      end
-    end
-
-    let(:filter)      { TestFilter.new }
+    }
+    let(:filter)      { filter_class.new }
     let(:input_root)  { File.join(tmp, "app/assets") }
     let(:output_root) { File.join(tmp, "filter1/app/assets") }
     let(:input_files) do
@@ -137,11 +139,11 @@ describe "Rake::Pipeline::Filter" do
     end
 
     def output_task(path, app=Rake.application)
-      app.define_task(Rake::FileTask, File.join(output_root, path))
+      app.define_task(Rake::Pipeline::DynamicFileTask, File.join(output_root, path))
     end
 
     def input_task(path)
-      Rake::FileTask.define_task(File.join(input_root, path))
+      Rake::Pipeline::DynamicFileTask.define_task(File.join(input_root, path))
     end
 
     it "does not generate Rake tasks onto Rake.application if an alternate application is supplied" do
@@ -173,7 +175,6 @@ describe "Rake::Pipeline::Filter" do
       filter.generate_rake_tasks
       tasks = filter.rake_tasks
       tasks.should == [output_task("javascripts/application.js")]
-      tasks[0].prerequisites.should == input_files.map { |i| [i.fullpath, File.join(i.root, "extras", i.path)] }.flatten
 
       tasks.each(&:invoke)
 
@@ -205,8 +206,7 @@ describe "Rake::Pipeline::Filter" do
       tasks.each do |task|
         name = task.name.sub(/^#{Regexp.escape(output_root)}/, '')
         prereq = File.join(input_root, name)
-        extra_prereq = File.join(input_root, "extras", name)
-        task.prerequisites.should == [prereq, extra_prereq]
+        task.prerequisites.should == [prereq]
       end
 
       tasks.each(&:invoke)
@@ -238,14 +238,11 @@ describe "Rake::Pipeline::Filter" do
 
       tasks.sort[0].prerequisites.should == [
         File.join(input_root, "javascripts/ember.js"),
-        File.join(input_root, "extras/javascripts/ember.js")
       ]
 
       tasks.sort[1].prerequisites.should == [
         File.join(input_root, "javascripts/jquery.js"),
-        File.join(input_root, "extras/javascripts/jquery.js"),
         File.join(input_root, "javascripts/jquery-ui.js"),
-        File.join(input_root, "extras/javascripts/jquery-ui.js")
       ]
 
       tasks.each(&:invoke)
@@ -253,4 +250,65 @@ describe "Rake::Pipeline::Filter" do
       filter_runs.should == 2
     end
   end
+
+  describe "a filter with additional_dependencies" do
+    let(:include_filter) {
+      Class.new(Rake::Pipeline::ConcatFilter) do
+        def additional_dependencies(input)
+          includes(input)
+        end
+
+        def includes(input)
+          input.read.scan(/^#include \"(.*)\"$/).map(&:first).map do |inc|
+            File.join(input.root, inc)
+          end
+        end
+
+        def generate_output(inputs, output)
+          out = ""
+          inputs.each do |input|
+            includes(input).each { |inc| out += File.read(inc) }
+            out += input.read
+            output.write out
+          end
+        end
+      end
+    }
+
+    def write_input_file(filename, contents='', root=input_root)
+      mkdir_p root
+      File.open(File.join(root, filename), 'w') { |f| f.puts contents }
+      input_file(filename)
+    end
+
+    def invoke_filter(filter)
+      mkdir_p output_root
+      filter.output_root = output_root
+      filter.input_files = input_files
+      tasks = filter.generate_rake_tasks
+      tasks.each(&:invoke)
+      tasks
+    end
+
+    let!(:main)        { write_input_file('main', '#include "header"') }
+    let!(:header)      { write_input_file('header', 'header') }
+    let!(:main_output) { output_file('main') }
+    let(:input_files)  { [main] }
+    let(:filter)       { include_filter.new }
+
+    it "creates its output files" do
+      invoke_filter(filter)
+      main_output.exists?.should be_true
+      main_output.read.should == %[header\n#include "header"\n]
+    end
+
+    it "rebuilds the main file when a dynamic dependency changes" do
+      invoke_filter(filter)
+      File.open(header.fullpath, 'w') { |f| f.puts 'PEANUTS' }
+      filter.rake_tasks.each { |t| t.recursively_reenable(Rake.application) }
+      invoke_filter(filter)
+      main_output.read.should == %[PEANUTS\n#include "header"\n]
+    end
+  end
 end
+

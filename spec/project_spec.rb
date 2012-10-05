@@ -237,6 +237,11 @@ describe "Rake::Pipeline::Project" do
       pipeline.output_root.should == project.default_output_root
     end
 
+    it "sets the pipeline's project to itself" do
+      pipeline = project.build_pipeline(inputs) {}
+      pipeline.project.should == project
+    end
+
     it "creates a pipeline with a given set of inputs" do
       pipeline = project.build_pipeline(inputs) {}
       pipeline.inputs.should == inputs

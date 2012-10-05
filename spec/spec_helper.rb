@@ -6,6 +6,7 @@ unless ENV["TRAVIS"]
   end
 end
 
+require 'pry'
 
 require "rake-pipeline"
 require "rake-pipeline/filters"
