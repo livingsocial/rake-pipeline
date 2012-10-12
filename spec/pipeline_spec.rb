@@ -176,6 +176,14 @@ describe "Rake::Pipeline" do
 
         Rake.application.tasks.size.should == 0
       end
+
+      it "raises an error when tmp is an input" do
+        pipeline.tmpdir = "app/assets"
+
+        expect {
+          pipeline.invoke
+        }.to raise_error(Rake::Pipeline::TmpInputError, /tmpdir/)
+      end
     end
   end
 
