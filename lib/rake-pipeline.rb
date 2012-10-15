@@ -382,6 +382,15 @@ module Rake
       add_filter(Rake::Pipeline::PipelineFinalizingFilter.new)
     end
 
+    # A unique fingerprint. It's used to generate unique temporary
+    # directory names. It must be unique to the pipeline. It must be
+    # the same across processes.
+    def fingerprint
+      files = eligible_input_files + output_files
+
+      Digest::MD5.hexdigest(files.to_s)[0..7]
+    end
+
   protected
     # Generate a new temporary directory name.
     #
