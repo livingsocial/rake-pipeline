@@ -146,6 +146,7 @@ module Rake
       @filters         = []
       @invoke_mutex    = Mutex.new
       @clean_mutex     = Mutex.new
+      @tmp_id          = 0
       @inputs          = options[:inputs] || {}
       @tmpdir          = options[:tmpdir] || "tmp"
       @project         = options[:project]
@@ -193,8 +194,6 @@ module Rake
       DSL::PipelineDSL.evaluate(self, options, &block) if block
       self
     end
-
-    @@tmp_id = 0
 
     # Copy the current pipeline's attributes over.
     #
@@ -318,6 +317,7 @@ module Rake
     # @return [void]
     def invoke_clean
       @clean_mutex.synchronize do
+        @tmp_id = 0
         @rake_tasks = @rake_application = nil
         invoke
       end
@@ -395,15 +395,15 @@ module Rake
     # Generate a new temporary directory name.
     #
     # @return [String] a unique temporary directory name
-    def self.generate_tmpname
-      "rake-pipeline-tmp-#{@@tmp_id += 1}"
+    def generate_tmpname
+      "rake-pipeline-#{fingerprint}-tmp-#{@tmp_id += 1}"
     end
 
     # Generate a new temporary directory name under the main tmpdir.
     #
     # @return [void]
     def generate_tmpdir
-      File.join(tmpdir, self.class.generate_tmpname)
+      File.join(tmpdir, self.generate_tmpname)
     end
 
     # Generate all of the rake tasks for this pipeline.
