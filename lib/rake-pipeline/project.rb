@@ -108,6 +108,7 @@ module Rake
       # @see Rake::Pipeline#invoke
       def invoke
         @invoke_mutex.synchronize do
+          manifest.read_manifest
           pipelines.each(&:invoke)
           manifest.write_manifest
         end
@@ -126,6 +127,8 @@ module Rake
               rebuild_from_assetfile(assetfile_path, source)
             end
           end
+
+          manifest.read_manifest
           pipelines.each(&:invoke_clean)
           manifest.write_manifest
         end

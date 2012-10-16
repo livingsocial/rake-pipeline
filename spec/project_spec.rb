@@ -109,6 +109,12 @@ describe "Rake::Pipeline::Project" do
       project.invoke
       File.exist?(digested_tmpdir).should be_true
     end
+
+    it "updates the manifest" do
+      project.manifest.should_receive(:read_manifest)
+      project.manifest.should_receive(:write_manifest)
+      project.invoke
+    end
   end
 
   describe "invalid Assetfile" do
@@ -141,6 +147,12 @@ describe "Rake::Pipeline::Project" do
         assetfile_digest.should_not == original_assetfile_digest
         project.pipelines.last.should_not == original_pipeline
       end
+    end
+
+    it "updates the manifest" do
+      project.manifest.should_receive(:read_manifest)
+      project.manifest.should_receive(:write_manifest)
+      project.invoke_clean
     end
   end
 
