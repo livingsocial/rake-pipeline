@@ -217,15 +217,6 @@ module Rake
         pipeline
       end
 
-      # @return [Manifest] the manifest to read dependency information
-      #   from
-      def last_manifest
-        @last_manifest ||= begin
-          m = Rake::Pipeline::Manifest.new(manifest_path)
-          m.read_manifest
-        end
-      end
-
       # @return [Manifest] the manifest to write dependency information
       #   to
       def manifest

@@ -20,27 +20,18 @@ module Rake
     # process app.c to look for additional dependencies specified
     # by the file itself.
     class DynamicFileTask < Rake::FileTask
-      attr_writer :last_manifest
-      attr_writer :manifest
+      class ManifestRequired < StandardError
+        def to_s
+          "DynamicFileTask's cannot be invoked without a manifest."
+        end
+      end
+
+      attr_accessor :manifest
 
       # @return [Boolean] true if the task has a block to invoke
       #   for dynamic dependencies, false otherwise.
       def has_dynamic_block?
         !!@dynamic
-      end
-
-      def last_manifest
-        @last_manifest ||= Rake::Pipeline::Manifest.new
-      end
-
-      def manifest
-        @manifest ||= Rake::Pipeline::Manifest.new
-      end
-
-      # @return [ManifestEntry] the manifest entry from the last time
-      #   this task was run, usually read off the filesystem.
-      def last_manifest_entry
-        last_manifest[name]
       end
 
       # @return [ManifestEntry] the manifest entry from the current
@@ -58,6 +49,13 @@ module Rake
         manifest[name] = new_entry
       end
 
+      # Invoke this task. This method only checks to see if there
+      # is a manifest then delegates to super
+      def invoke(*args)
+        raise ManifestRequired if has_dynamic_block? && !manifest
+        super
+      end
+
       # In addition to the regular FileTask check, A DynamicFileTask is
       # needed if it has no manifest entry from a previous run, or if
       # one of its dynamic dependencies has been modified.
@@ -67,11 +65,11 @@ module Rake
         return true if super
 
         # if we have no manifest, this file task is needed
-        return true unless last_manifest_entry
+        return true unless manifest_entry
 
         # If any of this task's dynamic dependencies have changed,
         # this file task is needed
-        last_manifest_entry.deps.each do |dep, time|
+        manifest_entry.deps.each do |dep, time|
           return true if File.mtime(dep) > time
         end
 
@@ -121,6 +119,8 @@ module Rake
         # If we don't have a dynamic block, just act like a regular FileTask.
         return unless has_dynamic_block?
 
+        raise ManifestRequired if has_dynamic_block? && !manifest
+
         # Retrieve the dynamic prerequisites. If all goes well,
         # we will not have to invoke the dynamic block to do this.
         dynamics = dynamic_prerequisites
@@ -169,8 +169,8 @@ module Rake
         # Try to avoid invoking the dynamic block if this file
         # is not needed. If so, we may have all the information
         # we need in the manifest file.
-        if !needed? && last_manifest_entry
-          mtime = last_manifest_entry.mtime
+        if !needed? && manifest_entry
+          mtime = manifest_entry.mtime
         end
 
         # If the output file of this task still exists and
@@ -179,10 +179,9 @@ module Rake
         # come from the return value of the dynamic block
         # in a previous run.
         if File.exist?(name) && mtime == File.mtime(name)
-          return last_manifest_entry.deps.map { |k,v| k }
+          return manifest_entry.deps.map { |k,v| k }
         end
       end
     end
   end
 end
-

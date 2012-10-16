@@ -9,7 +9,13 @@ describe Rake::Pipeline::DynamicFileTask do
       invoked_tasks << task
     end
 
-    klass.define_task(deps, &task_proc)
+    task = klass.define_task(deps, &task_proc)
+
+    if klass == Rake::Pipeline::DynamicFileTask 
+      task.manifest = Rake::Pipeline::Manifest.new
+    end
+
+    task
   end
 
   let(:task) { define_task('output') }
@@ -59,11 +65,18 @@ describe Rake::Pipeline::DynamicFileTask do
       dynamic_task.invoke
       dynamic_task.manifest_entry.mtime.should == File.mtime('output')
     end
+
+    it "raises an error when there is no manifest" do
+      dynamic_task.manifest = nil
+      lambda { 
+        dynamic_task.invoke
+      }.should raise_error(Rake::Pipeline::DynamicFileTask::ManifestRequired)
+    end
   end
 
   describe "#needed?" do
-    it "is true if the task has no previous manifest entry" do
-      task.last_manifest_entry.should be_nil
+    it "is true if the task has manifest entry" do
+      task.manifest_entry.should be_nil
       task.should be_needed
     end
   end
@@ -102,7 +115,7 @@ describe Rake::Pipeline::DynamicFileTask do
       })
 
       task.dynamic { %w[] }
-      task.stub(:last_manifest_entry) { manifest_entry }
+      task.stub(:manifest_entry) { manifest_entry }
       task.should_not_receive(:invoke_dynamic_block)
       task.dynamic_prerequisites.should == %w[blinky]
     end

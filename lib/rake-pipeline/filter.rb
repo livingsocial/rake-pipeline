@@ -216,7 +216,6 @@ module Rake
         task = rake_application.define_task(Rake::Pipeline::DynamicFileTask, output => deps, &block)
 
         if pipeline && pipeline.project
-          task.last_manifest = pipeline.project.last_manifest
           task.manifest = pipeline.project.manifest
         end
 
