@@ -392,6 +392,11 @@ module Rake
       Digest::MD5.hexdigest(files.to_s)[0..7]
     end
 
+    # the Manifest used in this pipeline
+    def manifest
+      project.manifest
+    end
+
   protected
     # Generate a new temporary directory name.
     #

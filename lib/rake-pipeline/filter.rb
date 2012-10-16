@@ -72,6 +72,8 @@ module Rake
       #   this filter.
       attr_accessor :pipeline
 
+      attr_writer :manifest
+
       attr_writer :file_wrapper_class
 
       # @param [Proc] block a block to use as the Filter's
@@ -80,6 +82,13 @@ module Rake
         block ||= proc { |input| input }
         @output_name_generator = block
         @input_files = []
+      end
+
+      # @return [Rake::Pipeline::Manifest] the manifest passed
+      # to generated rake tasks. Use the pipeline's manifest
+      # if this is not set
+      def manifest
+        @manifest || pipeline.manifest
       end
 
       # Invoke this method in a subclass of Filter to declare that
@@ -214,11 +223,7 @@ module Rake
 
       def create_file_task(output, deps=[], &block)
         task = rake_application.define_task(Rake::Pipeline::DynamicFileTask, output => deps, &block)
-
-        if pipeline && pipeline.project
-          task.manifest = pipeline.project.manifest
-        end
-
+        task.manifest = manifest
         task
       end
 

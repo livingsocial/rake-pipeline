@@ -2,7 +2,8 @@ describe "Rake::Pipeline" do
   ConcatFilter ||= Rake::Pipeline::SpecHelpers::Filters::ConcatFilter
   StripAssertsFilter ||= Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
 
-  let(:pipeline) { Rake::Pipeline.new }
+  let(:project) { Rake::Pipeline::Project.new }
+  let(:pipeline) { Rake::Pipeline.new :project => project }
 
   it "accepts a input root" do
     pipeline.add_input "app/assets"

@@ -1,8 +1,11 @@
 describe "a matcher" do
   sep = File::SEPARATOR
 
+  let(:project) { Rake::Pipeline::Project.new }
+
   before do
-    @matcher = Rake::Pipeline::Matcher.new
+    @matcher = Rake::Pipeline::Matcher.new :project => project
+
     @files = %w(jquery.js sproutcore.js sproutcore.css).map do |file|
       file_wrapper(file)
     end
