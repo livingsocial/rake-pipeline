@@ -1,5 +1,6 @@
 describe "OrderingConcatFilter" do
-  MemoryFileWrapper = Rake::Pipeline::SpecHelpers::MemoryFileWrapper
+  MemoryFileWrapper ||= Rake::Pipeline::SpecHelpers::MemoryFileWrapper
+  MemoryManifest ||= Rake::Pipeline::SpecHelpers::MemoryManifest
 
   let(:input_files) {
     [
@@ -21,6 +22,7 @@ describe "OrderingConcatFilter" do
 
   def make_filter(ordering)
     filter = Rake::Pipeline::OrderingConcatFilter.new(ordering, "all.txt")
+    filter.manifest = MemoryManifest.new
     filter.file_wrapper_class = MemoryFileWrapper
     filter.input_files = input_files
     filter.output_root = "/path/to/output"

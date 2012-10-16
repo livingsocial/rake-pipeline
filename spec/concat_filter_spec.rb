@@ -1,5 +1,6 @@
 describe "ConcatFilter" do
   MemoryFileWrapper = Rake::Pipeline::SpecHelpers::MemoryFileWrapper
+  MemoryManifest = Rake::Pipeline::SpecHelpers::MemoryManifest
 
   let(:input_files) {
     [
@@ -10,6 +11,7 @@ describe "ConcatFilter" do
 
   it "generates output" do
     filter = Rake::Pipeline::ConcatFilter.new { "application.js" }
+    filter.manifest = MemoryManifest.new
     filter.file_wrapper_class = MemoryFileWrapper
     filter.output_root = "/path/to/output"
     filter.input_files = input_files

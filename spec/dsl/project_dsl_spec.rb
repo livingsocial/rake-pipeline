@@ -1,5 +1,5 @@
 describe "Rake::Pipeline::ProjectDSL" do
-  ConcatFilter = Rake::Pipeline::SpecHelpers::Filters::ConcatFilter
+  ConcatFilter ||= Rake::Pipeline::SpecHelpers::Filters::ConcatFilter
 
   let(:project) { Rake::Pipeline::Project.new }
   let(:dsl) { Rake::Pipeline::DSL::ProjectDSL.new(project) }

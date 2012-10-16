@@ -131,7 +131,7 @@ module Rake
     attr_writer :input_files
 
     # @return [Project] the Project that created this pipeline
-    attr_reader :project
+    attr_accessor :project
 
     # @param [Hash] options
     # @option options [Hash] :inputs
@@ -146,8 +146,9 @@ module Rake
       @filters         = []
       @invoke_mutex    = Mutex.new
       @clean_mutex     = Mutex.new
+      @tmp_id          = 0
       @inputs          = options[:inputs] || {}
-      @tmpdir          = options[:tmpdir] || "tmp"
+      @tmpdir          = options[:tmpdir] || File.expand_path("tmp")
       @project         = options[:project]
 
       if options[:output_root]
@@ -194,8 +195,6 @@ module Rake
       self
     end
 
-    @@tmp_id = 0
-
     # Copy the current pipeline's attributes over.
     #
     # @param [Class] target_class the class to create a new
@@ -209,6 +208,7 @@ module Rake
       pipeline.inputs = inputs
       pipeline.tmpdir = tmpdir
       pipeline.rake_application = rake_application
+      pipeline.project = project
       pipeline
     end
 
@@ -318,6 +318,7 @@ module Rake
     # @return [void]
     def invoke_clean
       @clean_mutex.synchronize do
+        @tmp_id = 0
         @rake_tasks = @rake_application = nil
         invoke
       end
@@ -382,19 +383,33 @@ module Rake
       add_filter(Rake::Pipeline::PipelineFinalizingFilter.new)
     end
 
+    # A unique fingerprint. It's used to generate unique temporary
+    # directory names. It must be unique to the pipeline. It must be
+    # the same across processes.
+    def fingerprint
+      files = eligible_input_files + output_files
+
+      Digest::MD5.hexdigest(files.to_s)[0..7]
+    end
+
+    # the Manifest used in this pipeline
+    def manifest
+      project.manifest
+    end
+
   protected
     # Generate a new temporary directory name.
     #
     # @return [String] a unique temporary directory name
-    def self.generate_tmpname
-      "rake-pipeline-tmp-#{@@tmp_id += 1}"
+    def generate_tmpname
+      "rake-pipeline-#{fingerprint}-tmp-#{@tmp_id += 1}"
     end
 
     # Generate a new temporary directory name under the main tmpdir.
     #
     # @return [void]
     def generate_tmpdir
-      File.join(tmpdir, self.class.generate_tmpname)
+      File.join(tmpdir, self.generate_tmpname)
     end
 
     # Generate all of the rake tasks for this pipeline.

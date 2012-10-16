@@ -70,8 +70,20 @@ HERE
     File.read(output).should == expected
   end
 
+  class CountingFilter < Rake::Pipeline::ConcatFilter
+    def generate_output(inputs, output)
+      @@calls += 1
+      super
+    end
+
+    def self.reset!
+      @@calls = 0
+    end
+  end
+
   concat_filter = Rake::Pipeline::ConcatFilter
   strip_asserts_filter = Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
+  memory_manifest = Rake::Pipeline::SpecHelpers::MemoryManifest
 
   def copy_files
     INPUTS.each do |name, string|
@@ -88,11 +100,13 @@ HERE
   describe "a pipeline" do
     it "can successfully apply filters" do
       concat = concat_filter.new
+      concat.manifest = memory_manifest.new
       concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
       concat.output_root = File.join(tmp, "temporary", "concat_filter")
       concat.output_name_generator = proc { |input| "javascripts/application.js" }
 
       strip_asserts = strip_asserts_filter.new
+      strip_asserts.manifest = memory_manifest.new
       strip_asserts.input_files = concat.output_files
       strip_asserts.output_root = File.join(tmp, "public")
       strip_asserts.output_name_generator = proc { |input| input }
@@ -106,11 +120,13 @@ HERE
 
     it "supports filters with multiple outputs per input" do
       concat = concat_filter.new
+      concat.manifest = memory_manifest.new
       concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
       concat.output_root = File.join(tmp, "temporary", "concat_filter")
       concat.output_name_generator = proc { |input| [ "javascripts/application.js", input.sub(/^app\//, '') ] }
 
       strip_asserts = strip_asserts_filter.new
+      strip_asserts.manifest = memory_manifest.new
       strip_asserts.input_files = concat.output_files
       strip_asserts.output_root = File.join(tmp, "public")
       strip_asserts.output_name_generator = proc { |input| input }
@@ -142,9 +158,11 @@ HERE
       pipeline.tmpdir = "temporary"
 
       concat = concat_filter.new
+      concat.manifest = memory_manifest.new
       concat.output_name_generator = proc { |input| "javascripts/application.js" }
 
       strip_asserts = strip_asserts_filter.new
+      strip_asserts.manifest = memory_manifest.new
       strip_asserts.output_name_generator = proc { |input| input }
 
       pipeline.add_filters(concat, strip_asserts)
@@ -217,6 +235,16 @@ HERE
         HERE
 
         output_should_exist(expected)
+      end
+
+      it "does not generate new files when things haven't changed" do
+        output_file  = File.join(tmp, "public/javascripts/application.js")
+
+        project.invoke_clean
+        previous_mtime = File.mtime(output_file)
+
+        project.invoke_clean
+        File.mtime(output_file).should == previous_mtime
       end
     end
 

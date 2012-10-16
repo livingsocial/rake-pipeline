@@ -31,6 +31,8 @@ if "".respond_to?(:encode)
   describe "the pipeline's encoding handling" do
     Filters = Rake::Pipeline::SpecHelpers::Filters
 
+    let(:project) { Rake::Pipeline::Project.new }
+
     let(:inputs) { inputs }
 
     def output_should_exist(expected, encoding="UTF-8")
@@ -56,7 +58,7 @@ if "".respond_to?(:encode)
     before do
       create_files
 
-      @pipeline = Rake::Pipeline.build do
+      @pipeline = Rake::Pipeline.build :project => project do
         output "public"
         input "#{tmp}/app/javascripts/", "*.js"
         concat "javascripts/application.js"
@@ -85,7 +87,7 @@ if "".respond_to?(:encode)
       let(:encoding) { "EUC-JP" }
 
       it "does not raise an exception" do
-         pipeline = Rake::Pipeline.build do
+         pipeline = Rake::Pipeline.build :project => project do
           output "public"
           input "#{tmp}/app/javascripts/", "*.js"
           concat "javascripts/application.js"

@@ -1,8 +1,9 @@
 describe "Rake::Pipeline" do
-  ConcatFilter = Rake::Pipeline::SpecHelpers::Filters::ConcatFilter
-  StripAssertsFilter = Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
+  ConcatFilter ||= Rake::Pipeline::SpecHelpers::Filters::ConcatFilter
+  StripAssertsFilter ||= Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
 
-  let(:pipeline) { Rake::Pipeline.new }
+  let(:project) { Rake::Pipeline::Project.new }
+  let(:pipeline) { Rake::Pipeline.new :project => project }
 
   it "accepts a input root" do
     pipeline.add_input "app/assets"
@@ -78,6 +79,31 @@ describe "Rake::Pipeline" do
     end
   end
 
+  describe "#fingerprint" do
+    include Rake::Pipeline::SpecHelpers::InputHelpers
+
+    it "should change when the input files changes" do
+      pipeline.add_filter ConcatFilter.new("vendor.js")
+      pipeline.input_files = [input_file("jquery.js")]
+
+      lambda { 
+        pipeline.input_files = [input_file("ember.js")]
+      }.should change(pipeline, :fingerprint)
+    end
+
+    it "should change when the output files change" do
+      pipeline.output_root = "public"
+
+      pipeline.add_filter ConcatFilter.new("vendor.js")
+      pipeline.input_files = [input_file("jquery.js")]
+
+      lambda { 
+        pipeline.add_filter ConcatFilter.new("application.js")
+        pipeline.setup
+      }.should change(pipeline, :fingerprint)
+    end
+  end
+
   describe "adding filters" do
     let(:filter) { ConcatFilter.new }
 
@@ -95,6 +121,16 @@ describe "Rake::Pipeline" do
     it "sets an added filter's pipeline" do
       pipeline.add_filter filter
       filter.pipeline.should == pipeline
+    end
+  end
+
+  describe "#copy" do
+    it "should copy state" do
+      copy = pipeline.copy
+      copy.inputs.should == pipeline.inputs
+      copy.tmpdir.should == pipeline.tmpdir
+      copy.rake_application.should == pipeline.rake_application
+      copy.project.should == pipeline.project
     end
   end
 
