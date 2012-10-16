@@ -85,9 +85,13 @@ HERE
     copy_files
   end
 
+  let(:project) { Rake::Pipeline::Project.new }
+  let(:pipeline) { project.build_pipeline("app/**/") }
+
   describe "a pipeline" do
     it "can successfully apply filters" do
       concat = concat_filter.new
+      concat.pipeline = pipeline
       concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
       concat.output_root = File.join(tmp, "temporary", "concat_filter")
       concat.output_name_generator = proc { |input| "javascripts/application.js" }
@@ -106,6 +110,7 @@ HERE
 
     it "supports filters with multiple outputs per input" do
       concat = concat_filter.new
+      concat.pipeline = pipeline
       concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
       concat.output_root = File.join(tmp, "temporary", "concat_filter")
       concat.output_name_generator = proc { |input| [ "javascripts/application.js", input.sub(/^app\//, '') ] }
@@ -136,7 +141,7 @@ HERE
     end
 
     it "can be configured using the pipeline" do
-      pipeline = Rake::Pipeline.new
+      pipeline = Rake::Pipeline.new :project => project
       pipeline.add_input tmp, 'app/javascripts/*.js'
       pipeline.output_root = File.expand_path("public")
       pipeline.tmpdir = "temporary"

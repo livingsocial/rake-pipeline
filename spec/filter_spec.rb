@@ -12,6 +12,9 @@ describe "Rake::Pipeline::Filter" do
     Rake::Pipeline::FileWrapper.new(file_root, path)
   end
 
+  let(:project) { Rake::Pipeline::Project.new }
+  let(:pipeline) { project.build_pipeline "app" }
+
   let(:filter)      { Rake::Pipeline::Filter.new }
   let(:input_root)  { File.join(tmp, "app/assets") }
   let(:output_root) { File.join(tmp, "filter1/app/assets") }
@@ -53,7 +56,6 @@ describe "Rake::Pipeline::Filter" do
   end
 
   it "knows about its containing pipeline" do
-    pipeline = Rake::Pipeline.new
     filter = Rake::Pipeline::Filter.new
     pipeline.add_filter(filter)
     filter.pipeline.should == pipeline
@@ -136,6 +138,7 @@ describe "Rake::Pipeline::Filter" do
       Rake.application = Rake::Application.new
       filter.output_root = output_root
       filter.input_files = input_files
+      filter.pipeline = pipeline
     end
 
     def output_task(path, app=Rake.application)
@@ -283,6 +286,7 @@ describe "Rake::Pipeline::Filter" do
 
     def invoke_filter(filter)
       mkdir_p output_root
+      filter.pipeline = pipeline
       filter.output_root = output_root
       filter.input_files = input_files
       tasks = filter.generate_rake_tasks

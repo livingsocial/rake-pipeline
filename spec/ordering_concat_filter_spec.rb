@@ -19,8 +19,12 @@ describe "OrderingConcatFilter" do
     MemoryFileWrapper.files["/path/to/output/all.txt"]
   }
 
+  let(:project) { Rake::Pipeline::Project.new }
+  let(:pipeline) { project.build_pipeline "app" }
+
   def make_filter(ordering)
     filter = Rake::Pipeline::OrderingConcatFilter.new(ordering, "all.txt")
+    filter.pipeline = pipeline
     filter.file_wrapper_class = MemoryFileWrapper
     filter.input_files = input_files
     filter.output_root = "/path/to/output"

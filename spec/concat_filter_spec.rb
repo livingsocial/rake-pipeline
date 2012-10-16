@@ -8,8 +8,12 @@ describe "ConcatFilter" do
     ]
   }
 
+  let(:project) { Rake::Pipeline::Project.new }
+  let(:pipeline) { project.build_pipeline "app" }
+
   it "generates output" do
     filter = Rake::Pipeline::ConcatFilter.new { "application.js" }
+    filter.pipeline = pipeline
     filter.file_wrapper_class = MemoryFileWrapper
     filter.output_root = "/path/to/output"
     filter.input_files = input_files
