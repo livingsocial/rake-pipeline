@@ -70,6 +70,17 @@ HERE
     File.read(output).should == expected
   end
 
+  class CountingFilter < Rake::Pipeline::ConcatFilter
+    def generate_output(inputs, output)
+      @@calls += 1
+      super
+    end
+
+    def self.reset!
+      @@calls = 0
+    end
+  end
+
   concat_filter = Rake::Pipeline::ConcatFilter
   strip_asserts_filter = Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
   memory_manifest = Rake::Pipeline::SpecHelpers::MemoryManifest
@@ -224,6 +235,16 @@ HERE
         HERE
 
         output_should_exist(expected)
+      end
+
+      it "does not generate new files when things haven't changed" do
+        output_file  = File.join(tmp, "public/javascripts/application.js")
+
+        project.invoke_clean
+        previous_mtime = File.mtime(output_file)
+
+        project.invoke_clean
+        File.mtime(output_file).should == previous_mtime
       end
     end
 
