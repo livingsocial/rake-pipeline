@@ -131,7 +131,7 @@ module Rake
     attr_writer :input_files
 
     # @return [Project] the Project that created this pipeline
-    attr_reader :project
+    attr_accessor :project
 
     # @param [Hash] options
     # @option options [Hash] :inputs
@@ -148,7 +148,7 @@ module Rake
       @clean_mutex     = Mutex.new
       @tmp_id          = 0
       @inputs          = options[:inputs] || {}
-      @tmpdir          = options[:tmpdir] || "tmp"
+      @tmpdir          = options[:tmpdir] || File.expand_path("tmp")
       @project         = options[:project]
 
       if options[:output_root]
@@ -208,6 +208,7 @@ module Rake
       pipeline.inputs = inputs
       pipeline.tmpdir = tmpdir
       pipeline.rake_application = rake_application
+      pipeline.project = project
       pipeline
     end
 

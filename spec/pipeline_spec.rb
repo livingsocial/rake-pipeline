@@ -123,6 +123,16 @@ describe "Rake::Pipeline" do
     end
   end
 
+  describe "#copy" do
+    it "should copy state" do
+      copy = pipeline.copy
+      copy.inputs.should == pipeline.inputs
+      copy.tmpdir.should == pipeline.tmpdir
+      copy.rake_application.should == pipeline.rake_application
+      copy.project.should == pipeline.project
+    end
+  end
+
   shared_examples_for "when working with input" do
     include Rake::Pipeline::SpecHelpers::InputHelpers
 
