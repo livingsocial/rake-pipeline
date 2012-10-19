@@ -172,6 +172,33 @@ module Rake
         alias_method :exclude, :reject
         alias_method :skip, :reject
 
+        # Apply filters in a sorted fashion. Use this when you need
+        # something other than file name ordering.
+        #
+        # @param [Proc] block used to sort inputs
+        # @return [SortedPipeline]
+        #
+        # @example
+        #   !!!ruby
+        #   Rake::Pipeline::Project.build do
+        #       match "*.js" do
+        #         # inputs will be sorted according to the block and
+        #         # passed to concat
+        #         sort do |f1, f2|
+        #           # reverse the inputs
+        #           f2.fullpath <=> f1.fullpath
+        #         end
+        #         concat "application.js"
+        #       end
+        #     end
+        #   end
+        def sort(&block)
+          sorter = pipeline.copy(SortedPipeline)
+          sorter.comparator = block
+          pipeline.add_filter sorter
+          sorter
+        end
+
         # Specify the output directory for the pipeline.
         #
         # @param [String] root the output directory.
