@@ -241,10 +241,10 @@ HERE
         output_file  = File.join(tmp, "public/javascripts/application.js")
 
         project.invoke_clean
-        previous_mtime = File.mtime(output_file)
+        previous_mtime = File.mtime(output_file).to_i
 
         project.invoke_clean
-        File.mtime(output_file).should == previous_mtime
+        File.mtime(output_file).to_i.should == previous_mtime
       end
     end
 
