@@ -1,5 +1,6 @@
 describe "GsubFilter" do
   MemoryFileWrapper = Rake::Pipeline::SpecHelpers::MemoryFileWrapper
+  MemoryManifest = Rake::Pipeline::SpecHelpers::MemoryManifest
 
   let(:input_files) {
     [
@@ -8,8 +9,10 @@ describe "GsubFilter" do
   }
 
   it "generates output" do
-    filter = Rake::Pipeline::GsubFilter.new "Ember.assert", 'foo'
+    filter = Rake::Pipeline::GsubFilter.new "Ember.assert", "foo"
     filter.file_wrapper_class = MemoryFileWrapper
+    filter.manifest = MemoryManifest.new
+
     filter.output_root = "/path/to/output"
     filter.input_files = input_files
 
@@ -28,6 +31,8 @@ describe "GsubFilter" do
     end
 
     filter.file_wrapper_class = MemoryFileWrapper
+    filter.manifest = MemoryManifest.new
+
     filter.output_root = "/path/to/output"
     filter.input_files = input_files
 

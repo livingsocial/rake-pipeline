@@ -196,6 +196,25 @@ module Rake
           end
         end
         alias_method :copy, :concat
+
+        # A helper method for adding a gsub filter to the pipeline.
+        # It takes the same arguments as String#gsub. The output file
+        # cannot be changed. 
+        #
+        # @see GsubFilter#initialize
+        def gsub(*args, &block)
+          filter(Rake::Pipeline::GsubFilter, *args, &block)
+        end
+        alias_method :replace, :gsub
+
+        # A helper method like gsub, but removes everything
+        # specified by the matcher. The matcher is the first argument
+        # passed to String#gsub
+        #
+        # @see String#gsub
+        def strip(matcher)
+          filter(Rake::Pipeline::GsubFilter, matcher, '')
+        end
       end
     end
   end
