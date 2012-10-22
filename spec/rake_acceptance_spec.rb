@@ -30,10 +30,19 @@ HERE
 <html></html>
 HERE
 
-"app/junk.txt" => <<-HERE
+"app/junk.txt" => <<-HERE,
 junk
 HERE
 
+"app/main.dynamic" => <<-HERE,
+# main.dynamic
+static content
+@import("variables")
+HERE
+
+"variables.import" => <<-HERE,
+$rakep = awesome
+HERE
 }
 
 EXPECTED_JS_OUTPUT = <<-HERE
@@ -56,6 +65,13 @@ EXPECTED_HTML_OUTPUT = <<-HERE
 <html></html>
 HERE
 
+EXPECTED_DYNAMIC_OUTPUT = <<-HERE
+# main.dynamic
+static content
+@import("variables")
+$rakep = awesome
+HERE
+
   def input_wrapper(path)
     Rake::Pipeline::FileWrapper.new(tmp, path)
   end
@@ -70,18 +86,8 @@ HERE
     File.read(output).should == expected
   end
 
-  class CountingFilter < Rake::Pipeline::ConcatFilter
-    def generate_output(inputs, output)
-      @@calls += 1
-      super
-    end
-
-    def self.reset!
-      @@calls = 0
-    end
-  end
-
   concat_filter = Rake::Pipeline::ConcatFilter
+  dynamic_import_filter = Rake::Pipeline::SpecHelpers::Filters::DynamicImportFilter
   strip_asserts_filter = Rake::Pipeline::SpecHelpers::Filters::StripAssertsFilter
   memory_manifest = Rake::Pipeline::SpecHelpers::MemoryManifest
 
@@ -170,6 +176,7 @@ HERE
 
       output_should_exist
     end
+
   end
 
   describe "using the pipeline DSL" do
@@ -241,10 +248,12 @@ HERE
         output_file  = File.join(tmp, "public/javascripts/application.js")
 
         project.invoke_clean
-        previous_mtime = File.mtime(output_file).to_i
+        previous_mtime = File.mtime(output_file)
+
+        sleep 1
 
         project.invoke_clean
-        File.mtime(output_file).to_i.should == previous_mtime
+        File.mtime(output_file).should == previous_mtime
       end
     end
 
@@ -503,6 +512,95 @@ HERE
           end
         end
       end
+    end
+  end
+
+  describe "Dynamic dependencies" do
+    shared_examples_for "a pipeline with dynamic files" do
+      it "should handle changes in dynamic imports" do
+        project.invoke
+
+        content = File.read output_file
+
+        content.should == EXPECTED_DYNAMIC_OUTPUT
+
+        sleep 1
+
+        imported_file = File.join tmp, "variables.import"
+
+        File.open imported_file, "w" do |f| 
+          f.write "true to trance"
+        end
+
+        project.invoke
+        content = File.read output_file
+
+        content.should include("true to trance")
+      end
+
+      it "should handle changes in dynamic source files" do
+        project.invoke
+
+        content = File.read output_file
+
+        content.should == EXPECTED_DYNAMIC_OUTPUT
+
+        sleep 1
+
+        imported_file = File.join tmp, "app/main.dynamic"
+
+        File.open imported_file, "w" do |f| 
+          f.write "true to trance"
+        end
+
+        project.invoke
+        content = File.read output_file
+
+        content.should == "true to trance"
+      end
+
+      it "should not regenerate files when nothing changes" do
+        project.invoke
+        previous_mtime = File.mtime output_file
+        sleep 1 ; project.invoke
+
+        File.mtime(output_file).should == previous_mtime
+      end
+    end
+
+    describe "direct dependencies" do
+      let(:project) do
+        Rake::Pipeline::Project.build do
+          tmpdir "temporary"
+          output "public"
+
+          input tmp, "**/*.dynamic" do
+            filter dynamic_import_filter
+          end
+        end
+      end
+
+      let(:output_file) { File.join tmp, "public", "app/main.dynamic" }
+
+      it_should_behave_like "a pipeline with dynamic files"
+    end
+
+    describe "transitive dependencies" do
+      let(:project) do
+        Rake::Pipeline::Project.build do
+          tmpdir "temporary"
+          output "public"
+
+          input tmp, "**/*.dynamic" do
+            filter dynamic_import_filter
+            concat "application.dyn"
+          end
+        end
+      end
+
+      let(:output_file) { File.join tmp, "public", "application.dyn" }
+
+      it_should_behave_like "a pipeline with dynamic files"
     end
   end
 end

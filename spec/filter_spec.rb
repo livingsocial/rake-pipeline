@@ -306,8 +306,18 @@ describe "Rake::Pipeline::Filter" do
       main_output.read.should == %[header\n#include "header"\n]
     end
 
+    it "rebuilds main file when it changes" do
+      invoke_filter(filter)
+      sleep 1
+      File.open(main.fullpath, 'w') { |f| f.puts 'PEANUTS' }
+      filter.rake_tasks.each { |t| t.recursively_reenable(Rake.application) }
+      invoke_filter(filter)
+      main_output.read.should == %[PEANUTS\n]
+    end
+
     it "rebuilds the main file when a dynamic dependency changes" do
       invoke_filter(filter)
+      sleep 1
       File.open(header.fullpath, 'w') { |f| f.puts 'PEANUTS' }
       filter.rake_tasks.each { |t| t.recursively_reenable(Rake.application) }
       invoke_filter(filter)

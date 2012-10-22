@@ -56,9 +56,12 @@ module Rake
         super
       end
 
-      # In addition to the regular FileTask check, A DynamicFileTask is
-      # needed if it has no manifest entry from a previous run, or if
-      # one of its dynamic dependencies has been modified.
+      # If this is task has a declared dynamic block then
+      # it should be run if there is no manifest entry or 
+      # any of the dynamic dependencies are out of date. 
+      # If this task does not have a declared dynamic block then
+      # it should be invoked if any of it's prereqs are dynamic
+      # and are out of date.
       #
       # @return [Boolean]
       def needed?
