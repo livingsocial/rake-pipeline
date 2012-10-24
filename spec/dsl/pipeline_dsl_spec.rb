@@ -97,4 +97,38 @@ describe "Rake::Pipeline::PipelineDSL" do
       filter.should be_kind_of(Rake::Pipeline::ConcatFilter)
     end
   end
+
+  describe "#reject" do
+    it "creates a new RejectMatcher for the given glob" do
+      matcher = dsl.reject("*.glob") {}
+      matcher.should be_kind_of(Rake::Pipeline::RejectMatcher)
+      matcher.glob.should == "*.glob"
+    end
+
+    it "creates a new RejectMatcher with the given block" do
+      block = proc { }
+      matcher = dsl.reject(&block)
+      matcher.should be_kind_of(Rake::Pipeline::RejectMatcher)
+      matcher.block.should == block
+    end
+
+    it "adds the new reject matcher to the pipeline's filters" do
+      matcher = dsl.reject("*.glob") {}
+      filter.should == matcher
+    end
+  end
+
+  describe "#skip" do
+    it "adds a new RejectMatcher" do
+      dsl.skip "*.glob"
+      filter.should be_kind_of(Rake::Pipeline::RejectMatcher)
+    end
+  end
+
+  describe "#exclude" do
+    it "adds a new RejectMatcher" do
+      dsl.exclude "*.glob"
+      filter.should be_kind_of(Rake::Pipeline::RejectMatcher)
+    end
+  end
 end
