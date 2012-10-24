@@ -131,4 +131,26 @@ describe "Rake::Pipeline::PipelineDSL" do
       filter.should be_kind_of(Rake::Pipeline::RejectMatcher)
     end
   end
+
+  describe "#gsub" do
+    it "creates a GsubFilter" do
+      dsl.gsub
+      filter.should be_kind_of(Rake::Pipeline::GsubFilter)
+    end
+  end
+
+  describe "#replace" do
+    it "creates a GsubFilter" do
+      dsl.replace
+      filter.should be_kind_of(Rake::Pipeline::GsubFilter)
+    end
+  end
+
+  describe "#strip" do
+    it "creates a GsubFilter with no replacement" do
+      regex = /mock/
+      dsl.should_receive(:filter).with(Rake::Pipeline::GsubFilter, regex, '')
+      dsl.strip /mock/
+    end
+  end
 end
