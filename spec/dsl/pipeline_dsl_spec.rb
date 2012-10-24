@@ -91,6 +91,15 @@ describe "Rake::Pipeline::PipelineDSL" do
     end
   end
 
+  describe "#sort" do
+    it "adds a SortedPipeline for the given comparator" do
+      comparator = proc { }
+      matcher = dsl.sort(&comparator)
+      matcher.should be_kind_of(Rake::Pipeline::SortedPipeline)
+      matcher.comparator.should == comparator
+    end
+  end
+
   describe "#copy" do
     it "creates a ConcatFilter" do
       dsl.copy
