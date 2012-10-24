@@ -108,6 +108,13 @@ module Rake
   #     # up until this point, as well as the HTML files.
   #   end
   class Pipeline
+    class Error < StandardError ; end
+    class TmpInputError < StandardError
+      def to_s
+        "tmpdir cannot be part of the input!"
+      end
+    end
+
     # @return [Hash[String, String]] the directory paths for the input files
     #   and their matching globs.
     attr_accessor :inputs
@@ -306,6 +313,9 @@ module Rake
     def invoke
       @invoke_mutex.synchronize do
         self.rake_application = Rake::Application.new unless @rake_application
+
+        input_directories = inputs.keys.collect { |f| File.expand_path(f) }
+        raise TmpInputError if input_directories.include? tmpdir
 
         setup
 
