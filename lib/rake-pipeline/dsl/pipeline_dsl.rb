@@ -138,6 +138,40 @@ module Rake
           matcher
         end
 
+        # Reject files matching a pattern or block. You may specify
+        # a glob or a glob.
+        #
+        # @param [String] pattern a glob pattern to match
+        # @param [Proc] a block used to evaluate each file. Returning 
+        # true will skip that file.
+        # @return [RejectMatcher]
+        #
+        # @example
+        #   !!!ruby
+        #   Rake::Pipeline::Project.build do
+        #     output "public"
+        #
+        #     input "app/assets" do
+        #       # reject everything maching *.min
+        #       reject "*.min"
+        #     end
+        #
+        #     input "app/javascripts" do
+        #       reject do |file|
+        #         # process the file here
+        #       end
+        #     end
+        #   end
+        def reject(pattern = '', &block)
+          matcher = pipeline.copy(RejectMatcher)
+          matcher.glob = pattern
+          matcher.block = block
+          pipeline.add_filter matcher
+          matcher
+        end
+        alias_method :exclude, :reject
+        alias_method :skip, :reject
+
         # Specify the output directory for the pipeline.
         #
         # @param [String] root the output directory.
