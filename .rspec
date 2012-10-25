@@ -1,1 +1,1 @@
--cfs -r spec_helper.rb
+-c -f progress --order random -r spec_helper.rb
