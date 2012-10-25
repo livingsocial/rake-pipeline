@@ -15,7 +15,7 @@ end
 
 desc "run the specs"
 task :spec do
-  sh "rspec -cfs spec"
+  sh "rspec"
 end
 
 task :default => :spec
