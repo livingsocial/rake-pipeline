@@ -70,6 +70,13 @@ module Rake
         File.join(root, path)
       end
 
+      # Check to see if this file is inside the given directory
+      #
+      # @return [Boolean]
+      def in_directory?(directory)
+        !!(fullpath =~ %r{^#{Regexp.escape(directory)}/})
+      end
+
       # Make FileWrappers sortable
       #
       # @param [FileWrapper] other {FileWrapper FileWrapper}
