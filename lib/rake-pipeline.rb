@@ -269,8 +269,6 @@ module Rake
         files = Dir[File.join(expanded_root, glob)].sort.select { |f| File.file?(f) }
 
         files.each do |file|
-          raise TmpInputError, file if file.index tmpdir
-
           relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
           result << FileWrapper.new(expanded_root, relative_path)
         end
@@ -320,9 +318,6 @@ module Rake
       @invoke_mutex.synchronize do
         self.rake_application = Rake::Application.new unless @rake_application
 
-        input_directories = inputs.keys.collect { |f| File.expand_path(f) }
-        raise TmpInputError if input_directories.include? tmpdir
-
         setup
 
         @rake_tasks.each { |task| task.recursively_reenable(rake_application) }
@@ -361,6 +356,12 @@ module Rake
     # @return [void]
     # @api private
     def setup_filters
+      # First verify that everything can actually be an input
+      # FIXME: define eligible_input_files to filter out tmpfile
+      eligible_input_files.each do |file|
+        raise TmpInputError, file.fullpath if file.in_directory? tmpdir
+      end
+
       last = @filters.last
 
       @filters.inject(eligible_input_files) do |current_inputs, filter|
