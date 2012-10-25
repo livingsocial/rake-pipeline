@@ -8,8 +8,12 @@ describe "GsubFilter" do
     ]
   }
 
+  let(:rake_application) { Rake::Application.new }
+
   it "generates output" do
     filter = Rake::Pipeline::GsubFilter.new "Ember.assert", "foo"
+    filter.rake_application = rake_application
+
     filter.file_wrapper_class = MemoryFileWrapper
     filter.manifest = MemoryManifest.new
 
@@ -17,6 +21,7 @@ describe "GsubFilter" do
     filter.input_files = input_files
 
     filter.output_files.should == [MemoryFileWrapper.new("/path/to/output", "ember.js", "UTF-8")]
+
 
     tasks = filter.generate_rake_tasks
     tasks.each(&:invoke)
@@ -30,6 +35,7 @@ describe "GsubFilter" do
       "foo"
     end
 
+    filter.rake_application = rake_application
     filter.file_wrapper_class = MemoryFileWrapper
     filter.manifest = MemoryManifest.new
 
@@ -45,8 +51,31 @@ describe "GsubFilter" do
     file.body.should == "foo"
   end
 
+  it "should be able to access global match variables" do
+    filter = Rake::Pipeline::GsubFilter.new /Ember\.(.+)/ do |match, word|
+      word.should == "assert"
+      "Ember.#{word}Strongly"
+    end
+
+    filter.rake_application = rake_application
+    filter.file_wrapper_class = MemoryFileWrapper
+    filter.manifest = MemoryManifest.new
+
+    filter.output_root = "/path/to/output"
+    filter.input_files = input_files
+
+    filter.output_files.should == [MemoryFileWrapper.new("/path/to/output", "ember.js", "UTF-8")]
+
+    tasks = filter.generate_rake_tasks
+    tasks.each(&:invoke)
+
+    file = MemoryFileWrapper.files["/path/to/output/ember.js"]
+    file.body.should == "Ember.assertStrongly"
+  end
+
   it "use the input name for output" do
     filter = Rake::Pipeline::GsubFilter.new
+    filter.rake_application = rake_application
     filter.file_wrapper_class = MemoryFileWrapper
     filter.output_root = "/path/to/output"
     filter.input_files = input_files

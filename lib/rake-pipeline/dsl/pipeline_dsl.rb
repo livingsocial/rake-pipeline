@@ -225,8 +225,6 @@ module Rake
         alias_method :copy, :concat
 
         # A helper method for adding a gsub filter to the pipeline.
-        # It takes the same arguments as String#gsub. The output file
-        # cannot be changed. 
         #
         # @see GsubFilter#initialize
         def gsub(*args, &block)
