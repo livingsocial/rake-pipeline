@@ -1,6 +1,6 @@
 describe "ConcatFilter" do
-  MemoryFileWrapper = Rake::Pipeline::SpecHelpers::MemoryFileWrapper
-  MemoryManifest = Rake::Pipeline::SpecHelpers::MemoryManifest
+  MemoryFileWrapper ||= Rake::Pipeline::SpecHelpers::MemoryFileWrapper
+  MemoryManifest ||= Rake::Pipeline::SpecHelpers::MemoryManifest
 
   let(:input_files) {
     [

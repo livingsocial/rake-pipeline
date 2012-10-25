@@ -1,5 +1,5 @@
 describe "RejectMatcher" do
-  MemoryFileWrapper = Rake::Pipeline::SpecHelpers::MemoryFileWrapper
+  MemoryFileWrapper ||= Rake::Pipeline::SpecHelpers::MemoryFileWrapper
 
   let(:input_files) {
     [
