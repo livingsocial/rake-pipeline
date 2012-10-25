@@ -54,6 +54,16 @@ describe "Rake::Pipeline::FileWrapper" do
     end
   end
 
+  describe "#in_directory?" do
+    it "is when the full path starts with the directory" do
+      file.should be_in_directory(file.root)
+    end
+
+    it "is not when full path does not start with the directory" do
+      file.should_not be_in_directory("/foo/bar/baz")
+    end
+  end
+
   it "it knows it doesn't exist when the file doesn't exist" do
     file.exists?.should == false
   end

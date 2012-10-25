@@ -56,13 +56,15 @@ module Rake
         super
       end
 
-      # In addition to the regular FileTask check, A DynamicFileTask is
-      # needed if it has no manifest entry from a previous run, or if
-      # one of its dynamic dependencies has been modified.
+      # In addition to the regular FileTask check, a DynamicFileTask 
+      # should be invoked when any of it's prerequisites are required,
+      # there is no manifest or it's dependencies are out of date.
       #
       # @return [Boolean]
       def needed?
         return true if super
+
+        return true if prerequisites_needed?
 
         # if we have no manifest, this file task is needed
         return true unless manifest_entry
@@ -70,7 +72,7 @@ module Rake
         # If any of this task's dynamic dependencies have changed,
         # this file task is needed
         manifest_entry.deps.each do |dep, time|
-          return true if File.mtime(dep) > time
+          return true if File.mtime(dep) > time || time > timestamp
         end
 
         # Otherwise, it's not needed
@@ -116,9 +118,6 @@ module Rake
       def invoke_prerequisites(task_args, invocation_chain)
         super
 
-        # If we don't have a dynamic block, just act like a regular FileTask.
-        return unless has_dynamic_block?
-
         raise ManifestRequired if has_dynamic_block? && !manifest
 
         # Retrieve the dynamic prerequisites. If all goes well,
@@ -149,7 +148,6 @@ module Rake
       # to its current manifest entry.
       def invoke_with_call_chain(*)
         super
-        return unless has_dynamic_block?
 
         manifest_entry.mtime = mtime_or_now(name)
       end
@@ -182,6 +180,11 @@ module Rake
           return manifest_entry.deps.map { |k,v| k }
         end
       end
+
+      def prerequisites_needed?
+        prerequisite_tasks.any? { |n| application[n, @scope].needed? }
+      end
     end
   end
 end
+
