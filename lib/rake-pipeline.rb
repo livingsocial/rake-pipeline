@@ -109,9 +109,13 @@ module Rake
   #   end
   class Pipeline
     class Error < StandardError ; end
-    class TmpInputError < StandardError
+    class TmpInputError < Error
+      def initialize(file)
+        @file = file
+      end
+
       def to_s
-        "tmpdir cannot be part of the input!"
+        "Temporary files cannot be input! #{@file} is inside a pipeline's tmp directory"
       end
     end
 
@@ -265,6 +269,8 @@ module Rake
         files = Dir[File.join(expanded_root, glob)].sort.select { |f| File.file?(f) }
 
         files.each do |file|
+          raise TmpInputError, file if file.index tmpdir
+
           relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
           result << FileWrapper.new(expanded_root, relative_path)
         end

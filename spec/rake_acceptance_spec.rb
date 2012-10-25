@@ -518,7 +518,7 @@ HERE
   describe "Dynamic dependencies" do
     shared_examples_for "a pipeline with dynamic files" do
       it "should handle changes in dynamic imports" do
-        project.invoke
+        project.invoke_clean
 
         content = File.read output_file
 
@@ -532,14 +532,14 @@ HERE
           f.write "true to trance"
         end
 
-        project.invoke
+        project.invoke_clean
         content = File.read output_file
 
         content.should include("true to trance")
       end
 
       it "should handle changes in dynamic source files" do
-        project.invoke
+        project.invoke_clean
 
         content = File.read output_file
 
@@ -553,16 +553,16 @@ HERE
           f.write "true to trance"
         end
 
-        project.invoke
+        project.invoke_clean
         content = File.read output_file
 
         content.should == "true to trance"
       end
 
       it "should not regenerate files when nothing changes" do
-        project.invoke
+        project.invoke_clean
         previous_mtime = File.mtime output_file
-        sleep 1 ; project.invoke
+        sleep 1 ; project.invoke_clean
 
         File.mtime(output_file).should == previous_mtime
       end
@@ -574,7 +574,7 @@ HERE
           tmpdir "temporary"
           output "public"
 
-          input tmp, "**/*.dynamic" do
+          input tmp, "app/*.dynamic" do
             filter dynamic_import_filter
           end
         end
@@ -591,7 +591,7 @@ HERE
           tmpdir "temporary"
           output "public"
 
-          input tmp, "**/*.dynamic" do
+          input tmp, "app/*.dynamic" do
             filter dynamic_import_filter
             concat "application.dyn"
           end
