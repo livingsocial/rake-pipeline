@@ -6,6 +6,8 @@ rvm:
   - ruby-head
   - jruby-head
 
+bundler_args: --without docs
+
 notifications:
   email:
     - wycats@gmail.com
