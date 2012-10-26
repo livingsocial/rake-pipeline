@@ -619,8 +619,75 @@ HERE
       end
     end
 
-    project.invoke_clean
+    project.invoke
 
     output_should_exist
+  end
+
+  describe "Handling mistakes" do
+    it "should raise an error when the tmp dir is added directly" do
+      project = Rake::Pipeline::Project.build do
+        output "public"
+        tmpdir "app"
+
+        input "app", "**/*" do
+          concat "tmp.js"
+        end
+      end
+
+      expect { 
+        project.invoke ; project.invoke
+      }.to raise_error(Rake::Pipeline::TmpInputError)
+    end
+
+    it "should raise an error when the tmp dir is matched" do
+      project = Rake::Pipeline::Project.build do
+        output "public"
+        tmpdir "app/tmp"
+
+        input "app" do
+          # to generate temporary files
+          # which can be matched in the second invocation
+          match "**/*.js" do
+            concat "app.js"
+          end
+
+          match "tmp/**/*" do
+            concat "tmp.js"
+          end
+        end
+      end
+
+      expect { 
+        project.invoke ; project.invoke
+      }.to raise_error(Rake::Pipeline::TmpInputError)
+    end
+
+    it "should not raise an error for internal temporary files" do
+      # Create a project with multiple filters and build
+      # steps to create intermediate build files
+      project = Rake::Pipeline::Project.build do
+        output "public"
+        tmpdir "temporary"
+
+        input tmp, "app/**/*" do
+          match "*.js" do
+            concat "application.js"
+          end
+
+          match "*.css" do
+            concat "application.css"
+          end
+
+          match "*.{js,css}" do
+            concat "every_file.application"
+          end
+        end
+      end
+
+      expect { 
+        project.invoke
+      }.to_not raise_error(Rake::Pipeline::TmpInputError)
+    end
   end
 end
