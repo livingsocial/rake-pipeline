@@ -309,31 +309,18 @@ module Rake
     end
     alias add_filter add_filters
 
-    # Invoke the pipeline, processing the inputs into the output. If
-    # the pipeline has already been invoked, reinvoking will not
-    # pick up new input files added to the file system.
+    # Invoke the pipeline, processing the inputs into the output.
     #
     # @return [void]
     def invoke
       @invoke_mutex.synchronize do
-        self.rake_application = Rake::Application.new unless @rake_application
+        @tmp_id = 0
+
+        self.rake_application = Rake::Application.new
 
         setup
 
-        @rake_tasks.each { |task| task.recursively_reenable(rake_application) }
         @rake_tasks.each { |task| task.invoke }
-      end
-    end
-
-    # Pick up any new files added to the inputs and process them through
-    # the filters. Then call #invoke.
-    #
-    # @return [void]
-    def invoke_clean
-      @clean_mutex.synchronize do
-        @tmp_id = 0
-        @rake_tasks = @rake_application = nil
-        invoke
       end
     end
 
@@ -435,17 +422,7 @@ module Rake
     #
     # @return [void]
     def generate_rake_tasks
-      @rake_tasks ||= begin
-        tasks = []
-
-        @filters.each do |filter|
-          # TODO: Don't generate rake tasks if we aren't
-          # creating a new Rake::Application
-          tasks = filter.generate_rake_tasks
-        end
-
-        tasks
-      end
+      @rake_tasks = filters.collect { |f| f.generate_rake_tasks }.flatten
     end
 
     # Assert that an input root and glob were both provided.

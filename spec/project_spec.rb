@@ -99,6 +99,12 @@ describe "Rake::Pipeline::Project" do
   end
 
   describe "#invoke" do
+    def modify_assetfile
+      File.open(assetfile_path, 'w') do |file|
+        file.write(MODIFIED_ASSETFILE_SOURCE)
+      end
+    end
+    
     it "creates output files" do
       output_files.each { |file| file.should_not exist }
       project.invoke
@@ -115,6 +121,17 @@ describe "Rake::Pipeline::Project" do
       project.manifest.should_receive(:write_manifest)
       project.invoke
     end
+    
+    it "rebuilds its pipeline when the Assetfile changes" do
+      project.invoke
+      original_pipeline = project.pipelines.last
+      original_assetfile_digest = assetfile_digest
+
+      modify_assetfile
+      project.invoke
+      assetfile_digest.should_not == original_assetfile_digest
+      project.pipelines.last.should_not == original_pipeline
+    end
   end
 
   describe "invalid Assetfile" do
@@ -129,30 +146,15 @@ describe "Rake::Pipeline::Project" do
     end
   end
 
-  describe "#invoke_clean" do
+  describe "#invoke" do
     context "if the Assetfile contents have changed" do
-      def modify_assetfile
-        File.open(assetfile_path, 'w') do |file|
-          file.write(MODIFIED_ASSETFILE_SOURCE)
-        end
-      end
-
-      it "rebuilds its pipeline" do
-        project.invoke_clean
-        original_pipeline = project.pipelines.last
-        original_assetfile_digest = assetfile_digest
-
-        modify_assetfile
-        project.invoke_clean
-        assetfile_digest.should_not == original_assetfile_digest
-        project.pipelines.last.should_not == original_pipeline
-      end
+      
     end
 
     it "updates the manifest" do
       project.manifest.should_receive(:read_manifest)
       project.manifest.should_receive(:write_manifest)
-      project.invoke_clean
+      project.invoke
     end
   end
 
