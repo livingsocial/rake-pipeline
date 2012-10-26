@@ -271,7 +271,11 @@ module Rake
 
         files.each do |file|
           relative_path = file.sub(%r{^#{Regexp.escape(expanded_root)}/}, '')
-          result << FileWrapper.new(expanded_root, relative_path)
+          wrapped_file = FileWrapper.new(expanded_root, relative_path)
+
+          raise TmpInputError, file if wrapped_file.in_directory?(tmpdir)
+
+          result << wrapped_file
         end
       end
 
@@ -344,12 +348,6 @@ module Rake
     # @return [void]
     # @api private
     def setup_filters
-      # First verify that everything can actually be an input
-      # FIXME: define eligible_input_files to filter out tmpfile
-      eligible_input_files.each do |file|
-        raise TmpInputError, file.fullpath if file.in_directory? tmpdir
-      end
-
       last = @filters.last
 
       @filters.inject(eligible_input_files) do |current_inputs, filter|
