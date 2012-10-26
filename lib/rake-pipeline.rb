@@ -217,11 +217,12 @@ module Rake
     # @return [Pipeline] the new pipeline
     # @api private
     def copy(target_class=self.class, &block)
-      pipeline = target_class.build(&block)
+      pipeline = target_class.new
       pipeline.inputs = inputs
       pipeline.tmpdir = tmpdir
       pipeline.rake_application = rake_application
       pipeline.project = project
+      pipeline.build &block
       pipeline
     end
 

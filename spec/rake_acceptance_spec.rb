@@ -603,4 +603,24 @@ HERE
       it_should_behave_like "a pipeline with dynamic files"
     end
   end
+
+  it "should work with nested matchers" do
+    project = Rake::Pipeline::Project.build do
+      tmpdir "temporary"
+      output "public"
+
+      input tmp, "app/**/*.js" do
+        match "**/*" do
+          match "**/*.js" do
+            filter strip_asserts_filter
+            concat "javascripts/application.js"
+          end
+        end
+      end
+    end
+
+    project.invoke_clean
+
+    output_should_exist
+  end
 end
