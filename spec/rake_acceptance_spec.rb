@@ -231,7 +231,7 @@ HERE
           end
         end
 
-        project.invoke_clean
+        project.invoke
 
         expected = <<-HERE.gsub(/^ {10}/, '')
           var History = {};
@@ -247,12 +247,12 @@ HERE
       it "does not generate new files when things haven't changed" do
         output_file  = File.join(tmp, "public/javascripts/application.js")
 
-        project.invoke_clean
+        project.invoke
         previous_mtime = File.mtime(output_file)
 
         sleep 1
 
-        project.invoke_clean
+        project.invoke
         File.mtime(output_file).should == previous_mtime
       end
     end
@@ -518,7 +518,7 @@ HERE
   describe "Dynamic dependencies" do
     shared_examples_for "a pipeline with dynamic files" do
       it "should handle changes in dynamic imports" do
-        project.invoke_clean
+        project.invoke
 
         content = File.read output_file
 
@@ -532,14 +532,14 @@ HERE
           f.write "true to trance"
         end
 
-        project.invoke_clean
+        project.invoke
         content = File.read output_file
 
         content.should include("true to trance")
       end
 
       it "should handle changes in dynamic source files" do
-        project.invoke_clean
+        project.invoke
 
         content = File.read output_file
 
@@ -553,16 +553,16 @@ HERE
           f.write "true to trance"
         end
 
-        project.invoke_clean
+        project.invoke
         content = File.read output_file
 
         content.should == "true to trance"
       end
 
       it "should not regenerate files when nothing changes" do
-        project.invoke_clean
+        project.invoke
         previous_mtime = File.mtime output_file
-        sleep 1 ; project.invoke_clean
+        sleep 1 ; project.invoke
 
         File.mtime(output_file).should == previous_mtime
       end

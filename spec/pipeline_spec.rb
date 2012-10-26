@@ -163,7 +163,7 @@ describe "Rake::Pipeline" do
       pipeline.input_files = [input_file("foo.bar", pipeline.tmpdir)]
 
       expect {
-        pipeline.invoke_clean
+        pipeline.invoke
       }.to raise_error(Rake::Pipeline::TmpInputError)
     end
 
