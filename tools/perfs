@@ -23,7 +23,7 @@ class Perfs < Thor
 
   class_option :clean, :type => :boolean, :default => true
 
-  desc "bench PROJECT_DIR", "Benchmark building, rebuilding, and cleaning the given project"
+  desc "bench PROJECT_DIR", "Benchmark building and cleaning the given project"
   def bench(project_dir)
     setup(project_dir)
 
@@ -31,20 +31,15 @@ class Perfs < Thor
       project.invoke
     end
 
-    reinvoke_time = Benchmark.realtime do
-      project.invoke_clean
-    end
-
     clean_time = Benchmark.realtime do
       project.clean
     end
 
     puts "build: #{invoke_time}"
-    puts "rebuild: #{reinvoke_time}"
     puts "clean: #{clean_time}"
   end
 
-  desc "profile PROJECT_DIR", "Profile a clean build of the given project"
+  desc "profile PROJECT_DIR", "Profile a build"
   method_option :rebuild, :type => :boolean, :aliases => "-r", :default => false
   def profile(project_dir)
     setup(project_dir)
@@ -52,7 +47,7 @@ class Perfs < Thor
     if options[:rebuild]
       project.invoke
       result = RubyProf.profile do
-        project.invoke_clean
+        project.invoke
       end
     else
       result = RubyProf.profile do
@@ -96,7 +91,6 @@ class Perfs < Thor
   def setup(project_dir)
     cd project_dir
     project.clean
-    project.invoke unless options[:clean]
   end
 
   def project
