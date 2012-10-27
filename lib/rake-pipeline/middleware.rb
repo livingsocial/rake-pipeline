@@ -19,9 +19,9 @@ module Rake
       # @param [#call] app a Rack application
       # @param [String|Rake::Pipeline] pipeline either a path to an
       #   Assetfile to use to build a pipeline, or an existing pipeline.
-      def initialize(app, pipeline)
+      def initialize(app, pipeline, &defaults)
         @app = app
-        @project = Rake::Pipeline::Project.new(pipeline)
+        @project = Rake::Pipeline::Project.new(pipeline, &defaults)
       end
 
       # Automatically compiles your assets if required and
