@@ -163,6 +163,7 @@ HERE
 
     it "can be configured using the pipeline" do
       pipeline = Rake::Pipeline.new
+      pipeline.project = Rake::Pipeline::Project.new
       pipeline.add_input tmp, 'app/javascripts/*.js'
       pipeline.output_root = File.expand_path("public")
       pipeline.tmpdir = "temporary"

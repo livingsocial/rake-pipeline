@@ -333,6 +333,7 @@ module Rake
     def setup
       setup_filters
       generate_rake_tasks
+      record_input_files
     end
 
     # Set up the filters. This will loop through all of the filters for
@@ -447,5 +448,17 @@ module Rake
       end
     end
 
+    # This is needed to ensure that every file procesed in the pipeline
+    # has an entry in the manifest. This is used to compare input files
+    # for the global dirty check
+    def record_input_files
+      input_files.each do |file|
+        full_path = file.fullpath
+
+        if File.exists?(full_path) && !manifest[full_path]
+          manifest[full_path] ||= ManifestEntry.new({}, File.mtime(full_path).to_i)
+        end
+      end
+    end
   end
 end

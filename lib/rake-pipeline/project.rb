@@ -110,16 +110,15 @@ module Rake
       # @see Rake::Pipeline#invoke
       def invoke
         @invoke_mutex.synchronize do
-          if assetfile_path
-            source = File.read(assetfile_path)
-            if digest(source) != assetfile_digest
-              rebuild_from_assetfile(assetfile_path, source)
-            end
-          end
-
           last_manifest.read_manifest
-          pipelines.each(&:invoke)
-          manifest.write_manifest
+
+          if dirty?
+            rebuild_from_assetfile(assetfile_path) if assetfile_dirty?
+
+            pipelines.each(&:invoke)
+
+            manifest.write_manifest
+          end
         end
       end
 
@@ -263,6 +262,58 @@ module Rake
       # @return [String] the SHA1 digest of the given string.
       def digest(str)
         Digest::SHA1.hexdigest(str)
+      end
+
+      def dirty?
+        assetfile_dirty? || files_dirty?
+      end
+
+      def assetfile_dirty?
+        if assetfile_path
+          source = File.read(assetfile_path)
+          digest(source) != assetfile_digest
+        else
+          false
+        end
+      end
+
+      # Returns true if any of these conditions are met:
+      # The pipeline hasn't been invoked yet
+      # The input files have been modified
+      # Any of the input files have been deleted
+      # There are new input files
+      def files_dirty?
+        return true if manifest.empty?
+
+        previous_files = manifest.files
+
+        input_files.each do |input_file|
+          if !File.exists? input_file
+            return true # existing input file has been deleted
+          elsif !previous_files[input_file]
+            return true # there is a new file in the pipeline
+          elsif File.mtime(input_file).to_i != previous_files[input_file]
+            return true # existing file has been changed
+          end
+        end
+
+        false
+      end
+
+      def input_files
+        static_input_files = pipelines.collect do |p|
+          p.input_files.reject { |file| file.in_directory? tmpdir }.map(&:fullpath)
+        end.flatten
+
+        dynamic_input_files = static_input_files.collect do |file|
+          if manifest[file] 
+            manifest[file].deps.keys
+          else
+            nil
+          end
+        end.flatten.compact
+
+        static_input_files + dynamic_input_files
       end
     end
   end

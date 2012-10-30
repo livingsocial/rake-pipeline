@@ -207,6 +207,7 @@ module Rake
         @rake_tasks = outputs.map do |output, inputs|
           additional_paths = []
           inputs.each do |input|
+
             create_file_task(input.fullpath).dynamic do
               additional_paths += additional_dependencies(input)
             end
