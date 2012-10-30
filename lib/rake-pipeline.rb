@@ -393,10 +393,15 @@ module Rake
     # A unique fingerprint. It's used to generate unique temporary
     # directory names. It must be unique to the pipeline. It must be
     # the same across processes.
+    #
+    # @return [String]
+    # @api private
     def fingerprint
-      files = eligible_input_files + output_files
-
-      Digest::MD5.hexdigest(files.to_s)[0..7]
+      if project 
+        project.pipelines.index self
+      else
+        1
+      end
     end
 
     # the Manifest used in this pipeline
