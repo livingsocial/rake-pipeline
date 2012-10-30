@@ -76,7 +76,7 @@ module Rake
         # If any of this task's dynamic dependencies have changed,
         # this file task is needed
         last_manifest_entry.deps.each do |dep, time|
-          return true if File.mtime(dep) > time
+          return true if File.mtime(dep).to_i > time
         end
 
         # Otherwise, it's not needed
@@ -142,7 +142,7 @@ module Rake
         entry = Rake::Pipeline::ManifestEntry.new
 
         dynamics.each do |dynamic|
-          entry.deps.merge!(dynamic => mtime_or_now(dynamic))
+          entry.deps.merge!(dynamic => mtime_or_now(dynamic).to_i)
         end
 
         self.manifest_entry = entry
@@ -153,7 +153,7 @@ module Rake
       def invoke_with_call_chain(*)
         super
 
-        manifest_entry.mtime = mtime_or_now(name)
+        manifest_entry.mtime = mtime_or_now(name).to_i
       end
 
     private
@@ -180,7 +180,7 @@ module Rake
         # list of dependencies in the manifest, which
         # come from the return value of the dynamic block
         # in a previous run.
-        if File.exist?(name) && mtime == File.mtime(name)
+        if File.exist?(name) && mtime == File.mtime(name).to_i
           return last_manifest_entry.deps.map { |k,v| k }
         end
       end

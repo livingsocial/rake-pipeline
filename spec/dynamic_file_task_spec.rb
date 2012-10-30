@@ -20,11 +20,6 @@ describe Rake::Pipeline::DynamicFileTask do
 
   let(:task) { define_task('output') }
 
-  before do
-    # Make sure date conversions happen in UTC, not local time
-    ENV['TZ'] = 'UTC'
-  end
-
   after do
     # Clean out all defined tasks after each test runs
     Rake.application = Rake::Application.new
@@ -57,13 +52,13 @@ describe Rake::Pipeline::DynamicFileTask do
     it "adds dynamic dependencies to its manifest entry" do
       dynamic_task.invoke
       dynamic_task.manifest_entry.deps.should == {
-        'dynamic' => File.mtime('dynamic')
+        'dynamic' => File.mtime('dynamic').to_i
       }
     end
 
     it "adds the current task's mtime to its manifest entry" do
       dynamic_task.invoke
-      dynamic_task.manifest_entry.mtime.should == File.mtime('output')
+      dynamic_task.manifest_entry.mtime.should == File.mtime('output').to_i
     end
 
     it "raises an error when there is no manifest" do
@@ -109,9 +104,9 @@ describe Rake::Pipeline::DynamicFileTask do
 
       manifest_entry = Rake::Pipeline::ManifestEntry.from_hash({
         "deps" => {
-          "blinky" => "2000-01-01 00:00:00 +0000"
+          "blinky" => time.to_i
         },
-        "mtime" => "2000-01-01 00:00:00 +0000"
+        "mtime" => time.to_i
       })
 
       task.dynamic { %w[] }
