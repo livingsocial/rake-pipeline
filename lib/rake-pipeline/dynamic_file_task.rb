@@ -182,7 +182,7 @@ module Rake
       end
 
       def prerequisites_needed?
-        prerequisite_tasks.any? { |n| application[n, @scope].needed? }
+        prerequisite_tasks.any? { |n| n.needed? }
       end
     end
   end
