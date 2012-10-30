@@ -72,7 +72,7 @@ module Rake
       #   this filter.
       attr_accessor :pipeline
 
-      attr_writer :manifest
+      attr_writer :manifest, :last_manifest
 
       attr_writer :file_wrapper_class
 
@@ -89,6 +89,10 @@ module Rake
       # if this is not set
       def manifest
         @manifest || pipeline.manifest
+      end
+
+      def last_manifest
+        @last_manifest || pipeline.last_manifest
       end
 
       # Invoke this method in a subclass of Filter to declare that
@@ -224,6 +228,7 @@ module Rake
       def create_file_task(output, deps=[], &block)
         task = rake_application.define_task(Rake::Pipeline::DynamicFileTask, output => deps, &block)
         task.manifest = manifest
+        task.last_manifest = last_manifest
         task
       end
 

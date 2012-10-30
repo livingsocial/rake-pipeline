@@ -107,12 +107,14 @@ HERE
     it "can successfully apply filters" do
       concat = concat_filter.new
       concat.manifest = memory_manifest.new
+      concat.last_manifest = memory_manifest.new
       concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
       concat.output_root = File.join(tmp, "temporary", "concat_filter")
       concat.output_name_generator = proc { |input| "javascripts/application.js" }
 
       strip_asserts = strip_asserts_filter.new
       strip_asserts.manifest = memory_manifest.new
+      strip_asserts.last_manifest = memory_manifest.new
       strip_asserts.input_files = concat.output_files
       strip_asserts.output_root = File.join(tmp, "public")
       strip_asserts.output_name_generator = proc { |input| input }
@@ -127,12 +129,14 @@ HERE
     it "supports filters with multiple outputs per input" do
       concat = concat_filter.new
       concat.manifest = memory_manifest.new
+      concat.last_manifest = memory_manifest.new
       concat.input_files = INPUTS.keys.select { |key| key =~ /javascript/ }.map { |file| input_wrapper(file) }
       concat.output_root = File.join(tmp, "temporary", "concat_filter")
       concat.output_name_generator = proc { |input| [ "javascripts/application.js", input.sub(/^app\//, '') ] }
 
       strip_asserts = strip_asserts_filter.new
       strip_asserts.manifest = memory_manifest.new
+      strip_asserts.last_manifest = memory_manifest.new
       strip_asserts.input_files = concat.output_files
       strip_asserts.output_root = File.join(tmp, "public")
       strip_asserts.output_name_generator = proc { |input| input }
@@ -165,10 +169,12 @@ HERE
 
       concat = concat_filter.new
       concat.manifest = memory_manifest.new
+      concat.last_manifest = memory_manifest.new
       concat.output_name_generator = proc { |input| "javascripts/application.js" }
 
       strip_asserts = strip_asserts_filter.new
       strip_asserts.manifest = memory_manifest.new
+      strip_asserts.last_manifest = memory_manifest.new
       strip_asserts.output_name_generator = proc { |input| input }
 
       pipeline.add_filters(concat, strip_asserts)
@@ -619,7 +625,7 @@ HERE
       end
     end
 
-    project.invoke_clean
+    project.invoke
 
     output_should_exist
   end

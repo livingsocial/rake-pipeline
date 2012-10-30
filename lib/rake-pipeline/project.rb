@@ -117,7 +117,7 @@ module Rake
             end
           end
 
-          manifest.read_manifest
+          last_manifest.read_manifest
           pipelines.each(&:invoke)
           manifest.write_manifest
         end
@@ -213,6 +213,12 @@ module Rake
       #   to
       def manifest
         @manifest ||= Rake::Pipeline::Manifest.new(manifest_path)
+      end
+
+      # @return [Manifest] the manifest to write dependency information
+      #   to
+      def last_manifest
+        @last_manifest ||= Rake::Pipeline::Manifest.new(manifest_path)
       end
 
       # @return [String] the path to the dynamic dependency manifest

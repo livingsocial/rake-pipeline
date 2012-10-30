@@ -115,7 +115,7 @@ describe Rake::Pipeline::DynamicFileTask do
       })
 
       task.dynamic { %w[] }
-      task.stub(:manifest_entry) { manifest_entry }
+      task.stub(:last_manifest_entry) { manifest_entry }
       task.should_not_receive(:invoke_dynamic_block)
       task.dynamic_prerequisites.should == %w[blinky]
     end

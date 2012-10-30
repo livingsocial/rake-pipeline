@@ -409,6 +409,11 @@ module Rake
       project.manifest
     end
 
+    # the Manifest used in this pipeline
+    def last_manifest
+      project.last_manifest
+    end
+
   protected
     # Generate a new temporary directory name.
     #
