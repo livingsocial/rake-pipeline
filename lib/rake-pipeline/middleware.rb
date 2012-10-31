@@ -17,11 +17,10 @@ module Rake
       attr_accessor :project
 
       # @param [#call] app a Rack application
-      # @param [String|Rake::Pipeline] pipeline either a path to an
-      #   Assetfile to use to build a pipeline, or an existing pipeline.
-      def initialize(app, pipeline)
+      # @param [Rake::Pipeline::Project] an existing project
+      def initialize(app, project)
         @app = app
-        @project = Rake::Pipeline::Project.new(pipeline)
+        @project = project
       end
 
       # Automatically compiles your assets if required and

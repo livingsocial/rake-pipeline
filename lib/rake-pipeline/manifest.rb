@@ -58,6 +58,25 @@ module Rake
       def []=(key, value)
         @entries[key] = value
       end
+
+      def empty?
+        entries.empty?
+      end
+
+      def files
+        entries.inject({}) do |hash, pair| 
+          file = pair.first
+          entry = pair.last
+
+          hash.merge!(file => entry.mtime)
+
+          entry.deps.each_pair do |name, time| 
+            hash.merge!(name => time)
+          end
+
+          hash
+        end
+      end
     end
   end
 end

@@ -16,6 +16,7 @@ describe "GsubFilter" do
 
     filter.file_wrapper_class = MemoryFileWrapper
     filter.manifest = MemoryManifest.new
+    filter.last_manifest = MemoryManifest.new
 
     filter.output_root = "/path/to/output"
     filter.input_files = input_files
@@ -38,6 +39,7 @@ describe "GsubFilter" do
     filter.rake_application = rake_application
     filter.file_wrapper_class = MemoryFileWrapper
     filter.manifest = MemoryManifest.new
+    filter.last_manifest = MemoryManifest.new
 
     filter.output_root = "/path/to/output"
     filter.input_files = input_files
@@ -60,6 +62,7 @@ describe "GsubFilter" do
     filter.rake_application = rake_application
     filter.file_wrapper_class = MemoryFileWrapper
     filter.manifest = MemoryManifest.new
+    filter.last_manifest = MemoryManifest.new
 
     filter.output_root = "/path/to/output"
     filter.input_files = input_files
