@@ -107,8 +107,10 @@ module Rake
           File.read(fullpath)
         end
 
-        if "".respond_to?(:encode) && !contents.valid_encoding?
-          raise EncodingError, "The file at the path #{fullpath} is not valid UTF-8. Please save it again as UTF-8."
+        # In our unit tests Rubinius returns false when the encoding is BINARY
+        # The encoding type check bypasses the problem and is probably acceptable, but isn't ideal
+        if encoding != "BINARY" && "".respond_to?(:encode) && !contents.valid_encoding?
+          raise EncodingError, "The file at the path #{fullpath} is not valid #{encoding}. Please save it again as #{encoding}."
         end
 
         contents

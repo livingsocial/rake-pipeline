@@ -15,10 +15,9 @@ describe "Rake::Pipeline" do
   end
 
   it "uses sorted input files for #output_files" do
-    # only 2 files in this test. Return 1 so the
-    # first comparison reorders the array
+    # Reverse sort
     pipeline.comparator = proc { |f1, f2|
-      1
+      f2 <=> f1
     }
 
     pipeline.input_files = [input_file("jquery.js"), input_file("jquery_ui.js")]

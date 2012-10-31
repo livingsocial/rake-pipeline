@@ -6,6 +6,9 @@ gem "flay"
 gem "flog"
 
 gem "simplecov", :require => false
-gem "yard"
-gem "rdiscount"
 gem "pry"
+
+group :docs do
+  gem "yard"
+  gem "rdiscount"
+end
