@@ -98,6 +98,10 @@ HERE
     end
   end
 
+  def delete_files
+    FileUtils.rm_rf File.join(tmp, "app/javascripts/jquery.js")
+  end
+
   before do
     Rake.application = Rake::Application.new
     copy_files
@@ -261,6 +265,18 @@ HERE
 
         project.invoke
         File.mtime(output_file).should == previous_mtime
+      end
+
+      it "handles deleted files" do
+        output_file  = File.join(tmp, "public/javascripts/application.js")
+
+        project.invoke
+        content = File.read output_file
+
+        delete_files
+        project.invoke
+
+        content.should_not == File.read(output_file)
       end
     end
 
@@ -493,6 +509,10 @@ HERE
 
         junk = File.join(tmp, "public/junk.txt")
         File.exists?(junk).should be_false
+      end
+
+      def delete_files
+        FileUtils.rm_rf File.join(tmp1, "app/javascripts/jquery.js")
       end
 
       before do
