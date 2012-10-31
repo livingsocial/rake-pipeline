@@ -115,6 +115,14 @@ module Rake
           if dirty?
             rebuild_from_assetfile(assetfile_path) if assetfile_dirty?
 
+            # The temporary files have to be cleaned otherwise
+            # there will be a "ghost" input. Here's an example 
+            # rake task: application.js => [a.js, b.js]. Deleting a.js
+            # will make application.js => [b.js]. The task correctly checks
+            # if B has changed (which it hasn't) and says that application.js
+            # is correct. Cleaning tmp files ensures that this doesn't happen.
+            clean if files_deleted?
+
             pipelines.each(&:invoke)
 
             manifest.write_manifest
@@ -265,7 +273,7 @@ module Rake
       end
 
       def dirty?
-        assetfile_dirty? || files_dirty?
+        assetfile_dirty? || files_dirty? || files_deleted?
       end
 
       def assetfile_dirty?
@@ -278,23 +286,29 @@ module Rake
       end
 
       # Returns true if any of these conditions are met:
-      # The pipeline hasn't been invoked yet
-      # The input files have been modified
-      # Any of the input files have been deleted
-      # There are new input files
+      # * The pipeline hasn't been invoked yet
+      # * The input files have changed
+      # * There is a new input file
       def files_dirty?
         return true if manifest.empty?
 
         previous_files = manifest.files
 
+        # check for modifications to new files
         input_files.each do |input_file|
-          if !File.exists? input_file
-            return true # existing input file has been deleted
-          elsif !previous_files[input_file]
+          if !previous_files[input_file]
             return true # there is a new file in the pipeline
           elsif File.mtime(input_file).to_i != previous_files[input_file]
             return true # existing file has been changed
           end
+        end
+
+        false
+      end
+
+      def files_deleted?
+        manifest.files.each_key do |input_file|
+          return true if !File.exists?(input_file)
         end
 
         false
