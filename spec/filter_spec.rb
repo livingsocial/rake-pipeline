@@ -1,4 +1,6 @@
 describe "Rake::Pipeline::Filter" do
+  MemoryManifest ||= Rake::Pipeline::SpecHelpers::MemoryManifest
+
   after do
     # Clean out all defined tasks after each test runs
     Rake.application = Rake::Application.new
@@ -287,6 +289,7 @@ describe "Rake::Pipeline::Filter" do
     def invoke_filter(filter)
       mkdir_p output_root
       filter.pipeline = pipeline
+      filter.last_manifest = MemoryManifest.new
       filter.output_root = output_root
       filter.input_files = input_files
       tasks = filter.generate_rake_tasks
@@ -318,6 +321,7 @@ describe "Rake::Pipeline::Filter" do
     it "rebuilds the main file when a dynamic dependency changes" do
       invoke_filter(filter)
       sleep 1
+      $LATCH = true
       File.open(header.fullpath, 'w') { |f| f.puts 'PEANUTS' }
       filter.rake_tasks.each { |t| t.recursively_reenable(Rake.application) }
       invoke_filter(filter)

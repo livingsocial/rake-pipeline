@@ -104,7 +104,7 @@ describe "Rake::Pipeline::Project" do
         file.write(MODIFIED_ASSETFILE_SOURCE)
       end
     end
-    
+
     it "creates output files" do
       output_files.each { |file| file.should_not exist }
       project.invoke
@@ -117,11 +117,11 @@ describe "Rake::Pipeline::Project" do
     end
 
     it "updates the manifest" do
-      project.manifest.should_receive(:read_manifest)
+      project.last_manifest.should_receive(:read_manifest)
       project.manifest.should_receive(:write_manifest)
       project.invoke
     end
-    
+
     it "rebuilds its pipeline when the Assetfile changes" do
       project.invoke
       original_pipeline = project.pipelines.last
@@ -143,18 +143,6 @@ describe "Rake::Pipeline::Project" do
       lambda {
         Rake::Pipeline::Project.new(assetfile_path)
       }.should raise_error {|error| error.backtrace[0].should match(/Assetfile:6/) }
-    end
-  end
-
-  describe "#invoke" do
-    context "if the Assetfile contents have changed" do
-      
-    end
-
-    it "updates the manifest" do
-      project.manifest.should_receive(:read_manifest)
-      project.manifest.should_receive(:write_manifest)
-      project.invoke
     end
   end
 

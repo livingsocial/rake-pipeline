@@ -6,7 +6,7 @@ module Rake
     class Server < Rack::Server
       def app
         not_found = proc { [404, { "Content-Type" => "text/plain" }, ["not found"]] }
-        config = "Assetfile"
+        project = Rake::Pipline::Project.new "Assetfile"
 
         Middleware.new(not_found, config)
       end

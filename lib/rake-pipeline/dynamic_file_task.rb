@@ -26,7 +26,7 @@ module Rake
         end
       end
 
-      attr_accessor :manifest
+      attr_accessor :manifest, :last_manifest
 
       # @return [Boolean] true if the task has a block to invoke
       #   for dynamic dependencies, false otherwise.
@@ -49,6 +49,10 @@ module Rake
         manifest[name] = new_entry
       end
 
+      def last_manifest_entry
+        last_manifest[name]
+      end
+
       # Invoke this task. This method only checks to see if there
       # is a manifest then delegates to super
       def invoke(*args)
@@ -67,12 +71,12 @@ module Rake
         return true if prerequisites_needed?
 
         # if we have no manifest, this file task is needed
-        return true unless manifest_entry
+        return true unless last_manifest_entry
 
         # If any of this task's dynamic dependencies have changed,
         # this file task is needed
-        manifest_entry.deps.each do |dep, time|
-          return true if File.mtime(dep) > time || time > timestamp
+        last_manifest_entry.deps.each do |dep, time|
+          return true if File.mtime(dep).to_i > time
         end
 
         # Otherwise, it's not needed
@@ -138,7 +142,7 @@ module Rake
         entry = Rake::Pipeline::ManifestEntry.new
 
         dynamics.each do |dynamic|
-          entry.deps.merge!(dynamic => mtime_or_now(dynamic))
+          entry.deps.merge!(dynamic => mtime_or_now(dynamic).to_i)
         end
 
         self.manifest_entry = entry
@@ -149,7 +153,7 @@ module Rake
       def invoke_with_call_chain(*)
         super
 
-        manifest_entry.mtime = mtime_or_now(name)
+        manifest_entry.mtime = mtime_or_now(name).to_i
       end
 
     private
@@ -167,8 +171,8 @@ module Rake
         # Try to avoid invoking the dynamic block if this file
         # is not needed. If so, we may have all the information
         # we need in the manifest file.
-        if !needed? && manifest_entry
-          mtime = manifest_entry.mtime
+        if !needed? && last_manifest_entry
+          mtime = last_manifest_entry.mtime
         end
 
         # If the output file of this task still exists and
@@ -176,13 +180,13 @@ module Rake
         # list of dependencies in the manifest, which
         # come from the return value of the dynamic block
         # in a previous run.
-        if File.exist?(name) && mtime == File.mtime(name)
-          return manifest_entry.deps.map { |k,v| k }
+        if File.exist?(name) && mtime == File.mtime(name).to_i
+          return last_manifest_entry.deps.map { |k,v| k }
         end
       end
 
       def prerequisites_needed?
-        prerequisite_tasks.any? { |n| application[n, @scope].needed? }
+        prerequisite_tasks.any? { |n| n.needed? }
       end
     end
   end

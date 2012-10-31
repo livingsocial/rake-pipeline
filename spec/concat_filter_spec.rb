@@ -12,6 +12,7 @@ describe "ConcatFilter" do
   it "generates output" do
     filter = Rake::Pipeline::ConcatFilter.new { "application.js" }
     filter.manifest = MemoryManifest.new
+    filter.last_manifest = MemoryManifest.new
     filter.file_wrapper_class = MemoryFileWrapper
     filter.output_root = "/path/to/output"
     filter.input_files = input_files

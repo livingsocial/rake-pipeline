@@ -79,31 +79,6 @@ describe "Rake::Pipeline" do
     end
   end
 
-  describe "#fingerprint" do
-    include Rake::Pipeline::SpecHelpers::InputHelpers
-
-    it "should change when the input files changes" do
-      pipeline.add_filter ConcatFilter.new("vendor.js")
-      pipeline.input_files = [input_file("jquery.js")]
-
-      lambda { 
-        pipeline.input_files = [input_file("ember.js")]
-      }.should change(pipeline, :fingerprint)
-    end
-
-    it "should change when the output files change" do
-      pipeline.output_root = "public"
-
-      pipeline.add_filter ConcatFilter.new("vendor.js")
-      pipeline.input_files = [input_file("jquery.js")]
-
-      lambda { 
-        pipeline.add_filter ConcatFilter.new("application.js")
-        pipeline.setup
-      }.should change(pipeline, :fingerprint)
-    end
-  end
-
   describe "adding filters" do
     let(:filter) { ConcatFilter.new }
 

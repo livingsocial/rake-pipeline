@@ -6,10 +6,10 @@ module Rake
       def self.from_hash(hash)
         entry = new
 
-        entry.mtime = DateTime.parse(hash["mtime"]).to_time
+        entry.mtime = hash["mtime"]
 
         hash["deps"].each do |dep, time_string|
-          entry.deps[dep] = DateTime.parse(time_string).to_time
+          entry.deps[dep] = time_string
         end
 
         entry
