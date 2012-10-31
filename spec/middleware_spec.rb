@@ -68,8 +68,10 @@ describe "Rake::Pipeline Middleware" do
     assetfile_path = File.join(tmp, "Assetfile")
     File.open(assetfile_path, "w") { |file| file.write(assetfile_source) }
 
+    project = Rake::Pipeline::Project.new assetfile_path
+
     app = lambda { |env| [404, {}, ['not found']] }
-    middleware = Rake::Pipeline::Middleware.new(app, assetfile_path)
+    middleware = Rake::Pipeline::Middleware.new(app, project)
   end
 
   describe "dynamic requests" do
