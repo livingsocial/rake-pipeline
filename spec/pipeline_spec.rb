@@ -134,14 +134,6 @@ describe "Rake::Pipeline" do
       pipeline.input_files.should == files
     end
 
-    it "raise an error when inputs are temporary_files" do
-      pipeline.input_files = [input_file("foo.bar", pipeline.tmpdir)]
-
-      expect {
-        pipeline.invoke
-      }.to raise_error(Rake::Pipeline::TmpInputError)
-    end
-
     it "configures the filters with outputs and inputs with #rake_tasks" do
       concat = ConcatFilter.new
       concat.output_name_generator = proc { |input| "javascripts/application.js" }
