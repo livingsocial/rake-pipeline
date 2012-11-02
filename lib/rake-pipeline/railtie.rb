@@ -24,7 +24,9 @@ module Rake
       initializer "rake-pipeline.assetfile" do |app|
         if config.rake_pipeline_enabled
           assetfile = File.join(Rails.root, config.rake_pipeline_assetfile)
-          config.app_middleware.insert ActionDispatch::Static, Rake::Pipeline::Middleware, assetfile
+          project = Rake::Pipeline::Project.new assetfile
+
+          config.app_middleware.insert ActionDispatch::Static, Rake::Pipeline::Middleware, project
         end
       end
     end
