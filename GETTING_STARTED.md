@@ -205,7 +205,7 @@ require "coffee-script"
 
 class CoffeeScriptFilter < Rake::Pipeline::Filter
   def initialize(&block)
-    &block ||= proc { |input| input.path.gsub(/\.coffee, ".js")
+    &block ||= proc { |input| input.path.gsub(/\.coffee/, ".js")
     super(&block)
   end
 
