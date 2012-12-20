@@ -30,7 +30,7 @@ module Rake
       # @return [Array(Fixnum, Hash, #each)] A rack response
       def call(env)
         project.invoke
-        path = env["PATH_INFO"]
+        path = ::Rack::Utils.unescape(env["PATH_INFO"])
 
         if project.maps.has_key?(path)
           return project.maps[path].call(env)

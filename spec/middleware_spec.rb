@@ -16,7 +16,8 @@ describe "Rake::Pipeline Middleware" do
 
     "app/index.html" => "<html>HI</html>",
       "app/javascripts/index.html" => "<html>JAVASCRIPT</html>",
-      "app/empty_dir" => nil
+      "app/empty_dir" => nil,
+      "app/assets/fonts/Filename with spaces.json" => "Font content"
   }
 
   expected_output = <<-HERE.gsub(/^ {4}/, '')
@@ -165,6 +166,13 @@ describe "Rake::Pipeline Middleware" do
 
       last_response.body.should == "not found"
       last_response.status.should == 404
+    end
+
+    it "serves filenames with spaces" do
+      get "/assets/fonts/Filename%20with%20spaces.json"
+
+      last_response.body.should == "Font content"
+      last_response.status.should == 200
     end
 
     it "falls back to the app" do
