@@ -15,7 +15,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Rake::Pipeline::VERSION
 
-  gem.add_dependency "rake", "~> 0.9.0"
+  gem.add_dependency "rake", "~> 10.0.0"
   gem.add_dependency "thor"
   gem.add_dependency "json"
 
