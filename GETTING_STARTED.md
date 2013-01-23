@@ -36,6 +36,9 @@ and 2 files are outputs. The `source` directory is input and the output
 will go into `compiled`. Here's the `Assetfile` to do just that:
 
 ```ruby
+# Set the Pipeline's output directory
+output "compiled"
+
 # input defines operations on a set of files. All files processed in
 # this block go into the output directory
 input "source" do
@@ -53,9 +56,6 @@ input "source" do
     concat "application.js"
   end
 end
-
-# Set the Pipeline's output directory
-output "compiled"
 ```
 
 Now run `rakep build` from the project root to compile everything.
@@ -93,6 +93,9 @@ different location. In short, `concat` is aliased to `copy` as well.
 Here's the updated `Assetfile`:
 
 ```ruby
+# Set the Pipeline's output directory
+output "compiled"
+
 # input defines operations on a set of files. All files processed in
 # this block go into the output directory
 input "source" do
@@ -119,9 +122,6 @@ input "source" do
     copy
   end
 end
-
-# Set the Pipeline's output directory
-output "compiled"
 ```
 
 Now we can run `rakep server` inside the projects root. You'll see some
@@ -160,13 +160,13 @@ file. You can overide this or do much more fancy things. This is covered
 in a different file. We could use this filter like this:
 
 ```ruby
+output "compiled"
+
 input "source" do
   match "**/*.coffee" do
     filter CoffeeScript
   end
 end
-
-output "compiled"
 ```
 
 Now this filter doesn't do anything at the moment besides copy the
@@ -220,6 +220,8 @@ end
 Let's take a fresh look at the `Assetfile` now.
 
 ```ruby
+output "compiled"
+
 input "source" do
   match "javascript/**/*.coffee" do
     # Compile all .coffee files into.js
@@ -239,8 +241,6 @@ input "source" do
     copy
   end
 end
-
-output "compiled"
 ```
 
 Calling the filter without a block uses the default block in the filter.
