@@ -132,6 +132,7 @@ module Rake
 
       # Remove the project's temporary and output files.
       def clean
+        last_manifest.clear
         files_to_clean.each { |file| FileUtils.rm_rf(file) }
       end
 
@@ -273,7 +274,7 @@ module Rake
       end
 
       def dirty?
-        assetfile_dirty? || files_dirty? || files_deleted?
+        assetfile_dirty? || files_deleted? || files_dirty? 
       end
 
       def assetfile_dirty?
@@ -307,7 +308,7 @@ module Rake
       end
 
       def files_deleted?
-        manifest.files.each_key do |input_file|
+        last_manifest.files.each_key do |input_file|
           return true if !File.exists?(input_file)
         end
 
