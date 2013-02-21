@@ -586,6 +586,24 @@ HERE
         content.should == "true to trance"
       end
 
+      it "should handle dynamic dependencies being deleted" do
+        project.invoke
+
+        content = File.read output_file
+
+        content.should == EXPECTED_DYNAMIC_OUTPUT
+
+        sleep 1
+
+        imported_file = File.join tmp, "variables.import"
+
+        File.exists?(imported_file).should be_true
+
+        FileUtils.rm_rf imported_file
+
+        project.invoke
+      end
+
       it "should not regenerate files when nothing changes" do
         project.invoke
         previous_mtime = File.mtime output_file

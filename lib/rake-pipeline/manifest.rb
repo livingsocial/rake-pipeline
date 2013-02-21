@@ -59,6 +59,10 @@ module Rake
         @entries[key] = value
       end
 
+      def clear
+        entries.clear
+      end
+
       def empty?
         entries.empty?
       end
