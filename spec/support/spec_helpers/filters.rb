@@ -20,7 +20,7 @@ class Rake::Pipeline
         def includes(input)
           input.read.scan(/^@import\(\"(.*)\"\)$/).map(&:first).map do |inc|
             File.join(input.root, "#{inc}.import")
-          end
+          end.select { |f| File.exists? f }
         end
 
         def generate_output(inputs, output)
