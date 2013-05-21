@@ -190,7 +190,7 @@ you may have noticed they are compiled "in place". This means
 This works in our simple example, but what happens when we need to work
 with Javascript later in the pipeline or next build steps expect ".js"
 files? The filter has to customize the name. The most correct thing to
-do is make the output file has the same name except as ".js".
+do is make the output file have the same name except with a ".js" extension.
 
 This behavior is defined in the filter's initializer. This may seem odd
 to you. It was odd to me until I understood what was happening.
