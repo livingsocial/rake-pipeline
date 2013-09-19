@@ -35,7 +35,7 @@ module Rake
       desc "server", "Run the Rake::Pipeline preview server."
       def server
         require "rake-pipeline/server"
-        Rake::Pipeline::Server.new(:port => ENV.fetch("PORT", 9292)).start
+        Rake::Pipeline::Server.new(:Port => ENV.fetch("PORT", 9292)).start
       end
 
     private
