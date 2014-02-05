@@ -10,7 +10,7 @@ some context.
 ## Getting Started
 
 `Rake::Pipeline` comes with two main functionalities out of the box:
-matching and concatentation. You can specify a match (IE: all css files)
+matching and concatenation. You can specify a match (IE: all css files)
 then run them through a concatenation filter (combine them into one
 file). There is also an order concatenation filter which allows you to
 specify order (A should come before B).
@@ -156,7 +156,7 @@ end
 
 Notice `generate_output`'s method signature: `inputs` and `output`. The
 default semantic is to take N input files and map them to one output
-file. You can overide this or do much more fancy things. This is covered
+file. You can override this or do much more fancy things. This is covered
 in a different file. We could use this filter like this:
 
 ```ruby
