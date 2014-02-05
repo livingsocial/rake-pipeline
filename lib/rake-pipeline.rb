@@ -158,7 +158,6 @@ module Rake
     def initialize(options={})
       @filters         = []
       @invoke_mutex    = Mutex.new
-      @clean_mutex     = Mutex.new
       @tmp_id          = 0
       @inputs          = options[:inputs] || {}
       @tmpdir          = options[:tmpdir] || File.expand_path("tmp")
