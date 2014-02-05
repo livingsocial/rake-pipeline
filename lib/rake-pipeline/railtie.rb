@@ -24,9 +24,13 @@ module Rake
       initializer "rake-pipeline.assetfile" do |app|
         if config.rake_pipeline_enabled
           assetfile = File.join(Rails.root, config.rake_pipeline_assetfile)
-          project = Rake::Pipeline::Project.new assetfile
+          if File.exists?(assetfile)
+            project = Rake::Pipeline::Project.new assetfile
 
-          config.app_middleware.insert ActionDispatch::Static, Rake::Pipeline::Middleware, project
+            config.app_middleware.insert ActionDispatch::Static, Rake::Pipeline::Middleware, project
+          else
+            puts "Warning from Rake-Pipeline: There is no Assetfile. You should create one first."
+          end
         end
       end
     end
