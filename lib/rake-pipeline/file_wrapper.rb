@@ -102,7 +102,7 @@ module Rake
       #   expected encoding specified in {#encoding}.
       def read
         contents = if "".respond_to?(:encode)
-          File.read(fullpath, :encoding => encoding)
+          File.read(fullpath, :encoding => encoding, :binmode => (encoding.eql? "BINARY"))
         else
           File.read(fullpath)
         end
@@ -126,7 +126,7 @@ module Rake
         FileUtils.mkdir_p(File.dirname(fullpath))
 
         @created_file = if "".respond_to?(:encode)
-          File.open(fullpath, "w:#{encoding}")
+          File.open(fullpath, "w:#{encoding}", :binmode => (encoding.eql? "BINARY"))
         else
           File.open(fullpath, "w")
         end
