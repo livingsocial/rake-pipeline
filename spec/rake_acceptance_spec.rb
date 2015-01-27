@@ -732,7 +732,7 @@ HERE
 
       expect { 
         project.invoke
-      }.to_not raise_error(Rake::Pipeline::TmpInputError)
+      }.to_not raise_error
     end
   end
 end
