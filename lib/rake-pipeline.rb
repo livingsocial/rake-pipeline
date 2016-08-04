@@ -284,7 +284,9 @@ module Rake
 
     # for Pipelines, this is every file, but it may be overridden
     # by subclasses
-    alias eligible_input_files input_files
+    def eligible_input_files
+      input_files
+    end
 
     # @return [Rake::Application] The Rake::Application to install
     #   rake tasks onto. Defaults to Rake.application

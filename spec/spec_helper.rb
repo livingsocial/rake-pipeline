@@ -1,4 +1,8 @@
-unless ENV["TRAVIS"]
+def macruby?
+  defined?(RUBY_ENGINE) && RUBY_ENGINE == 'macruby'
+end
+
+unless ENV["TRAVIS"] || macruby?
   require 'simplecov'
   SimpleCov.start do
     add_group "lib", "lib"
